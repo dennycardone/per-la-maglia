@@ -1630,13 +1630,27 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
     steps.innerHTML = list.map(x => "<li>" + x + "</li>").join("");
     start.hidden = true; scr.hidden = false;
   }
+  // as soon as Chrome is ready, the button glows: one tap and the install window opens
+  const ready = () => { label.textContent = "Installa ora"; btn.classList.add("go"); };
+  if (window.__bip) ready();
+  window.addEventListener("bipready", ready);
+  let waiting = false;
   btn.onclick = async () => {
-    btn.disabled = true; label.textContent = "Installazione…";
-    const bip = await waitPrompt(2500);
-    btn.disabled = false; label.textContent = "Installa l'app";
-    if (bip) {
-      window.__bip = null;
+    if (window.__bip) {
+      const bip = window.__bip; window.__bip = null;
+      btn.classList.remove("go"); label.textContent = "Installa l'app";
       try { bip.prompt(); await bip.userChoice; } catch (e) {}
+      return;
+    }
+    if (waiting) return;
+    if (android && fromChrome) {
+      // already in Chrome: Chrome needs a few more seconds on the page before it allows the install
+      waiting = true; btn.classList.add("go"); label.textContent = "Preparo l'installazione…";
+      const bip = await waitPrompt(45000);
+      waiting = false;
+      if (bip) { ready(); return; }
+      btn.classList.remove("go"); label.textContent = "Installa l'app";
+      sheet("Installa dal menu", ["Tocca <b>⋮</b> in alto a destra e scegli <b>Installa app</b>."]);
       return;
     }
     if (android && !fromChrome) {
@@ -1649,12 +1663,12 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
       sheet("Aggiungi alla Home", ["Tocca <b>Condividi</b> in basso, poi <b>Aggiungi alla schermata Home</b>."]);
       return;
     }
-    sheet("Già pronta", ["Se l'app è già installata la trovi tra le tue app. Altrimenti usa <b>Installa</b> dal menu ⋮ del browser."]);
+    sheet("Installa dal menu", ["Apri il menu del browser e scegli <b>Installa app</b>."]);
   };
   document.getElementById("installBack").onclick = () => { scr.hidden = true; start.hidden = false; };
   sync();
   // arriving in Chrome from another app: make the button the obvious next tap
-  if (fromChrome && !installed()) { btn.classList.add("go"); history.replaceState(null, "", location.pathname); }
+  if (fromChrome && !installed()) { btn.classList.add("go"); history.replaceState(null, "", location.pathname + "?installa"); }
 })();
 </script>
 </body>
