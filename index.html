@@ -357,7 +357,7 @@ const C = {
   elevMin: 38, elevMax: 64, elevDef: 50,   // degrees; drag up = higher arc
   slowScale: 0.3, slowDur: 0.55, perfect: 0.015,
   kDecel: 9, kReact: 0.12, reachStand: 2.1, jumpAdd: 0.55, jumpDur: 0.5, kBack: 5.2,
-  windowMin: 0.17, windowMax: 0.21,   // every situation has a good release window of 170–210 ms
+  windowMin: 0.145, windowMax: 0.175,   // every situation has a good release window of 145–175 ms
   topY: 1.65, closeGap: 4.0,
   lives: 3, H: 1/240
 };
@@ -482,7 +482,7 @@ function* setupGen(){
     const target = C.windowMin + Math.random() * (C.windowMax - C.windowMin);
     const wc1 = bestWindowCharge(st, 0.3); yield null;
     if (wc1 <= 0) continue;
-    st.chargeTime = clamp(target / wc1, 0.35, 0.95);
+    st.chargeTime = clamp(target / wc1, 0.3, 0.95);
     const ms = bestWindowCharge(st, st.chargeTime) * st.chargeTime; yield null;
     if (ms >= C.windowMin && ms <= C.windowMax) { yield st; return; }
   }
