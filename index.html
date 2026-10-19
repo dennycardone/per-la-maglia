@@ -138,6 +138,12 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .trio .btn{font-size:17px;padding:11px 6px}
 .btn.small{font-size:16px;padding:9px}
+.install{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border-color:rgba(255,194,75,.55);color:var(--amber)}
+.install svg{flex:none}
+.isteps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;counter-reset:st}
+.isteps li{position:relative;padding-left:40px;min-height:28px;font-size:17px;line-height:1.35;color:var(--chalk);counter-increment:st}
+.isteps li::before{content:counter(st);position:absolute;left:0;top:-1px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:rgba(255,194,75,.16);color:var(--amber);font-family:var(--display);font-weight:900;font-size:17px}
+.isteps b{color:var(--amber)}
 .nick{appearance:none;width:100%;box-sizing:border-box;padding:11px 12px;border-radius:8px;border:1px solid rgba(238,242,234,.2);background:rgba(238,242,234,.06);color:var(--chalk);font-family:var(--label);font-weight:600;font-size:17px;letter-spacing:.02em}
 .nick::placeholder{color:#7d8a83}
 .nick:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
@@ -228,6 +234,7 @@ body{-webkit-touch-callout:none}
       <button class="btn" id="playBtn" type="button">Gioca</button>
       <div class="trio"><button class="btn ghost" id="rankBtn" type="button">Classifica</button><button class="btn ghost" id="profileBtn" type="button">Profilo</button><button class="btn ghost" id="settingsBtn" type="button">Impostazioni</button></div>
       <div class="best" id="bestLine"></div>
+      <button class="btn ghost small install" id="installBtn" type="button"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Installa l'app</button>
       <div class="hint">Si gioca con il telefono in orizzontale</div>
     </div>
   </div>
@@ -263,6 +270,16 @@ body{-webkit-touch-callout:none}
       <button class="btn ghost" id="quitBtn" type="button">Esci dalla partita</button>
       <div class="note">Uscendo, i punti di questa partita non vengono conteggiati.</div>
     </div>
+  </div>
+</section>
+
+<section class="screen" id="installScreen" hidden>
+  <div class="panel">
+    <div class="eyebrow">Installa l'app</div>
+    <h1 id="installTitle" style="font-size:clamp(40px,9vw,64px)">Per la Maglia sul telefono</h1>
+    <ol class="isteps" id="installSteps"></ol>
+    <p class="note">Una volta installato si apre a schermo intero dalla schermata Home e funziona anche senza connessione.</p>
+    <button class="btn ghost" id="installBack" type="button">Indietro</button>
   </div>
 </section>
 
@@ -1579,6 +1596,55 @@ requestAnimationFrame(frame);
 if ("serviceWorker" in navigator && location.protocol === "https:") {
   window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
 }
+
+// install button: native prompt where the browser offers one, step-by-step instructions everywhere else
+(() => {
+  const btn = document.getElementById("installBtn");
+  const scr = document.getElementById("installScreen");
+  const start = document.getElementById("startScreen");
+  const steps = document.getElementById("installSteps");
+  const title = document.getElementById("installTitle");
+  const ua = navigator.userAgent || "";
+  const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const android = /Android/.test(ua);
+  const inApp = /FBAN|FBAV|Instagram|Line\/|TikTok|Snapchat|Twitter/i.test(ua);
+  const installed = () => window.matchMedia("(display-mode: standalone)").matches || window.matchMedia("(display-mode: fullscreen)").matches || navigator.standalone === true;
+  let deferred = null;
+  const sync = () => { btn.hidden = installed(); };
+  window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; });
+  window.addEventListener("appinstalled", () => { deferred = null; scr.hidden = true; start.hidden = false; sync(); });
+  const share = '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="vertical-align:-2px"><path d="M12 15V3m0 0L8 7m4-4l4 4M6 11H5v10h14V11h-1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function guide() {
+    let t = "Per la Maglia sul telefono", list;
+    if (inApp) {
+      t = "Apri prima nel browser";
+      list = ["Tocca il menu <b>⋯</b> in alto.", "Scegli <b>Apri nel browser</b> (Safari o Chrome).", "Tocca di nuovo <b>Installa l'app</b>."];
+    } else if (ios) {
+      t = "Su iPhone e iPad";
+      list = ["Tocca <b>Condividi</b> " + share + " nella barra del browser.", "Scorri e scegli <b>Aggiungi alla schermata Home</b>.", "Tocca <b>Aggiungi</b>: l'icona della maglia compare tra le app.", "Non vedi la voce? Apri questa pagina in <b>Safari</b> e riprova."];
+    } else if (android) {
+      t = "Su Android";
+      list = ["Tocca il menu <b>⋮</b> in alto a destra del browser.", "Scegli <b>Installa app</b> oppure <b>Aggiungi a schermata Home</b>.", "Conferma con <b>Installa</b>: l'icona della maglia compare tra le app."];
+    } else {
+      t = "Sul computer";
+      list = ["In Chrome o Edge clicca l'icona <b>Installa</b> a destra nella barra degli indirizzi.", "Oppure apri il menu <b>⋮</b> e scegli <b>Installa Per la Maglia</b>.", "Per giocare dal telefono apri questo stesso indirizzo dal browser del telefono."];
+    }
+    title.textContent = t;
+    steps.innerHTML = list.map(x => "<li>" + x + "</li>").join("");
+    start.hidden = true; scr.hidden = false;
+  }
+  btn.onclick = async () => {
+    if (deferred) {
+      const d = deferred; deferred = null;
+      try { d.prompt(); const r = await d.userChoice; if (r && r.outcome === "accepted") return; } catch (e) {}
+      return;
+    }
+    guide();
+  };
+  document.getElementById("installBack").onclick = () => { scr.hidden = true; start.hidden = false; };
+  sync();
+  window.matchMedia("(display-mode: standalone)").addEventListener?.("change", sync);
+})();
 </script>
 </body>
 </html>
