@@ -243,7 +243,7 @@ body{-webkit-touch-callout:none}
       <div class="trio"><button class="btn ghost" id="rankBtn" type="button">Classifica</button><button class="btn ghost" id="profileBtn" type="button">Profilo</button><button class="btn ghost" id="settingsBtn" type="button">Impostazioni</button></div>
       <div class="best" id="bestLine"></div>
       <button class="btn ghost small install" id="installBtn" type="button"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Installa l'app</span></button>
-      <div class="hint">Si gioca con il telefono in orizzontale · <span id="ver">v6</span></div>
+      <div class="hint">Si gioca con il telefono in orizzontale</div>
     </div>
   </div>
 </section>
@@ -1638,7 +1638,7 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
     bits.push("API install " + (typeof navigator.install === "function" ? "sì" + (window.__instErr ? " (" + window.__instErr + ")" : "") : "no"));
     bits.push(Math.round((Date.now() - window.__t0) / 1000) + " s sulla pagina, " + window.__taps + " tocchi");
     bits.push("v6");
-    document.getElementById("installWhy").textContent = "Diagnosi: " + bits.join(" · ");
+    document.getElementById("installWhy").textContent = /[?&]debug\b/.test(location.search) ? "Diagnosi: " + bits.join(" · ") : "";
   }
   function sheet(t, list) {
     why();
@@ -1670,7 +1670,8 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
       waiting = false;
       if (bip) { ready(); return; }
       btn.classList.remove("go"); label.textContent = "Installa l'app";
-      sheet("Installa dal menu", ["Tocca <b>⋮</b> in alto a destra e scegli <b>Installa app</b>."]);
+      // Chrome stays silent when the game is already installed on this phone
+      sheet("È già installata", ["Trovi <b>Per la Maglia</b> tra le tue app: aprila da lì per giocare a schermo intero."]);
       return;
     }
     if (android && !fromChrome) {
