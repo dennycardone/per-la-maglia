@@ -2,6 +2,11 @@
 <html lang="it">
 <head>
 <meta charset="utf-8">
+<script>
+// grab Chrome's install prompt the moment it is offered, before the game loads
+window.__bip = null;
+window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.__bip = e; window.dispatchEvent(new Event("bipready")); });
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#05080e">
 <meta name="description" content="Pallonetti a sfida tra tifoserie: scavalca il portiere e porta punti alla tua squadra.">
@@ -140,6 +145,8 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .btn.small{font-size:16px;padding:9px}
 .install{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border-color:rgba(255,194,75,.55);color:var(--amber)}
 .install svg{flex:none}
+.install.go{animation:pulse 1.2s ease-in-out infinite;background:rgba(255,194,75,.14)}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(255,194,75,.25)}}
 .isteps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;counter-reset:st}
 .isteps li{position:relative;padding-left:40px;min-height:28px;font-size:17px;line-height:1.35;color:var(--chalk);counter-increment:st}
 .isteps li::before{content:counter(st);position:absolute;left:0;top:-1px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:rgba(255,194,75,.16);color:var(--amber);font-family:var(--display);font-weight:900;font-size:17px}
@@ -234,7 +241,7 @@ body{-webkit-touch-callout:none}
       <button class="btn" id="playBtn" type="button">Gioca</button>
       <div class="trio"><button class="btn ghost" id="rankBtn" type="button">Classifica</button><button class="btn ghost" id="profileBtn" type="button">Profilo</button><button class="btn ghost" id="settingsBtn" type="button">Impostazioni</button></div>
       <div class="best" id="bestLine"></div>
-      <button class="btn ghost small install" id="installBtn" type="button"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Installa l'app</button>
+      <button class="btn ghost small install" id="installBtn" type="button"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Installa l'app</span></button>
       <div class="hint">Si gioca con il telefono in orizzontale</div>
     </div>
   </div>
@@ -1597,7 +1604,7 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
   window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
 }
 
-// install button: native prompt where the browser offers one, step-by-step instructions everywhere else
+// install button: one tap starts the installation
 (() => {
   const btn = document.getElementById("installBtn");
   const scr = document.getElementById("installScreen");
@@ -1607,43 +1614,47 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
   const ua = navigator.userAgent || "";
   const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const android = /Android/.test(ua);
-  const inApp = /FBAN|FBAV|Instagram|Line\/|TikTok|Snapchat|Twitter/i.test(ua);
   const installed = () => window.matchMedia("(display-mode: standalone)").matches || window.matchMedia("(display-mode: fullscreen)").matches || navigator.standalone === true;
-  let deferred = null;
+  const label = btn.querySelector("span");
   const sync = () => { btn.hidden = installed(); };
-  window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; });
-  window.addEventListener("appinstalled", () => { deferred = null; scr.hidden = true; start.hidden = false; sync(); });
-  const share = '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="vertical-align:-2px"><path d="M12 15V3m0 0L8 7m4-4l4 4M6 11H5v10h14V11h-1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  function guide() {
-    let t = "Per la Maglia sul telefono", list;
-    if (inApp) {
-      t = "Apri prima nel browser";
-      list = ["Tocca il menu <b>⋯</b> in alto.", "Scegli <b>Apri nel browser</b> (Safari o Chrome).", "Tocca di nuovo <b>Installa l'app</b>."];
-    } else if (ios) {
-      t = "Su iPhone e iPad";
-      list = ["Tocca <b>Condividi</b> " + share + " nella barra del browser.", "Scorri e scegli <b>Aggiungi alla schermata Home</b>.", "Tocca <b>Aggiungi</b>: l'icona della maglia compare tra le app.", "Non vedi la voce? Apri questa pagina in <b>Safari</b> e riprova."];
-    } else if (android) {
-      t = "Su Android";
-      list = ["Tocca il menu <b>⋮</b> in alto a destra del browser.", "Scegli <b>Installa app</b> oppure <b>Aggiungi a schermata Home</b>.", "Conferma con <b>Installa</b>: l'icona della maglia compare tra le app."];
-    } else {
-      t = "Sul computer";
-      list = ["In Chrome o Edge clicca l'icona <b>Installa</b> a destra nella barra degli indirizzi.", "Oppure apri il menu <b>⋮</b> e scegli <b>Installa Per la Maglia</b>.", "Per giocare dal telefono apri questo stesso indirizzo dal browser del telefono."];
-    }
+  const fromChrome = /[?&]installa\b/.test(location.search);
+  window.addEventListener("appinstalled", () => { window.__bip = null; scr.hidden = true; start.hidden = false; sync(); });
+  // the prompt usually arrives a moment after the page opens: wait for it briefly while the tap still counts
+  const waitPrompt = ms => window.__bip ? Promise.resolve(window.__bip) : new Promise(res => {
+    const t = setTimeout(() => { window.removeEventListener("bipready", on); res(null); }, ms);
+    function on() { clearTimeout(t); res(window.__bip); }
+    window.addEventListener("bipready", on, { once: true });
+  });
+  function sheet(t, list) {
     title.textContent = t;
     steps.innerHTML = list.map(x => "<li>" + x + "</li>").join("");
     start.hidden = true; scr.hidden = false;
   }
   btn.onclick = async () => {
-    if (deferred) {
-      const d = deferred; deferred = null;
-      try { d.prompt(); const r = await d.userChoice; if (r && r.outcome === "accepted") return; } catch (e) {}
+    btn.disabled = true; label.textContent = "Installazione…";
+    const bip = await waitPrompt(2500);
+    btn.disabled = false; label.textContent = "Installa l'app";
+    if (bip) {
+      window.__bip = null;
+      try { bip.prompt(); await bip.userChoice; } catch (e) {}
       return;
     }
-    guide();
+    if (android && !fromChrome) {
+      // opened inside another app (Claude, WhatsApp, Telegram, Instagram…): reopen in Chrome, where the install works
+      const url = location.host + location.pathname + "?installa";
+      location.href = "intent://" + url + "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" + encodeURIComponent(location.origin + location.pathname + "?installa") + ";end";
+      return;
+    }
+    if (ios) {
+      sheet("Aggiungi alla Home", ["Tocca <b>Condividi</b> in basso, poi <b>Aggiungi alla schermata Home</b>."]);
+      return;
+    }
+    sheet("Già pronta", ["Se l'app è già installata la trovi tra le tue app. Altrimenti usa <b>Installa</b> dal menu ⋮ del browser."]);
   };
   document.getElementById("installBack").onclick = () => { scr.hidden = true; start.hidden = false; };
   sync();
-  window.matchMedia("(display-mode: standalone)").addEventListener?.("change", sync);
+  // arriving in Chrome from another app: make the button the obvious next tap
+  if (fromChrome && !installed()) { btn.classList.add("go"); history.replaceState(null, "", location.pathname); }
 })();
 </script>
 </body>
