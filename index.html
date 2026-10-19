@@ -357,7 +357,6 @@ const C = {
   elevMin: 38, elevMax: 64, elevDef: 50,   // degrees; drag up = higher arc
   slowScale: 0.3, slowDur: 0.55, perfect: 0.015,
   kDecel: 9, kReact: 0.12, reachStand: 2.1, jumpAdd: 0.55, jumpDur: 0.5, kBack: 5.2,
-  saltAdd: 0.75, saltDur: 0.55,   // the "saltatore" keeper: bigger leap when he gets under a lob
   windowMin: 0.17, windowMax: 0.21,   // every situation has a good release window of 170–210 ms
   topY: 1.65, closeGap: 4.0,
   lives: 3, H: 1/240
@@ -410,20 +409,10 @@ function stepState(s, st, h){
     return;
   }
   const tk = s.t - s.kickT;
-  const salt = st.type === "saltatore";
-  if (salt) {
-    // reads the lob: after a short reaction he turns and runs back toward his goal, then jumps under the ball
-    if (tk < C.kReact) s.kx -= Math.max(0, st.vk - C.kDecel * tk) * h;
-    else s.kx = Math.min(st.d - 0.25, s.kx + st.vb * Math.min(1, (tk - C.kReact) / 0.2) * h);
-  } else if (!s.passedKeeper) { const sp = Math.max(0, kSpeed(s, st) - C.kDecel * tk); s.kx -= sp * h; }
+  if (!s.passedKeeper) { const sp = Math.max(0, kSpeed(s, st) - C.kDecel * tk); s.kx -= sp * h; }
   else if (tk > s.passT + 0.25) s.kx += C.kBack * h;
   const tj = tk - C.kReact;
   s.reach = C.reachStand + (tj > 0 && tj < C.jumpDur ? C.jumpAdd * Math.sin(Math.PI * tj / C.jumpDur) : 0);
-  if (salt && s.passedKeeper) {
-    if (s.jumpT == null && s.ball.vy < 0 && s.ball.x - s.kx < 1.6 && s.ball.x - s.kx > -0.5) s.jumpT = s.t;
-    const tq = s.jumpT == null ? -1 : s.t - s.jumpT;
-    s.reach = C.reachStand + (tq >= 0 && tq < C.saltDur ? C.saltAdd * Math.sin(Math.PI * tq / C.saltDur) : 0);
-  }
   const b = s.ball, sp = Math.hypot(b.vx, b.vy);
   b.vx += -C.drag * sp * b.vx * h; b.vy += (-C.g - C.drag * sp * b.vy) * h;
   const px = b.x, py = b.y;
@@ -436,8 +425,6 @@ function stepState(s, st, h){
   if (!s.passedKeeper) {
     if (Math.abs(b.x - s.kx) < 0.32 + C.r && b.y - C.r < s.reach) { s.result = { type: "miss", label: "PARATA", sub: s.charge < 0.5 ? "Troppo corto" : "Ci arriva con le mani" }; return; }
     if (b.x > s.kx + 0.32 + C.r) { s.passedKeeper = true; s.passT = tk; s.overHands = true; }
-  } else if (salt) {
-    if (b.vy < 0 && Math.abs(b.x - s.kx) < 0.36 + C.r && b.y - C.r < s.reach) { s.result = { type: "miss", label: "IN VOLO", sub: "Ti ha letto il pallonetto" }; return; }
   } else if (b.y < 1.0 && s.kx + 0.3 >= b.x - C.r) { s.result = { type: "miss", label: "RECUPERO", sub: "Il portiere torna in tempo" }; return; }
   if (px < st.d && b.x >= st.d) {
     const t = (st.d - px) / (b.x - px), y = py + (b.y - py) * t;
@@ -488,13 +475,10 @@ function bestWindowCharge(st, ct){
 // Distance changes freely (10–20 m). Far shots have a wider band of power, so their power bar fills faster:
 // each situation gets the fill time that brings its best window back to 170–210 ms of hold.
 function* setupGen(){
-  // the keeper type is drawn once, so the calibration keeps it: each type shows up as often as intended
-  const roll = Math.random(), type = roll < 0.3 ? "saltatore" : roll < 0.62 ? "furbo" : "classico";
   for (let i = 0; i < 200; i++) {
-    const st = { type, d: 10 + Math.random() * 10, k0: 0.3 + Math.random() * 3.2,
-                 vk: type === "furbo" ? 4.5 + Math.random() * 3 : 4 + Math.random() * 2.5, stop: 4 + Math.random() * 3, pause: 0.4 + Math.random() * 0.5,
-                 vb: 0 };
-    st.vb = 3.2 + Math.random() * 1.6 + (st.d - 10) * 0.25;   // runs back faster on longer shots
+    const furbo = Math.random() < 0.45;
+    const st = { type: furbo ? "furbo" : "classico", d: 10 + Math.random() * 10, k0: 0.3 + Math.random() * 3.2,
+                 vk: furbo ? 4.5 + Math.random() * 3 : 4 + Math.random() * 2.5, stop: 4 + Math.random() * 3, pause: 0.4 + Math.random() * 0.5 };
     const target = C.windowMin + Math.random() * (C.windowMax - C.windowMin);
     const wc1 = bestWindowCharge(st, 0.3); yield null;
     if (wc1 <= 0) continue;
@@ -662,7 +646,7 @@ function nextShot(){
   setup = takeSetup(); sim = makeState(setup); trail = []; pending = false; netHit = null; kRun = 0; prevKx = null;
   const speed = setup.vk > 6.2 ? "veloce" : setup.vk > 5.3 ? "media" : "lenta";
   const fill = setup.chargeTime < 0.48 ? "rapida" : setup.chargeTime < 0.66 ? "media" : "lenta";
-  $("setupInfo").textContent = `${Math.round(setup.d)} m · Carica ${fill} · ` + (setup.type === "furbo" ? "Portiere furbo: si ferma, finta e riparte forte" : setup.type === "saltatore" ? "Portiere saltatore: torna indietro e salta sui pallonetti alti" : `Portiere classico: esce a velocità ${speed}`);
+  $("setupInfo").textContent = `${Math.round(setup.d)} m · Carica ${fill} · ` + (setup.type === "furbo" ? "Portiere furbo: si ferma, finta e riparte forte" : `Portiere classico: esce a velocità ${speed}`);
   // continuous sequence: the keeper starts coming out (and the power starts rising) as soon as the shot appears
   fingerDown = false;
   phase = "hold";
@@ -1447,14 +1431,13 @@ function drawKeeper(v){
   // posture tells the keeper type before you touch: classic crouches to charge, "furbo" stands tall with arms wide
   const pausing = setup.type === "furbo" && sim.stopT != null && sim.t - sim.stopT < setup.pause;
   const crouch = !sim.kicked && (setup.type === "classico" || pausing);
-  if (setup.type === "saltatore" && !sim.kicked) armsUp = true;
   const o = { armsUp, reach: sim.reach, gloves: true, crouch, ready: !sim.kicked, dir: -1, t: performance.now() / 1000, num: "1", skin: "#e0b48f", hair: "#4a3424" };
   const res = sim.result, at = sim.afterT || 0;
   if (res && phase === "after") {
     if (res.type === "goal") { o.dir = 1; o.ready = false; if (at > 0.35) { o.pose = "despair"; o.armsUp = false; } }
     else if (res.label === "ALTA" || res.label === "CORTO" || res.label === "TRAVERSA") { o.pose = at > 0.3 ? "cheer" : undefined; o.armsUp = false; }
   } else if (sim.passedKeeper) o.dir = 1;
-  if (kMoving && !o.pose && lift < 0.05 && !(sim.kicked && !sim.passedKeeper)) { o.run = kRun; o.armsUp = setup.type === "saltatore" && !sim.kicked; o.crouch = false; o.ready = false; o.dir = sim.passedKeeper ? 1 : -1; }
+  if (kMoving && !o.pose && lift < 0.05 && !(sim.kicked && !sim.passedKeeper)) { o.run = kRun; o.armsUp = false; o.crouch = false; o.ready = false; o.dir = sim.passedKeeper ? 1 : -1; }
   person(v, sim.kx, o.pose ? 0 : lift, KEEPER_KIT, o);
 }
 function drawAttacker(v){
