@@ -1,0 +1,17 @@
+{
+  "name": "Per la Maglia",
+  "short_name": "Per la Maglia",
+  "description": "Ogni tuo gol vale per la tua squadra: scavalca il portiere col cucchiaio e porta punti alla tua tifoseria.",
+  "lang": "it",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#05080e",
+  "theme_color": "#05080e",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
