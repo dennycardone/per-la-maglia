@@ -188,7 +188,9 @@ html,body{overscroll-behavior:none}
 .wxnote.gold{border-color:rgba(255,194,75,.6);background:linear-gradient(90deg,rgba(255,194,75,.25),rgba(5,8,14,.85))}
 .wxnote.gold b{color:var(--amber)}
 body{position:fixed;inset:0;touch-action:none}
-.screen{touch-action:pan-y;overscroll-behavior:contain}
+.screen{overflow:hidden;touch-action:none;overscroll-behavior:none}
+.screen.tall{overflow-y:auto;touch-action:pan-y}
+.rlist{touch-action:pan-y;overscroll-behavior:contain}
 .lvbar{height:10px;border-radius:999px;background:rgba(238,242,234,.1);overflow:hidden}
 .lvbar i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#ffc24b,#ff9a3c);transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
 @media (orientation:landscape) and (min-width:560px){
@@ -202,7 +204,7 @@ body{position:fixed;inset:0;touch-action:none}
   .col{gap:10px}
   h1{font-size:clamp(44px,7vw,72px)}
   #startScreen .lede,#startScreen .hint{display:none}
-  .teams{grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}
+  .teams{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}.teams .chip{padding:5px 6px;font-size:13px;gap:4px}
   .chip{flex-direction:column;gap:2px;padding:5px 2px;font-size:11px;text-align:center}
   .chip span{max-width:100%}
   .homeTeam{padding:8px 10px;font-size:14px}
@@ -246,16 +248,16 @@ body{position:fixed;inset:0;touch-action:none}
       <div class="rules"><span>Sotto la traversa <b>×3</b></span><span>Al volo <b>×2</b></span><span>Arco teso fino a <b>×1,5</b></span><span>Rilascio perfetto <b>+100</b></span><span>Faccia a faccia <b>+50</b></span><span>Serie fino a <b>×3</b></span></div>
       <label class="label" for="nickInput">Il tuo soprannome</label>
       <input id="nickInput" class="nick" maxlength="16" autocomplete="off" spellcheck="false" placeholder="Come vuoi comparire in classifica">
+      <div class="homeTeam" id="homeTeam"></div>
+      <div class="best" id="bestLine"></div>
+      <button class="btn ghost small install" id="installBtn" type="button"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Installa l'app</span></button>
+      <div class="hint">Si gioca con il telefono in orizzontale</div>
     </div>
     <div class="col">
-      <div class="homeTeam" id="homeTeam"></div>
       <div class="label">Per chi giochi?</div>
       <div class="teams" id="teams"></div>
       <button class="btn" id="playBtn" type="button">Gioca</button>
       <div class="trio"><button class="btn ghost" id="rankBtn" type="button">Classifica</button><button class="btn ghost" id="profileBtn" type="button">Profilo</button><button class="btn ghost" id="settingsBtn" type="button">Impostazioni</button></div>
-      <div class="best" id="bestLine"></div>
-      <button class="btn ghost small install" id="installBtn" type="button"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Installa l'app</span></button>
-      <div class="hint">Si gioca con il telefono in orizzontale</div>
     </div>
   </div>
 </section>
@@ -376,11 +378,13 @@ const C = {
   lives: 3, H: 1/240
 };
 
+// Serie A 2026/27, in alphabetical order
 const TEAMS = [
-  ["Milan","#d4202c","#111111"],["Inter","#1462b4","#0b0b0b"],["Juventus","#f2f2f2","#151515"],["Napoli","#1aa3e0","#f2f2f2"],
-  ["Roma","#9c1c32","#f4b223"],["Lazio","#8fd2f2","#f2f2f2"],["Atalanta","#1f63b5","#0d0d0d"],["Fiorentina","#6a2c91","#f2f2f2"],
-  ["Bologna","#b0202b","#1c2f5c"],["Torino","#8b1d1a","#f2f2f2"],["Genoa","#b3122b","#14234a"],["Bari","#e2252b","#f2f2f2"],
-  ["Palermo","#f2a6c4","#111111"],["Sampdoria","#2a5fb0","#f2f2f2"],["Udinese","#f2f2f2","#111111"],["Cagliari","#b3202b","#16305f"]
+  ["Atalanta","#1f63b5","#0d0d0d"],["Bologna","#b0202b","#1c2f5c"],["Cagliari","#b3202b","#16305f"],["Como","#1c4f9c","#f2f2f2"],
+  ["Fiorentina","#6a2c91","#f2f2f2"],["Frosinone","#f6c500","#1b3d8f"],["Genoa","#b3122b","#14234a"],["Inter","#1462b4","#0b0b0b"],
+  ["Juventus","#f2f2f2","#151515"],["Lazio","#8fd2f2","#f2f2f2"],["Lecce","#f6c500","#d71920"],["Milan","#d4202c","#111111"],
+  ["Monza","#d4111f","#f2f2f2"],["Napoli","#1aa3e0","#f2f2f2"],["Parma","#f2f2f2","#111111"],["Roma","#9c1c32","#f4b223"],
+  ["Sassuolo","#00a04f","#111111"],["Torino","#8b1d1a","#f2f2f2"],["Udinese","#f2f2f2","#111111"],["Venezia","#111111","#f28c28"]
 ];
 const store = {
   get(k, d){ try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } },
@@ -393,7 +397,14 @@ const LIGHT = () => SET.quality === "leggera";
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 const cv = $("cv"), ctx = cv.getContext("2d");
 let W = 0, H = 0, DPR = 1;
-let teamIdx = clamp(store.get("cucchiaio.team", store.get("pennellata.team", 0)), 0, TEAMS.length - 1);
+const OLD_TEAMS = ["Milan","Inter","Juventus","Napoli","Roma","Lazio","Atalanta","Fiorentina","Bologna","Torino","Genoa","Bari","Palermo","Sampdoria","Udinese","Cagliari"];
+let teamIdx = (() => {
+  const byName = TEAMS.findIndex(t => t[0] === store.get("cucchiaio.teamName", ""));
+  if (byName >= 0) return byName;
+  const old = OLD_TEAMS[store.get("cucchiaio.team", store.get("pennellata.team", -1))];
+  const i = TEAMS.findIndex(t => t[0] === old);
+  return i >= 0 ? i : TEAMS.findIndex(t => t[0] === "Milan");
+})();
 let coached = store.get("cucchiaio.coached", false);
 let crowd = null;
 
@@ -542,8 +553,10 @@ const KIT = {
   Roma: ["plain","#9c1c32","#f4b223","#9c1c32","#111111"], Lazio: ["plain","#8fd2f2","#f2f2f2","#f2f2f2","#8fd2f2"],
   Atalanta: ["stripes","#1f63b5","#0d0d0d","#111111","#111111"], Fiorentina: ["plain","#6a2c91","#f2f2f2","#f2f2f2","#6a2c91"],
   Bologna: ["stripes","#b0202b","#1c2f5c","#f2f2f2","#1c2f5c"], Torino: ["plain","#8b1d1a","#f2f2f2","#f2f2f2","#8b1d1a"],
-  Genoa: ["halves","#b3122b","#14234a","#14234a","#14234a"], Bari: ["plain","#e2252b","#f2f2f2","#f2f2f2","#e2252b"],
-  Palermo: ["plain","#f2a6c4","#111111","#111111","#111111"], Sampdoria: ["hoop","#2a5fb0","#f2f2f2","#f2f2f2","#2a5fb0"],
+  Genoa: ["halves","#b3122b","#14234a","#14234a","#14234a"], Como: ["plain","#1c4f9c","#f2f2f2","#f2f2f2","#1c4f9c"],
+  Frosinone: ["plain","#f6c500","#1b3d8f","#1b3d8f","#f6c500"], Lecce: ["stripes","#f6c500","#d71920","#1c2f5c","#d71920"],
+  Monza: ["halves","#d4111f","#f2f2f2","#f2f2f2","#d4111f"], Parma: ["plain","#f2f2f2","#111111","#111111","#f2f2f2"],
+  Sassuolo: ["stripes","#00a04f","#111111","#111111","#00a04f"], Venezia: ["plain","#111111","#f28c28","#111111","#111111"],
   Udinese: ["stripes","#f2f2f2","#111111","#111111","#111111"], Cagliari: ["halves","#b3202b","#16305f","#16305f","#16305f"]
 };
 const KEEPER_KIT = ["plain","#ff8a1f","#14161a","#14161a","#ff8a1f"];
@@ -1087,7 +1100,7 @@ function renderTeams(){
     b.type = "button"; b.className = "chip"; b.id = "team-" + i;
     b.setAttribute("aria-pressed", i === teamIdx ? "true" : "false");
     b.innerHTML = jerseySVG(KIT[t[0]] || ["plain", t[1], t[2]]) + `<span>${t[0]}</span>`;
-    b.onclick = () => { teamIdx = i; store.set("cucchiaio.team", i); renderTeams(); buildCrowd(); renderHome(); };
+    b.onclick = () => { teamIdx = i; store.set("cucchiaio.teamName", TEAMS[i][0]); renderTeams(); buildCrowd(); renderHome(); };
     box.appendChild(b);
   });
   $("playBtn").textContent = "Gioca per il " + TEAMS[teamIdx][0];
@@ -1718,6 +1731,29 @@ requestAnimationFrame(frame);
 if ("serviceWorker" in navigator && location.protocol === "https:") {
   window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
 }
+
+// menus never scroll: each one shrinks to fit the screen (only a very small phone in portrait may still scroll)
+(() => {
+  const fit = sc => {
+    const panel = sc.querySelector(".panel"); if (!panel || sc.hidden) return;
+    panel.style.zoom = 1; sc.classList.remove("tall");
+    const cs = getComputedStyle(sc), avail = sc.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    const need = panel.scrollHeight;
+    if (need > avail) {
+      const z = Math.max(0.55, (avail - 4) / need);
+      panel.style.zoom = z;
+      if (z === 0.55) sc.classList.add("tall");
+    }
+    sc.scrollTop = 0;
+  };
+  const all = () => document.querySelectorAll(".screen").forEach(fit);
+  let raf = 0; const soon = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(all); };
+  const mo = new MutationObserver(soon);
+  document.querySelectorAll(".screen").forEach(sc => mo.observe(sc, { attributes: true, attributeFilter: ["hidden"], childList: true, subtree: true, characterData: true }));
+  window.addEventListener("resize", soon);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(soon);
+  soon();
+})();
 
 // install button: one tap starts the installation
 (() => {
