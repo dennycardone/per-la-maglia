@@ -180,6 +180,13 @@ body.cb .pop.miss .big{color:#4aa3ff}
 body.cb .rrow.me,body.cb .chip[aria-pressed="true"]{outline:2px dashed var(--amber);outline-offset:-2px}
 body{-webkit-touch-callout:none}
 html,body{overscroll-behavior:none}
+.wxnote{position:fixed;left:50%;top:40%;max-width:80vw;transform:translate(-50%,-8px);opacity:0;transition:opacity .35s,transform .35s;pointer-events:none;
+  padding:8px 16px;border-radius:8px;background:rgba(5,8,14,.8);border:1px solid rgba(238,242,234,.18);text-align:center}
+.wxnote.on{opacity:1;transform:translate(-50%,0)}
+.wxnote b{display:block;font-family:var(--display);font-weight:900;font-size:24px;line-height:1;text-transform:uppercase;letter-spacing:.02em}
+.wxnote small{display:block;margin-top:3px;font-family:var(--label);font-weight:600;font-size:13px;letter-spacing:.06em;color:var(--mute)}
+.wxnote.gold{border-color:rgba(255,194,75,.6);background:linear-gradient(90deg,rgba(255,194,75,.25),rgba(5,8,14,.85))}
+.wxnote.gold b{color:var(--amber)}
 body{position:fixed;inset:0;touch-action:none}
 .screen{touch-action:pan-y;overscroll-behavior:contain}
 .lvbar{height:10px;border-radius:999px;background:rgba(238,242,234,.1);overflow:hidden}
@@ -214,6 +221,7 @@ body{position:fixed;inset:0;touch-action:none}
     <div class="score" id="score">0</div>
     <div class="mult" id="multBox">Serie <b id="mult">×1.0</b> <span class="fire" id="fire" hidden>In fiamme</span></div>
   </div>
+  <div class="wxnote" id="wxNote" hidden></div>
   <div class="center" id="info">
     <span id="setupInfo"></span>
     <span class="coach" id="coach">Il portiere esce da solo. Tieni premuto ovunque per caricare, trascina su o giù per l'arco, rilascia per calciare.</span>
@@ -363,6 +371,8 @@ const C = {
   kDecel: 9, kReact: 0.12, reachStand: 2.1, jumpAdd: 0.55, jumpDur: 0.5, kBack: 5.2,
   windowMin: 0.17, windowMax: 0.21,   // every situation has a good release window of 170–210 ms
   topY: 1.65, closeGap: 4.0,
+  windK: 0.25,                          // m/s² of push for each m/s of wind (+ = toward the goal)
+  rainDrag: 2.6, rainBounce: 0.3, rainRoll: 0.45,   // wet ball: heavier in the air, dies on the bounce, slides on the grass
   lives: 3, H: 1/240
 };
 
@@ -417,14 +427,14 @@ function stepState(s, st, h){
   else if (tk > s.passT + 0.25) s.kx += C.kBack * h;
   const tj = tk - C.kReact;
   s.reach = C.reachStand + (tj > 0 && tj < C.jumpDur ? C.jumpAdd * Math.sin(Math.PI * tj / C.jumpDur) : 0);
-  const b = s.ball, sp = Math.hypot(b.vx, b.vy);
-  b.vx += -C.drag * sp * b.vx * h; b.vy += (-C.g - C.drag * sp * b.vy) * h;
+  const b = s.ball, sp = Math.hypot(b.vx, b.vy), wet = !!st.rain, dr = wet ? C.drag * C.rainDrag : C.drag;
+  b.vx += (-dr * sp * b.vx + (b.y > C.r + 0.02 ? C.windK * (st.wind || 0) : 0)) * h; b.vy += (-C.g - dr * sp * b.vy) * h;
   const px = b.x, py = b.y;
   b.x += b.vx * h; b.y += b.vy * h;
   if (b.y < C.r) {
     b.y = C.r;
-    if (b.vy < 0) { if (-b.vy > 1) s.bounced = true; b.vy = -b.vy * 0.5; }
-    if (Math.abs(b.vy) < 0.3) b.vx -= Math.sign(b.vx) * Math.min(Math.abs(b.vx), 1.2 * h);
+    if (b.vy < 0) { if (-b.vy > 1) s.bounced = true; b.vy = -b.vy * (wet ? C.rainBounce : 0.5); }
+    if (Math.abs(b.vy) < 0.3) b.vx -= Math.sign(b.vx) * Math.min(Math.abs(b.vx), (wet ? C.rainRoll : 1.2) * h);
   }
   if (!s.passedKeeper) {
     if (Math.abs(b.x - s.kx) < 0.32 + C.r && b.y - C.r < s.reach) { s.result = { type: "miss", label: "PARATA", sub: s.charge < 0.5 ? "Troppo corto" : "Ci arriva con le mani" }; return; }
@@ -478,11 +488,16 @@ function bestWindowCharge(st, ct){
 }
 // Distance changes freely (10–20 m). Far shots have a wider band of power, so their power bar fills faster:
 // each situation gets the fill time that brings its best window back to 170–210 ms of hold.
+// Weather comes and goes during a match; every situation is calibrated with the weather it is played in,
+// so the good release window stays 170–210 ms in rain and wind too.
+const WX = { rain: false, wind: 0 };
 function* setupGen(){
+  const rainNow = WX.rain, windNow = WX.wind;
   for (let i = 0; i < 200; i++) {
     const furbo = Math.random() < 0.45;
     const st = { type: furbo ? "furbo" : "classico", d: 10 + Math.random() * 10, k0: 0.3 + Math.random() * 3.2,
                  vk: furbo ? 4.5 + Math.random() * 3 : 4 + Math.random() * 2.5, stop: 4 + Math.random() * 3, pause: 0.4 + Math.random() * 0.5 };
+    st.rain = rainNow; st.wind = windNow;
     const target = C.windowMin + Math.random() * (C.windowMax - C.windowMin);
     const wc1 = bestWindowCharge(st, 0.3); yield null;
     if (wc1 <= 0) continue;
@@ -490,7 +505,7 @@ function* setupGen(){
     const ms = bestWindowCharge(st, st.chargeTime) * st.chargeTime; yield null;
     if (ms >= C.windowMin && ms <= C.windowMax) { yield st; return; }
   }
-  yield { type: "classico", d: 13, k0: 1.4, vk: 5.8, stop: 5, pause: 0.6, chargeTime: 0.6 };
+  yield { type: "classico", d: 13, k0: 1.4, vk: 5.8, stop: 5, pause: 0.6, chargeTime: 0.6, rain: false, wind: 0 };
 }
 let gen = null, ready = null;
 function pump(budget){
@@ -540,8 +555,8 @@ const THEMES = {
   tramonto: { sky: ["#2b1838", "#8a4a4a"], roof: "#1a1222", tier: ["#1c1524", "#2a1f2e"], beam: 0.07, near: ["#2b5e31", "#14301c"], far: ["#1d3a22", "#2b5a33"], tint: "rgba(255,140,70,.10)" },
   pioggia:  { sky: ["#03060a", "#0a1018"], roof: "#070a10", tier: ["#0a1019", "#0e1724"], beam: 0.12, near: ["#16462b", "#0a2214"], far: ["#0b2617", "#123d25"], tint: "rgba(120,150,190,.06)" }
 };
-let THEME = "notte", crowdL = null, rain = [];
-function pickTheme(){ const k = Object.keys(THEMES); THEME = k[Math.floor(Math.random() * k.length)]; buildCrowd(); }
+let THEME = "notte", crowdL = null, rain = [], gusts = [];
+function pickTheme(){ const k = ["notte", "tramonto"]; THEME = k[Math.floor(Math.random() * k.length)]; buildCrowd(); }
 function buildCrowd(){
   const t = TEAMS[teamIdx], { gy, farH, boardH, boardY, roofH } = L, th = THEMES[THEME];
   const c = document.createElement("canvas"); c.width = Math.round(W * DPR); c.height = Math.round(H * DPR);
@@ -635,7 +650,9 @@ function buildCrowd(){
   }
   bg = c; crowdL = cl;
   rain = [];
-  if (THEME === "pioggia") for (let i = 0; i < (LIGHT() ? 50 : 140); i++) rain.push({ x: Math.random() * W, y: Math.random() * H, l: 8 + Math.random() * 12, v: 520 + Math.random() * 280 });
+  for (let i = 0; i < (LIGHT() ? 50 : 140); i++) rain.push({ x: Math.random() * W, y: Math.random() * H, l: 8 + Math.random() * 12, v: 520 + Math.random() * 280 });
+  gusts = [];
+  for (let i = 0; i < (LIGHT() ? 6 : 14); i++) gusts.push({ x: Math.random() * W, y: L.roofH + Math.random() * (L.gy - L.roofH), l: 30 + Math.random() * 60, v: 0.6 + Math.random() * 0.8 });
 }
 
 function view(){
@@ -646,16 +663,47 @@ function view(){
 }
 const S_ = (v, x, y) => ({ x: v.ox + x * v.sc, y: v.gy - y * v.sc });
 
+function windText(w){ return w ? `Vento ${w > 0 ? "a favore" : "contro"} ${Math.round(Math.abs(w))} m/s` : ""; }
+function weatherTurn(){
+  // decide the weather of the shot after this one (the next situation is calibrated with it)
+  if (!G || demo || G.shots < 2) return;
+  const r = Math.random;
+  if (!WX.rain) { if (r() < 0.12) WX.rain = true; } else if (r() < 0.22) WX.rain = false;
+  if (!WX.wind) { if (r() < 0.15) WX.wind = (r() < 0.5 ? -1 : 1) * (2.5 + r() * 3.5); }
+  else if (r() < 0.2) WX.wind = 0;
+  else { const m = clamp(Math.abs(WX.wind) + (r() - 0.5) * 2, 1.5, 6.5); WX.wind = Math.sign(WX.wind) * m; }   // gusts
+}
+let prevWx = { rain: false, wind: 0 };
 function nextShot(){
   setup = takeSetup(); sim = makeState(setup); trail = []; pending = false; netHit = null; kRun = 0; prevKx = null;
   const speed = setup.vk > 6.2 ? "veloce" : setup.vk > 5.3 ? "media" : "lenta";
   const fill = setup.chargeTime < 0.48 ? "rapida" : setup.chargeTime < 0.66 ? "media" : "lenta";
-  $("setupInfo").textContent = `${Math.round(setup.d)} m · Carica ${fill} · ` + (setup.type === "furbo" ? "Portiere furbo: si ferma, finta e riparte forte" : `Portiere classico: esce a velocità ${speed}`);
+  const wx = [setup.rain ? "Pioggia" : "", windText(setup.wind)].filter(Boolean).join(" · ");
+  $("setupInfo").textContent = `${Math.round(setup.d)} m · Carica ${fill} · ` + (setup.type === "furbo" ? "Portiere furbo: si ferma, finta e riparte forte" : `Portiere classico: esce a velocità ${speed}`) + (wx ? " · " + wx : "");
+  if (!demo && G) {
+    const notes = [];
+    if (setup.rain && !prevWx.rain) notes.push(["Inizia a piovere", "Palla pesante: serve più potenza, rimbalza poco"]);
+    if (!setup.rain && prevWx.rain) notes.push(["Smette di piovere", "Il pallone torna leggero"]);
+    if (setup.wind && !prevWx.wind) notes.push(["Si alza il vento", setup.wind > 0 ? "A favore: il pallone vola più lungo" : "Contro: il pallone cade più corto"]);
+    else if (setup.wind && prevWx.wind && Math.sign(setup.wind) !== Math.sign(prevWx.wind)) notes.push(["Il vento gira", setup.wind > 0 ? "Ora è a favore" : "Ora è contro"]);
+    if (!setup.wind && prevWx.wind) notes.push(["Il vento cala", "Si torna a tirare come sempre"]);
+    if (G.curvaNext) { G.curvaNext = false; curva = true; notes.unshift(["Il tiro della curva", "Tutto lo stadio canta per te"]); sfx.chant(6); crowdCheer = performance.now() + 4000; }
+    else curva = false;
+    if (notes.length) showNote(notes[0][0], notes.slice(0, 2).map(n => n === notes[0] ? n[1] : n[0] + ": " + n[1]).join(" · "), curva);
+    prevWx = { rain: !!setup.rain, wind: setup.wind || 0 };
+    weatherTurn();
+  } else curva = false;
   // continuous sequence: the keeper starts coming out (and the power starts rising) as soon as the shot appears
   fingerDown = false;
   phase = "hold";
 }
-let fingerDown = false, kRun = 0, prevKx = null, kMoving = false, crowdCheer = 0, crowdSad = 0;
+let fingerDown = false, kRun = 0, prevKx = null, kMoving = false, crowdCheer = 0, crowdSad = 0, curva = false, rainA = 0, windA = 0, flareT = 0;
+let noteTimer = null;
+function showNote(title, sub, gold){
+  const n = $("wxNote"); n.innerHTML = `<b>${title}</b><small>${sub}</small>`; n.classList.toggle("gold", !!gold);
+  n.hidden = false; void n.offsetWidth; n.classList.add("on");
+  clearTimeout(noteTimer); noteTimer = setTimeout(() => { n.classList.remove("on"); noteTimer = setTimeout(() => { n.hidden = true; }, 400); }, 2600);
+}
 
 // ---------- Leaderboard: shared online when the page can reach its store, local otherwise ----------
 const online = { db: null, user: null, uid: null, docs: [], ready: false, canWrite: null, names: {}, writeFailed: false };
@@ -826,7 +874,9 @@ document.querySelectorAll("[data-rank] .tab").forEach(b => b.addEventListener("c
 // ---------- Flow ----------
 function startGame(){
   stopDemo(); wparts = []; sparts = []; pickTheme();
-  G = { score: 0, lives: C.lives, streak: 0, bestStreak: 0, shots: 0, goals: 0, top: 0, perfect: 0, start: performance.now(), miss: {} };
+  if (WX.rain || WX.wind || (ready && (ready.rain || ready.wind))) { ready = null; gen = null; }
+  WX.rain = false; WX.wind = 0; prevWx = { rain: false, wind: 0 }; curva = false;
+  G = { curvaNext: false, score: 0, lives: C.lives, streak: 0, bestStreak: 0, shots: 0, goals: 0, top: 0, perfect: 0, start: performance.now(), miss: {} };
   $("startScreen").hidden = true; $("overScreen").hidden = true; $("hud").hidden = false; $("info").hidden = false;
   $("coach").hidden = coached;
   lastCharge = null; nextShot(); phase = "ready"; updateHud();
@@ -914,6 +964,8 @@ function resolve(res){
     pop(label, `+${pts}` + (tags.length ? " · " + tags.join(" · ") : ""), zone === 3 || tm.perfect ? "gold" : "goal", tm);
     flashT = 1; buzz([30, 40, 70]); emitCelebration(); crowdCheer = performance.now() + 2200; sfx.roar(zone === 3 || tm.perfect || G.streak >= 5 ? 1 : 0.7);
     if (G.streak >= 5) sfx.chant(G.streak - 4);
+    if (curva) { emitCelebration(); emitCelebration(); flashT = 1.6; crowdCheer = performance.now() + 3500; }
+    if (G.goals % 10 === 0) G.curvaNext = true;
   } else {
     G.lives--; G.streak = 0; crowdSad = performance.now() + 1400;
     G.miss[res.label] = (G.miss[res.label] || 0) + 1;
@@ -1295,10 +1347,21 @@ function drawScene(){
   drawTrail(v);
   drawBall(v);
   drawGoalFront(v);
+  drawFlag(v);
   drawArc(v);
-  if (rain.length) {
-    ctx.strokeStyle = "rgba(200,220,255,.32)"; ctx.lineWidth = 1; ctx.beginPath();
-    for (const d of rain) { ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - d.l * 0.25, d.y + d.l); }
+  if (rainA > 0.01) {
+    ctx.fillStyle = `rgba(20,30,50,${0.22 * rainA})`; ctx.fillRect(0, 0, W, H);
+    const wet = ctx.createLinearGradient(0, v.gy, 0, H); wet.addColorStop(0, `rgba(170,200,230,${0.12 * rainA})`); wet.addColorStop(1, "rgba(170,200,230,0)");
+    ctx.fillStyle = wet; ctx.fillRect(0, v.gy, W, H - v.gy);
+    const slant = 0.25 - (setup.wind || 0) * 0.06;
+    ctx.strokeStyle = `rgba(200,220,255,${0.34 * rainA})`; ctx.lineWidth = 1; ctx.beginPath();
+    for (const d of rain) { ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - d.l * slant, d.y + d.l); }
+    ctx.stroke();
+  }
+  if (windA > 0.01) {
+    ctx.strokeStyle = `rgba(230,238,245,${0.16 * windA})`; ctx.lineWidth = 1.2; ctx.beginPath();
+    const dir = Math.sign(setup.wind || prevWindDir || 1);
+    for (const g of gusts) { ctx.moveTo(g.x, g.y); ctx.lineTo(g.x - dir * g.l, g.y + Math.sin(g.x * 0.02) * 3); }
     ctx.stroke();
   }
   ctx.restore();
@@ -1356,6 +1419,36 @@ function drawGoalFront(v){
   }
 }
 
+// corner flag beside the goal: it hangs limp when calm and streams with the wind (direction and strength)
+let prevWindDir = 1;
+function drawFlag(v){
+  const x = setup.d + 2.3, pole = 1.9, base = S_(v, x, 0), top = S_(v, x, pole);
+  ctx.strokeStyle = "#d9ddd5"; ctx.lineWidth = Math.max(1.5, 0.04 * v.sc);
+  ctx.beginPath(); ctx.moveTo(base.x, base.y); ctx.lineTo(top.x, top.y); ctx.stroke();
+  const w = setup.wind || 0, m = Math.min(1, Math.abs(w) / 6), dir = w ? Math.sign(w) : 1, t = performance.now() / 1000;
+  const len = 0.8 * v.sc, hgt = 0.5 * v.sc, n = 8, ang = (1 - m) * 1.3;   // calm: hangs down; strong wind: flies flat
+  const u = { x: dir * Math.cos(ang), y: Math.sin(ang) }, nn = { x: -u.y * dir, y: u.x * dir };
+  const edge = [];
+  for (let i = 0; i <= n; i++) {
+    const k = i / n, wave = Math.sin(t * (3 + 11 * m) - k * 5) * (0.03 + 0.08 * m) * v.sc * k;
+    edge.push({ x: top.x + u.x * k * len + nn.x * wave, y: top.y + u.y * k * len + nn.y * wave });
+  }
+  ctx.fillStyle = "#ffcf5a"; ctx.beginPath();
+  edge.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+  for (let i = n; i >= 0; i--) { const p = edge[i]; ctx.lineTo(p.x + nn.x * hgt, p.y + nn.y * hgt); }
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "rgba(0,0,0,.18)"; ctx.beginPath();
+  edge.forEach((p, i) => i ? ctx.lineTo(p.x + nn.x * hgt * 0.5, p.y + nn.y * hgt * 0.5) : ctx.moveTo(p.x + nn.x * hgt * 0.5, p.y + nn.y * hgt * 0.5));
+  for (let i = n; i >= 0; i--) { const p = edge[i]; ctx.lineTo(p.x + nn.x * hgt, p.y + nn.y * hgt); }
+  ctx.closePath(); ctx.fill();
+  if (w && !demo) {   // strength label above the flag
+    ctx.font = `800 ${Math.max(13, Math.round(0.42 * v.sc))}px "Barlow Condensed",sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    const lbl = (w > 0 ? "" : "◀ ") + Math.round(Math.abs(w)) + " m/s" + (w > 0 ? " ▶" : "");
+    ctx.fillStyle = "rgba(5,8,14,.6)"; const tw = ctx.measureText(lbl).width;
+    ctx.fillRect(top.x - tw / 2 - 6, top.y - 0.62 * v.sc, tw + 12, 0.5 * v.sc);
+    ctx.fillStyle = w > 0 ? "#7fe0a0" : "#ff9a8a"; ctx.fillText(lbl, top.x, top.y - 0.16 * v.sc);
+  }
+}
 // Player drawn as a filled figure in profile. Coordinates in metres from the feet; dir = facing (+1 right).
 function person(v, x, lift, kit, o){
   const sc = v.sc, dir = o.dir || 1, cr = o.crouch ? 0.88 : 1;
@@ -1451,6 +1544,17 @@ function drawAttacker(v){
   person(v, 0, 0, teamKit(), o);
 }
 function drawTrail(v){
+  if (curva) {
+    const t = TEAMS[teamIdx], c1 = t[1], c2 = t[2] === t[1] ? "#ffffff" : t[2];
+    ctx.save(); ctx.globalCompositeOperation = "lighter";
+    trail.forEach((p, i) => {
+      const k = i / trail.length, q = S_(v, p[0], p[1]), r = Math.max(2.5, (0.06 + 0.16 * k) * v.sc);
+      ctx.globalAlpha = 0.2 + 0.6 * k; ctx.fillStyle = i % 2 ? c1 : c2;
+      ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 7); ctx.fill();
+    });
+    ctx.restore(); ctx.globalAlpha = 1;
+    return;
+  }
   const hot = G && G.streak >= 5;
   if (hot) {
     ctx.save(); ctx.globalCompositeOperation = "lighter";
@@ -1531,10 +1635,10 @@ function afterStep(h){
   if (res.label === "PARATA" || res.label === "RECUPERO" || res.label === "ANTICIPATO") {
     b.x += (sim.kx + 0.25 - b.x) * Math.min(1, h * 18); b.y += (Math.min(1.4, sim.reach - 0.4) - b.y) * Math.min(1, h * 18); return;
   }
-  const sp = Math.hypot(b.vx, b.vy);
-  b.vx += -C.drag * sp * b.vx * h; b.vy += (-C.g - C.drag * sp * b.vy) * h;
+  const sp = Math.hypot(b.vx, b.vy), wet = !!setup.rain, dr = wet ? C.drag * C.rainDrag : C.drag;
+  b.vx += (-dr * sp * b.vx + (b.y > C.r + 0.02 ? C.windK * (setup.wind || 0) : 0)) * h; b.vy += (-C.g - dr * sp * b.vy) * h;
   b.x += b.vx * h; b.y += b.vy * h;
-  if (b.y < C.r) { b.y = C.r; if (b.vy < 0) b.vy = -b.vy * 0.45; b.vx *= 0.99; }
+  if (b.y < C.r) { b.y = C.r; if (b.vy < 0) b.vy = -b.vy * (wet ? C.rainBounce : 0.45); b.vx *= wet ? 0.995 : 0.99; }
   if (res.type === "goal") {
     const back = setup.d + 2 - (b.y / C.goalH) * 1.1;
     if (b.x > back - C.r) { if (!netHit) { netHit = { y: b.y, t: performance.now() }; sfx.net(); } b.x = back - C.r; b.vx = -Math.abs(b.vx) * 0.15; b.vy *= 0.6; }
@@ -1583,7 +1687,12 @@ function frame(now){
   flashT = Math.max(0, flashT - dt * 1.1); shakeT = Math.max(0, shakeT - dt * 3);
   if (!paused) {
     updParts(dt);
-    for (const d of rain) { d.y += d.v * dt; d.x -= d.v * 0.25 * dt; if (d.y > H) { d.y = -20; d.x = Math.random() * (W + 60); } }
+    const wantRain = setup && setup.rain ? 1 : 0, wantWind = setup && setup.wind ? 1 : 0;
+    rainA += (wantRain - rainA) * Math.min(1, dt * 1.5); windA += (wantWind - windA) * Math.min(1, dt * 1.5);
+    if (setup && setup.wind) prevWindDir = Math.sign(setup.wind);
+    if (rainA > 0.01) { const sl = 0.25 - ((setup && setup.wind) || 0) * 0.06; for (const d of rain) { d.y += d.v * dt; d.x -= d.v * sl * dt; if (d.y > H) { d.y = -20; d.x = Math.random() * (W + 120) - 60; } } }
+    if (windA > 0.01) { const sp = Math.abs((setup && setup.wind) || 4) * 90; for (const g of gusts) { g.x += prevWindDir * sp * g.v * dt; if (g.x > W + 100) g.x = -20; if (g.x < -100) g.x = W + 20; } }
+    if (curva && phase !== "after") { flareT -= dt; if (flareT <= 0) { flareT = 0.35; const t = TEAMS[teamIdx]; for (let i = 0; i < 3; i++) sparts.push({ k: "smoke", x: Math.random() * W, y: L.boardY - 6, vx: rr(-10, 10), vy: rr(-30, -14), life: 2.4, max: 2.4, size: rr(14, 24), col: i % 2 ? (t[2] === "#111111" ? "#ffcf5a" : t[2]) : (t[1] === "#f2f2f2" ? "#ffcf5a" : t[1]) }); crowdCheer = performance.now() + 600; } }
   }
   if (sim) {
     if (prevKx != null) { const dx = Math.abs(sim.kx - prevKx); kMoving = dx > 0.004; kRun += dx * 4.2; }
