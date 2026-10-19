@@ -242,7 +242,7 @@ body{-webkit-touch-callout:none}
       <div class="trio"><button class="btn ghost" id="rankBtn" type="button">Classifica</button><button class="btn ghost" id="profileBtn" type="button">Profilo</button><button class="btn ghost" id="settingsBtn" type="button">Impostazioni</button></div>
       <div class="best" id="bestLine"></div>
       <button class="btn ghost small install" id="installBtn" type="button"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Installa l'app</span></button>
-      <div class="hint">Si gioca con il telefono in orizzontale</div>
+      <div class="hint">Si gioca con il telefono in orizzontale · <span id="ver">v5</span></div>
     </div>
   </div>
 </section>
@@ -285,6 +285,7 @@ body{-webkit-touch-callout:none}
     <div class="eyebrow">Installa l'app</div>
     <h1 id="installTitle" style="font-size:clamp(40px,9vw,64px)">Per la Maglia sul telefono</h1>
     <ol class="isteps" id="installSteps"></ol>
+    <p class="note" id="installWhy"></p>
     <p class="note">Una volta installato si apre a schermo intero dalla schermata Home e funziona anche senza connessione.</p>
     <button class="btn ghost" id="installBack" type="button">Indietro</button>
   </div>
@@ -1625,7 +1626,18 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
     function on() { clearTimeout(t); res(window.__bip); }
     window.addEventListener("bipready", on, { once: true });
   });
+  async function why() {
+    const bits = [];
+    try { if (navigator.getInstalledRelatedApps) { const a = await navigator.getInstalledRelatedApps(); bits.push(a.length ? "risulta già installata" : "non installata"); } } catch (e) {}
+    bits.push(navigator.serviceWorker && navigator.serviceWorker.controller ? "sw attivo" : "sw non attivo");
+    bits.push(/Chrome\/(\d+)/.test(ua) ? "Chrome " + RegExp.$1 : "browser non Chrome");
+    if (/SamsungBrowser/.test(ua)) bits.push("Samsung Internet");
+    if (/; wv\)/.test(ua)) bits.push("browser interno");
+    bits.push("v5");
+    document.getElementById("installWhy").textContent = "Diagnosi: " + bits.join(" · ");
+  }
   function sheet(t, list) {
+    why();
     title.textContent = t;
     steps.innerHTML = list.map(x => "<li>" + x + "</li>").join("");
     start.hidden = true; scr.hidden = false;
