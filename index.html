@@ -144,6 +144,7 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .trio .btn{font-size:17px;padding:11px 6px}
 .btn.small{font-size:16px;padding:9px}
+.btn.home{display:flex;align-items:center;justify-content:center;gap:10px}
 .install{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border-color:rgba(255,194,75,.55);color:var(--amber)}
 .install svg{flex:none}
 .install.go{animation:pulse 1.2s ease-in-out infinite;background:rgba(255,194,75,.14)}
@@ -178,6 +179,9 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 body.cb .pop.miss .big{color:#4aa3ff}
 body.cb .rrow.me,body.cb .chip[aria-pressed="true"]{outline:2px dashed var(--amber);outline-offset:-2px}
 body{-webkit-touch-callout:none}
+html,body{overscroll-behavior:none}
+body{position:fixed;inset:0;touch-action:none}
+.screen{touch-action:pan-y;overscroll-behavior:contain}
 .lvbar{height:10px;border-radius:999px;background:rgba(238,242,234,.1);overflow:hidden}
 .lvbar i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#ffc24b,#ff9a3c);transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
 @media (orientation:landscape) and (min-width:560px){
@@ -343,7 +347,7 @@ body{-webkit-touch-callout:none}
         <div class="note rstatus"></div>
       </div>
       <button class="btn" id="againBtn" type="button">Rigioca</button>
-      <button class="btn ghost" id="menuBtn" type="button">Cambia squadra</button>
+      <button class="btn ghost home" id="menuBtn" type="button"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h5v-6h3v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Home</span></button>
     </div>
   </div>
 </section>
@@ -357,7 +361,7 @@ const C = {
   elevMin: 38, elevMax: 64, elevDef: 50,   // degrees; drag up = higher arc
   slowScale: 0.3, slowDur: 0.55, perfect: 0.015,
   kDecel: 9, kReact: 0.12, reachStand: 2.1, jumpAdd: 0.55, jumpDur: 0.5, kBack: 5.2,
-  windowMin: 0.145, windowMax: 0.175,   // every situation has a good release window of 145–175 ms
+  windowMin: 0.17, windowMax: 0.21,   // every situation has a good release window of 170–210 ms
   topY: 1.65, closeGap: 4.0,
   lives: 3, H: 1/240
 };
@@ -482,7 +486,7 @@ function* setupGen(){
     const target = C.windowMin + Math.random() * (C.windowMax - C.windowMin);
     const wc1 = bestWindowCharge(st, 0.3); yield null;
     if (wc1 <= 0) continue;
-    st.chargeTime = clamp(target / wc1, 0.3, 0.95);
+    st.chargeTime = clamp(target / wc1, 0.35, 0.95);
     const ms = bestWindowCharge(st, st.chargeTime) * st.chargeTime; yield null;
     if (ms >= C.windowMin && ms <= C.windowMax) { yield st; return; }
   }
