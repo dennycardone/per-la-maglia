@@ -1671,7 +1671,7 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
       if (bip) { ready(); return; }
       btn.classList.remove("go"); label.textContent = "Installa l'app";
       // Chrome stays silent when the game is already installed on this phone
-      sheet("È già installata", ["Trovi <b>Per la Maglia</b> tra le tue app: aprila da lì per giocare a schermo intero."]);
+      sheet("Riprova tra poco", ["Chrome non ha ancora dato il via libera: chiudi e riapri la pagina, poi tocca di nuovo <b>Installa l'app</b>."]);
       return;
     }
     if (android && !fromChrome) {
