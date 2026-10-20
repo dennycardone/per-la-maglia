@@ -213,6 +213,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
   background:rgba(8,12,20,.97);border-top:1px solid rgba(255,194,75,.35);box-shadow:0 -10px 30px rgba(0,0,0,.5);touch-action:none}
 .kbd-top{display:flex;align-items:baseline;gap:12px;max-width:760px;margin:0 auto 6px;padding:0 4px}
 .kbd-label{font-family:var(--label);font-weight:700;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.kbd-label.warn{color:#ff8a7e}
 .kbd-text{flex:1;font-family:var(--display);font-weight:900;font-size:24px;line-height:1;color:var(--amber);min-height:24px}
 .kbd-text::after{content:"";display:inline-block;width:2px;height:20px;margin-left:2px;background:var(--amber);vertical-align:-2px;animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
@@ -225,6 +226,10 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 .key.k-space{flex:5 1 0;max-width:340px;font-size:14px}
 .key.k-ok{flex:2 1 0;max-width:140px;background:var(--amber);color:#1a1205;font-family:var(--display);font-weight:900}
 .nick.editing{border-color:var(--amber);background:rgba(255,194,75,.08)}
+.nick.need:not(.editing){border-color:#ff6b5e}
+.nick.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.btn.warn{background:#ff6b5e;color:#1a0605;font-size:20px}
 .rback{appearance:none;border:0;background:none;color:var(--amber);font-family:var(--label);font-weight:700;font-size:13px;letter-spacing:.06em;text-align:left;padding:2px 8px 6px;cursor:pointer}
 .rhead .eyebrow{font-size:15px}
 .rfoot{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline}
@@ -1311,13 +1316,25 @@ function kbdPress(k){
   store.set("cucchiaio.nick", cleanNick(KB.val));
   kbdRender();
 }
-function kbdOpen(){ if (!$("kbd").hidden) return; KB.armAt = performance.now() + 350; KB.down = null; KB.val = $("nickInput").value || ""; KB.up = !KB.val; $("kbd").hidden = false; $("nickInput").classList.add("editing"); kbdRender(); }
-function kbdClose(){ $("kbd").hidden = true; $("nickInput").classList.remove("editing"); $("nickInput").value = cleanNick(KB.val); store.set("cucchiaio.nick", cleanNick(KB.val)); renderRanks(); srvProfile(); }
+function kbdOpen(why){ if (!$("kbd").hidden) return;
+  const lab = document.querySelector("#kbd .kbd-label"); lab.textContent = why ? "Per giocare scegli prima il tuo soprannome" : "Il tuo soprannome"; lab.classList.toggle("warn", !!why); KB.armAt = performance.now() + 350; KB.down = null; KB.val = $("nickInput").value || ""; KB.up = !KB.val; $("kbd").hidden = false; $("nickInput").classList.add("editing"); kbdRender(); }
+function kbdClose(){ if (cleanNick(KB.val).length >= 2) $("nickInput").classList.remove("need"); $("kbd").hidden = true; $("nickInput").classList.remove("editing"); $("nickInput").value = cleanNick(KB.val); store.set("cucchiaio.nick", cleanNick(KB.val)); renderRanks(); srvProfile(); }
 $("nickInput").addEventListener("pointerdown", e => { e.preventDefault(); });
-$("nickInput").addEventListener("click", e => { e.preventDefault(); kbdOpen(); });   // opens when the finger lifts, so the same touch can never hit a key
-$("nickInput").addEventListener("focus", e => { e.target.blur(); kbdOpen(); });
+$("nickInput").addEventListener("click", e => { e.preventDefault(); kbdOpen(false); });   // opens when the finger lifts, so the same touch can never hit a key
+$("nickInput").addEventListener("focus", e => { e.target.blur(); kbdOpen(false); });
 document.addEventListener("pointerdown", e => { if (!$("kbd").hidden && !e.target.closest("#kbd") && e.target.id !== "nickInput") kbdClose(); }, true);
-$("playBtn").onclick = startGame;
+// you play under a nickname: without one the match does not start
+let needNickTimer = null;
+$("playBtn").onclick = () => {
+  if (cleanNick(store.get("cucchiaio.nick", "")).length >= 2) return startGame();
+  const b = $("playBtn"), inp = $("nickInput");
+  b.textContent = "Prima scrivi il tuo soprannome"; b.classList.add("warn");
+  inp.classList.remove("shake"); void inp.offsetWidth; inp.classList.add("shake", "need");
+  buzz([40, 60, 40]);
+  clearTimeout(needNickTimer);
+  needNickTimer = setTimeout(() => { b.classList.remove("warn"); b.textContent = "Gioca " + sq(TEAMS[teamIdx][0], "per"); }, 2200);
+  setTimeout(() => kbdOpen(true), 250);
+};
 $("againBtn").onclick = startGame;
 $("pauseBtn").onclick = pauseGame;
 $("resumeBtn").onclick = resumeGame;
