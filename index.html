@@ -146,6 +146,7 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .lvline{display:flex;justify-content:space-between;gap:12px;font-family:var(--label);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
 .lvline span:last-child{color:var(--mute);font-weight:600}
 /* ---------- Home: curva with choreography up top, flares rising from below ---------- */
+#overScreen.over{--c1:#ffc24b;--c2:#111827;--s1:rgba(255,194,75,.8);--s2:rgba(255,255,255,.6);--ttl:#ffc24b}
 #startScreen.home{display:block;padding:0;background:#05080e;-webkit-backdrop-filter:none;backdrop-filter:none;--c1:#ffc24b;--c2:#111827;--s1:rgba(255,194,75,.8);--s2:rgba(255,255,255,.6);--ttl:#ffc24b}
 .hbg{position:absolute;inset:0;overflow:hidden}
 .coreo{position:absolute;left:-30px;right:-30px;top:-20px;height:58%;background:radial-gradient(circle,rgba(255,255,255,.5) 1.2px,transparent 1.7px) 0 0/7px 7px,repeating-linear-gradient(180deg,var(--c1) 0 34px,var(--c2) 34px 68px);
@@ -166,6 +167,61 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .hdim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,8,14,.55),rgba(5,8,14,0) 22%,rgba(5,8,14,.08) 62%,rgba(5,8,14,.88))}
 .light .puffs i:nth-child(n+5){display:none}
 @media (prefers-reduced-motion:reduce){.puffs i,.coreo{animation:none!important}}
+.comp{position:absolute;left:max(12px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 10px);z-index:6;appearance:none;display:flex;align-items:center;gap:8px;height:38px;padding:0 12px 0 9px;border-radius:999px;background:rgba(5,8,14,.85);border:1.5px solid var(--amber);font-family:var(--label);font-weight:700;font-size:15px;color:var(--amber);cursor:pointer}
+.comp small{color:var(--mute);font-size:12px;letter-spacing:.06em}
+.rail{position:absolute;right:max(10px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 8px);bottom:100px;display:flex;flex-direction:column;gap:5px;z-index:3}
+.rb{appearance:none;flex:1;max-height:46px;min-height:30px;width:74px;border-radius:11px;background:rgba(5,8,14,.82);border:1px solid rgba(238,242,234,.22);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-family:var(--label);font-weight:700;font-size:11px;color:var(--chalk);cursor:pointer;padding:0}
+.rb.inst{border-color:rgba(255,194,75,.6);color:var(--amber)}
+.rb.inst.go{animation:pulse 1.2s ease-in-out infinite;background:rgba(255,194,75,.14)}
+/* ---------- End of match ---------- */
+#overScreen.over{display:block;padding:0;background:#05080e;-webkit-backdrop-filter:none;backdrop-filter:none}
+.odim{background:linear-gradient(180deg,rgba(5,8,14,.25),rgba(5,8,14,.62) 40%,rgba(5,8,14,.92))!important}
+.ovwrap{position:absolute;inset:calc(env(safe-area-inset-top,0px) + 12px) max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 12px) max(16px,env(safe-area-inset-left,0px));display:grid;grid-template-columns:1.15fr 1fr;gap:16px;align-items:center;align-content:center}
+.ovl{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0}
+.oveb{font-family:var(--label);font-weight:700;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#e7eef2;text-shadow:0 2px 8px #000}
+.ovbig{font-family:var(--display);font-weight:900;font-size:clamp(56px,11vw,90px);line-height:.85;color:#fff;-webkit-text-stroke:3px var(--ttl);paint-order:stroke fill;text-shadow:0 6px 24px rgba(0,0,0,.7);font-variant-numeric:tabular-nums}
+.ovline{font-family:var(--display);font-weight:900;font-size:clamp(17px,2.8vw,23px);color:#fff;text-shadow:0 3px 12px #000;text-align:center}
+.ovline b{color:var(--amber)}
+.say{appearance:none;width:100%;margin-top:4px;display:flex;gap:8px;align-items:center;padding:6px 6px 6px 12px;border-radius:12px;background:rgba(5,8,14,.85);border:1.5px solid rgba(255,194,75,.6);color:var(--chalk);text-align:left;cursor:pointer}
+.say .ic{font-size:16px}
+.say .in{flex:1;min-width:0;font-family:var(--label);font-weight:600;font-size:14px;color:#cfd8d1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.say .in small{display:block;font-size:11px;color:#6f7d76}
+.say .go{padding:7px 12px;border-radius:8px;background:var(--amber);color:#1a1205;font-family:var(--label);font-weight:800;font-size:13px}
+.say.sent{border-color:rgba(127,224,160,.6);cursor:default}.say.sent .go{background:#7fe0a0}
+.say.empty .in #sayText{color:#93a39b}
+.ovbtns{display:flex;gap:8px;width:100%}
+.ovbtns #againBtn{flex:1;height:50px;font-size:28px}
+.ovbtns #menuBtn{width:110px;font-size:16px;padding:0}
+.ovtbl{border-radius:12px;background:rgba(5,8,14,.82);border:1px solid rgba(238,242,234,.14);padding:6px 8px;min-width:0}
+.ovh{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--label);font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);padding:2px 6px 5px}
+.ovsf{appearance:none;display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:999px;border:1px solid rgba(255,194,75,.55);background:none;color:var(--amber);font-family:var(--label);font-weight:700;font-size:12px;letter-spacing:.04em;cursor:pointer;white-space:nowrap}
+.orow{display:grid;grid-template-columns:20px 10px minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px 6px;border-radius:6px;font-family:var(--label);font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
+.orow i{width:9px;height:9px;border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
+.orow .p{color:var(--mute);text-align:right}
+.orow.me{background:rgba(255,194,75,.15);color:var(--amber)}
+.orow .up{color:#7fe0a0;font-size:12px;margin-left:5px}
+@media (orientation:portrait){.ovwrap{grid-template-columns:1fr;align-content:center}}
+.tlist{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;align-content:start;max-height:calc(100vh - 110px);overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain}
+.tmsg{display:grid;grid-template-columns:10px 1fr;gap:8px;padding:7px 10px;border-radius:10px;background:rgba(238,242,234,.05);border:1px solid rgba(238,242,234,.08)}
+.tmsg.me{border-color:rgba(255,194,75,.45);background:rgba(255,194,75,.08)}
+.tmsg i{width:10px;height:10px;border-radius:50%;margin-top:4px;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
+.tmsg .th{display:flex;gap:8px;align-items:baseline;font-family:var(--label);font-size:13px}
+.tmsg .th b{color:var(--chalk);font-weight:700}
+.tmsg .tt{color:var(--mute);font-size:12px}
+.tmsg .ta{margin-left:auto;color:#6f7d76;font-size:11px}
+.tmsg .tx{margin-top:2px;font-size:15px;line-height:1.3;color:#e7eef2;word-break:break-word}
+.tlist .rempty{grid-column:1 / -1}
+@media (orientation:portrait){.tlist{grid-template-columns:1fr}}
+.compVeil{position:absolute;inset:0;background:rgba(5,8,14,.5);z-index:7}
+.compSheet{position:absolute;left:max(12px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 54px);width:min(420px,calc(100vw - 110px));max-height:calc(100% - 70px);overflow-y:auto;padding:10px;border-radius:14px;background:rgba(8,12,20,.97);border:1.5px solid rgba(255,194,75,.5);box-shadow:0 14px 40px rgba(0,0,0,.7);z-index:8;touch-action:pan-y}
+.csh{font-family:var(--label);font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin:2px 4px 6px}
+.nat{display:grid;grid-template-columns:118px 1fr;gap:8px;align-items:center;padding:6px 4px;border-bottom:1px solid rgba(238,242,234,.08);font-family:var(--label);font-weight:700;font-size:14px}
+.nat:last-child{border-bottom:0}
+.nat .n{display:flex;align-items:center;gap:7px}
+.divs{display:flex;gap:5px;flex-wrap:wrap}
+.dv{appearance:none;white-space:nowrap;padding:4px 10px;border-radius:999px;border:1px solid rgba(238,242,234,.22);background:none;font-family:var(--label);font-weight:700;font-size:12px;color:#cfd8d1;cursor:pointer}
+.dv[aria-pressed="true"]{border-color:var(--amber);background:rgba(255,194,75,.18);color:var(--amber)}
+.dv:disabled{opacity:.42;cursor:default}
 .htop{position:absolute;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;gap:8px;align-items:center;z-index:2}
 .leagues{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;touch-action:pan-x}
 .leagues::-webkit-scrollbar{display:none}
@@ -184,10 +240,10 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .hico span{font-size:13px;letter-spacing:.04em}
 #installBtn{border-color:rgba(255,194,75,.6);color:var(--amber)}
 #installBtn.go{animation:pulse 1.2s ease-in-out infinite;background:rgba(255,194,75,.14)}
-.champ{position:absolute;left:max(12px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 54px);z-index:2;width:auto!important;max-width:46vw;padding:5px 10px!important;font-size:12px!important;gap:6px!important}
+.champ{position:absolute;left:max(12px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 56px);z-index:2;width:auto!important;max-width:46vw;padding:5px 10px!important;font-size:12px!important;gap:6px!important}
 .champ .cup{font-size:16px!important}
 .champ small{font-size:11px!important}
-.hcenter{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 58px);bottom:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:1;padding:0 16px}
+.hcenter{position:absolute;left:86px;right:86px;top:calc(env(safe-area-inset-top,0px) + 58px);bottom:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:1;padding:0 16px}
 .who{appearance:none;border:0;background:none;cursor:pointer;font-family:var(--label);font-weight:700;font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:#e7eef2;text-shadow:0 2px 8px #000;padding:2px 8px;border-radius:6px}
 .who b{color:var(--amber)}
 .who .pen{opacity:.7;letter-spacing:0;margin-left:4px}
@@ -206,7 +262,7 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .bj{flex:none;width:76px;padding:6px 0 5px;border-radius:10px;background:rgba(5,8,14,.75);border:1px solid rgba(238,242,234,.16);display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--chalk);font-family:var(--label);font-weight:700;font-size:12px;cursor:pointer;appearance:none;transition:transform .2s}
 .bj[aria-pressed="true"]{border:2px solid var(--amber);background:rgba(255,194,75,.16);color:var(--amber);transform:translateY(-6px)}
 .home.none .bj{box-shadow:0 0 0 1px rgba(255,194,75,.35)}
-@media (orientation:portrait){.htop{flex-wrap:wrap}.leagues{order:2;flex-basis:100%}.champ{top:calc(env(safe-area-inset-top,0px) + 96px);max-width:90vw}.hcenter{top:150px}.hico span{display:none}}
+@media (orientation:portrait){.hcenter{left:0;right:84px;top:110px}.champ{max-width:60vw}}
 .trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .trio .btn{font-size:17px;padding:11px 6px}
 .btn.small{font-size:16px;padding:9px}
@@ -391,15 +447,17 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
     <div class="puffs"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <div class="beams"></div><div class="hdim"></div>
   </div>
-  <div class="htop">
-    <div class="leagues" id="leagues"></div>
-    <div class="hicons">
-      <button class="hico" id="installBtn" type="button" aria-label="Installa l'app"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Installa l'app</span></button>
-      <button class="hico" id="rankBtn" type="button" aria-label="Classifica">🏆</button>
-      <button class="hico" id="profileBtn" type="button" aria-label="Profilo">👤</button>
-      <button class="hico" id="settingsBtn" type="button" aria-label="Impostazioni">⚙️</button>
-    </div>
+  <button class="comp" id="compBtn" type="button"><span class="flag f-it" id="compFlag"></span><span id="compName">Italia · Serie A</span> <small>▾ cambia</small></button>
+  <div class="rail">
+    <button class="rb" id="rankBtn" type="button"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 20V13h4v7M10 20V8h4v12M16 20v-9h4v9M3 20h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Classifica</span></button>
+    <button class="rb" id="histHomeBtn" type="button"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8M10 17h4v3h-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Albo d'oro</span></button>
+    <button class="rb" id="tauntBtn" type="button"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Sfottò</span></button>
+    <button class="rb" id="profileBtn" type="button"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Profilo</span></button>
+    <button class="rb" id="settingsBtn" type="button"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Opzioni</span></button>
+    <button class="rb inst" id="installBtn" type="button"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Installa</span></button>
   </div>
+  <div class="compVeil" id="compVeil" hidden></div>
+  <div class="compSheet" id="compSheet" hidden><div class="csh">Scegli il campionato</div><div id="compList"></div></div>
   <button class="champ" id="champ" type="button" hidden></button>
   <div class="hcenter">
     <button class="who" id="nickBtn" type="button"></button>
@@ -426,6 +484,16 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
     </div>
     <div class="rlist"></div>
     <div class="rfoot"><span class="note rstatus"></span></div>
+  </div>
+</section>
+
+<section class="screen" id="tauntScreen" hidden>
+  <div class="panel wide">
+    <div class="rhead">
+      <div class="rh1"><div class="eyebrow"><span id="tauntTitle">Sfottò</span></div><div class="note rhint">Una frase per partita, scritta a fine partita. Niente parolacce.</div></div>
+      <button class="btn ghost small" id="tauntBack" type="button">Indietro</button>
+    </div>
+    <div class="tlist" id="tauntList"></div>
   </div>
 </section>
 
@@ -496,26 +564,26 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
   </div>
 </section>
 
-<section class="screen" id="overScreen" hidden>
-  <div class="panel">
-    <div class="col">
-      <div class="eyebrow">Fine partita</div>
-      <div class="final" id="finalScore">0</div>
-      <div class="contrib" id="contrib"></div>
-      <div class="overtake" id="overtake" hidden></div>
-      <div class="contribBar" id="contribBar" hidden><div class="cbHead"><span id="cbLabel"></span><span id="cbPct"></span></div><div class="lvbar"><i id="cbFill"></i></div></div>
-      <div class="stats" id="stats"></div>
+<section class="screen over" id="overScreen" hidden>
+  <div class="hbg" aria-hidden="true">
+    <div class="coreo"></div><div class="coreoWord" id="overWord"></div>
+    <div class="puffs"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="hdim odim"></div>
+  </div>
+  <div class="ovwrap">
+    <div class="ovl">
+      <div class="oveb" id="overEb"></div>
+      <div class="ovbig" id="finalScore">0</div>
+      <div class="ovline" id="overLine"></div>
+      <button class="say" id="sayBtn" type="button"><span class="ic">📣</span><span class="in"><span id="sayText">Scrivi il tuo sfottò…</span><small id="sayHint">Una frase per partita · max 80 caratteri</small></span><span class="go" id="sayGo">INVIA</span></button>
+      <div class="ovbtns"><button class="btn" id="againBtn" type="button">RIGIOCA</button><button class="btn ghost home" id="menuBtn" type="button"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h5v-6h3v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Home</span></button></div>
     </div>
-    <div class="col">
-      <div class="label">Classifica</div>
-      <div class="rank" data-rank data-tab="teams">
-        <div class="rlist"></div>
-        <div class="note rstatus"></div>
-      </div>
-      <button class="btn" id="againBtn" type="button">Rigioca</button>
-      <button class="btn ghost home" id="menuBtn" type="button"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h5v-6h3v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Home</span></button>
+    <div class="ovtbl">
+      <div class="ovh"><span id="overTblTitle">Classifica</span><button class="ovsf" id="overTaunts" type="button">📣 Sfottò</button></div>
+      <div id="overTbl"></div>
     </div>
   </div>
+  <div hidden><div id="contrib"></div><div id="overtake"></div><div id="contribBar"><span id="cbLabel"></span><span id="cbPct"></span><i id="cbFill"></i></div><div id="stats"></div></div>
 </section>
 
 <script>
@@ -622,7 +690,13 @@ I18N.en = {
   "Piccoli colpi al tiro e al gol.": "Small taps on shots and goals.", "Non disponibile su questo telefono (per esempio su iPhone).": "Not available on this phone (for example on iPhone).",
   "Grafica leggera": "Light graphics", "Meno effetti e risoluzione ridotta, per telefoni meno potenti.": "Fewer effects and lower resolution, for less powerful phones.",
   "Colori per daltonici": "Colour-blind colours", "Errori in blu invece che in rosso e contorni più marcati sulla tua squadra.": "Misses in blue instead of red and stronger outlines on your team.",
-  "Sì": "On", "No": "Off", "Valore dei tiri": "Shot values", " è {n}° in classifica questa settimana": " is #{n} in the table this week", "GIOCA": "PLAY", "Prima scegli la squadra": "Pick your team first", "presto": "soon",
+  "Sì": "On", "No": "Off", "Valore dei tiri": "Shot values", "Il tuo sfottò": "Your banter", "Questa frase non si può scrivere: niente parolacce": "You can't write that: no bad words",
+  "Soprannome non ammesso: niente parolacce": "Nickname not allowed: no bad words", "Scrivi il tuo sfottò…": "Write your banter…", "Inviato alla curva": "Sent to the stand",
+  "Una frase per partita · max 80 caratteri": "One line per game · max 80 characters", "INVIA": "SEND", "RIGIOCA": "PLAY AGAIN", "Fine partita": "Full time",
+  "Ancora nessuno sfottò questa settimana. Il primo puoi scriverlo tu, alla fine di una partita.": "No banter yet this week. You can write the first one at the end of a game.",
+  "{n} min fa": "{n} min ago", "{n} h fa": "{n} h ago", "{n} g fa": "{n} d ago", "Una frase per partita, scritta a fine partita. Niente parolacce.": "One line per game, written at full time. No bad words.", "{t}": "for {t}", "ora {n}° ⬆": "now #{n} ⬆", "{n}° in classifica": "#{n} in the table",
+  "Italia": "Italy", "Inghilterra": "England", "Spagna": "Spain", "Germania": "Germany", "Francia": "France", "Scegli il campionato": "Choose the league",
+  "Opzioni": "Options", "Installa": "Install", "Attendi…": "Wait…", "Sfottò": "Banter", "📣 Sfottò": "📣 Banter", " è {n}° in classifica questa settimana": " is #{n} in the table this week", "GIOCA": "PLAY", "Prima scegli la squadra": "Pick your team first", "presto": "soon",
   "Ciao {n}": "Hi {n}", "Benvenuto, tifoso": "Welcome, fan", "↓ Scegli la tua squadra per iniziare ↓": "↓ Pick your team to start ↓",
   "20 tifoserie di Serie A si sfidano ogni settimana · ": "20 Serie A fan bases compete every week · ", "la tua manca": "yours is missing", "Lingua": "Language", "La lingua di tutto il gioco.": "The language of the whole game.",
   "Numero di maglia": "Shirt number", "Il numero del tuo giocatore in campo.": "Your player's number on the pitch.",
@@ -640,6 +714,7 @@ function tr(text, vars){
   if (vars) o = o.replace(/\{(\w+)\}/g, (m, k) => vars[k] != null ? vars[k] : m);
   return o;
 }
+window.tr = tr;
 const LIGHT = () => SET.quality === "leggera";
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 const cv = $("cv"), ctx = cv.getContext("2d");
@@ -1097,8 +1172,11 @@ async function srvFlush(){
   const queue = store.get("pm.queue", []);
   while (queue.length) {
     try {
-      if (srv.legacy) { const b = Object.assign({}, queue[0]); delete b.p_league; await sb("rpc/submit_game", { body: b }); }
-      else await sb("rpc/submit_game_v2", { body: queue[0] });
+      const b = Object.assign({}, queue[0]), gid = b._gid; delete b._gid;
+      let id;
+      if (srv.legacy) { delete b.p_league; id = await sb("rpc/submit_game", { body: b }); }
+      else id = await sb("rpc/submit_game_v2", { body: b });
+      if (gid && id) { const m = store.get("pm.gameIds", {}); m[gid] = id; const keys = Object.keys(m); if (keys.length > 30) delete m[keys[0]]; store.set("pm.gameIds", m); }
     }
     catch (e) { if (/^4\d\d/.test(e.message) && !/too fast/.test(e.message)) queue.shift(); else break; store.set("pm.queue", queue); continue; }
     queue.shift(); store.set("pm.queue", queue);
@@ -1106,7 +1184,7 @@ async function srvFlush(){
 }
 function srvSubmit(team, g, dur){
   const q = store.get("pm.queue", []);
-  q.push({ p_league: LEAGUE, p_team: team, p_score: g.score, p_shots: g.shots, p_goals: g.goals, p_perfect: g.perfect, p_top: g.top, p_best_streak: g.bestStreak,
+  q.push({ _gid: g.localId, p_league: LEAGUE, p_team: team, p_score: g.score, p_shots: g.shots, p_goals: g.goals, p_perfect: g.perfect, p_top: g.top, p_best_streak: g.bestStreak,
            p_duration: Math.round(dur * 10) / 10, p_nick: cleanNick(store.get("cucchiaio.nick", "")) || "Tifoso" });
   store.set("pm.queue", q.slice(-20));
   srvFlush().then(srvLoad);
@@ -1381,7 +1459,7 @@ function startGame(){
   stopDemo(); wparts = []; sparts = []; pickTheme();
   if (WX.rain || WX.wind || (ready && (ready.rain || ready.wind))) { ready = null; gen = null; }
   WX.rain = false; WX.wind = 0; prevWx = { rain: false, wind: 0 };
-  G = { score: 0, lives: C.lives, streak: 0, bestStreak: 0, shots: 0, goals: 0, top: 0, perfect: 0, start: performance.now(), miss: {} };
+  G = { localId: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), score: 0, lives: C.lives, streak: 0, bestStreak: 0, shots: 0, goals: 0, top: 0, perfect: 0, start: performance.now(), miss: {} };
   $("startScreen").hidden = true; $("overScreen").hidden = true; $("hud").hidden = false; $("info").hidden = false;
   $("coach").hidden = true;
   G.practice = !store.get("cucchiaio.tutorialDone", false);
@@ -1554,7 +1632,16 @@ function gameOver(){
   const newStats = addStats(store.get("cucchiaio.stats", EMPTY_STATS), G); store.set("cucchiaio.stats", newStats);
   const ts = store.get("cucchiaio.teamStats", {}); ts[t[0]] = addStats(ts[t[0]] || EMPTY_STATS, G); store.set("cucchiaio.teamStats", ts);
   const nl = levelOf(newStats.points);
-  countUp($("finalScore"), G.score);
+  countUp($("finalScore"), G.score, "+");
+  homeTheme();
+  const nick = cleanNick(store.get("cucchiaio.nick", ""));
+  $("overEb").textContent = (nick ? nick + " · N° " + (SET.num || 10) + " · " : "") + tr("Fine partita");
+  const pos = posA + 1;
+  $("overLine").innerHTML = "";
+  $("overLine").append(document.createTextNode(tr("{t}", { t: sq(t[0], "per") }) + " · "));
+  const lb = document.createElement("b"); lb.textContent = posA < posB && G.score > 0 ? tr("ora {n}° ⬆", { n: pos }) : tr("{n}° in classifica", { n: pos }); $("overLine").appendChild(lb);
+  renderOverTable(after, posA, posB);
+  resetSay();
   // contribution to the team this week (shared table only)
   const cb = $("contribBar");
   if (sharedMode()) {
@@ -1581,11 +1668,27 @@ function gameOver(){
   hidePop(); $("hud").hidden = true; $("info").hidden = true; $("overScreen").hidden = false;
   setTimeout(() => { if (phase === "over" || phase === "after") startDemo(); }, 900);
 }
-function countUp(el, to){
+// the table at the end: seven teams around yours, with how many places it climbed
+function renderOverTable(rows, posA, posB){
+  const box = $("overTbl"); box.textContent = "";
+  $("overTblTitle").textContent = tr("Classifica") + " " + leagueName() + " · " + seasonLabel(seasonId()).split(" · ")[0];
+  const start = Math.max(0, Math.min(rows.length - 7, posA - 3)), mine = TEAMS[teamIdx][0];
+  rows.slice(start, start + 7).forEach((x, k) => {
+    const r = document.createElement("div"), i = start + k; r.className = "orow" + (x.name === mine ? " me" : "");
+    r.innerHTML = `<span class="p">${i + 1}</span><i></i><span class="nm"></span><span class="pt"></span>`;
+    r.querySelector("i").style.background = x.color;
+    r.querySelector(".nm").textContent = x.name;
+    if (x.name === mine && posB > posA) { const u = document.createElement("span"); u.className = "up"; u.textContent = "▲" + (posB - posA); r.querySelector(".nm").appendChild(u); }
+    r.querySelector(".pt").textContent = x.pts.toLocaleString(LOC());
+    box.appendChild(r);
+  });
+}
+function leagueName(){ for (const n of NATIONS) for (const d of n.divs) if (d[0] === LEAGUE) return d[1]; return ""; }
+function countUp(el, to, prefix = ""){
   const t0 = performance.now(), dur = Math.min(1600, 500 + to / 4);
   const step = now => {
     const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
-    el.textContent = Math.round(to * e).toLocaleString(LOC());
+    el.textContent = prefix + Math.round(to * e).toLocaleString(LOC());
     if (k < 1) requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
@@ -1653,31 +1756,52 @@ function renderHome(){
   else txt = tr(" è {n}° in classifica questa settimana", { n: i + 1 });
   el.appendChild(document.createTextNode(txt));
 }
-const LEAGUES = [["serie-a", "Serie A", "f-it", true], ["premier", "Premier", "f-en", false], ["laliga", "LaLiga", "f-es", false], ["bundesliga", "Bundesliga", "f-de", false], ["ligue1", "Ligue 1", "f-fr", false]];
+// competitions by nation, each with its divisions (a new one only needs "open": true and its teams)
+const NATIONS = [
+  { nat: "Italia", flag: "f-it", divs: [["serie-a", "Serie A", true], ["serie-b", "Serie B", false], ["serie-c", "Serie C", false]] },
+  { nat: "Inghilterra", flag: "f-en", divs: [["premier", "Premier League", false], ["championship", "Championship", false]] },
+  { nat: "Spagna", flag: "f-es", divs: [["laliga", "LaLiga", false], ["segunda", "Segunda", false]] },
+  { nat: "Germania", flag: "f-de", divs: [["bundesliga", "Bundesliga", false], ["bundesliga2", "2. Bundesliga", false]] },
+  { nat: "Francia", flag: "f-fr", divs: [["ligue1", "Ligue 1", false], ["ligue2", "Ligue 2", false]] }
+];
 function renderLeagues(){
-  const box = $("leagues"); if (!box) return; box.textContent = "";
-  LEAGUES.forEach(([id, name, flag, open]) => {
-    const b = document.createElement("button"); b.type = "button"; b.className = "lgb"; b.disabled = !open;
-    b.setAttribute("aria-pressed", id === LEAGUE ? "true" : "false");
-    b.innerHTML = `<span class="flag ${flag}"></span>${name}` + (open ? "" : ` <small>${tr("presto")}</small>`);
-    box.appendChild(b);
+  const cur = NATIONS.map(n => ({ n, d: n.divs.find(d => d[0] === LEAGUE) })).find(x => x.d);
+  if (cur && $("compName")) { $("compName").textContent = tr(cur.n.nat) + " · " + cur.d[1]; $("compFlag").className = "flag " + cur.n.flag; }
+  const box = $("compList"); if (!box) return; box.textContent = "";
+  NATIONS.forEach(n => {
+    const row = document.createElement("div"); row.className = "nat";
+    row.innerHTML = `<span class="n"><span class="flag ${n.flag}"></span></span><span class="divs"></span>`;
+    row.querySelector(".n").append(tr(n.nat));
+    n.divs.forEach(([id, name, open]) => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "dv"; b.disabled = !open;
+      b.setAttribute("aria-pressed", id === LEAGUE ? "true" : "false");
+      b.textContent = name + (open ? "" : " · " + tr("presto"));
+      b.onclick = () => closeComp();
+      row.querySelector(".divs").appendChild(b);
+    });
+    box.appendChild(row);
   });
 }
+function openComp(){ renderLeagues(); $("compVeil").hidden = false; $("compSheet").hidden = false; }
+function closeComp(){ $("compVeil").hidden = true; $("compSheet").hidden = true; }
 // the home takes the colours of the team: choreography, flares and the title's outline
 function homeTheme(){
-  const h = $("startScreen"); if (!h) return;
+  ["overScreen", "startScreen"].forEach(id => themeOn($(id)));
+}
+function themeOn(h){
+  if (!h) return;
   h.classList.toggle("none", !teamChosen); h.classList.toggle("light", LIGHT());
   const light = c => { const n = parseInt(c.slice(1), 16); return ((n >> 16 & 255) * 299 + (n >> 8 & 255) * 587 + (n & 255) * 114) / 1000 > 200; };
   if (!teamChosen) {
     h.style.setProperty("--c1", "#ffc24b"); h.style.setProperty("--c2", "#141c2b");
     h.style.setProperty("--s1", "rgba(255,194,75,.7)"); h.style.setProperty("--s2", "rgba(90,140,255,.5)"); h.style.setProperty("--ttl", "#ffc24b");
-    $("coreoWord").textContent = "PER LA MAGLIA"; return;
+    if (h.id === "startScreen") $("coreoWord").textContent = "PER LA MAGLIA"; return;
   }
   const t = TEAMS[teamIdx], c1 = t[1], c2 = t[2] === t[1] ? "#ffffff" : t[2];
   h.style.setProperty("--c1", c1); h.style.setProperty("--c2", c2);
   h.style.setProperty("--s1", hexA(c1 === "#111111" ? "#5a5a5a" : c1, .85)); h.style.setProperty("--s2", hexA(c2 === "#111111" || c2 === "#0b0b0b" || c2 === "#0d0d0d" ? "#ffffff" : c2, .6));
   h.style.setProperty("--ttl", light(c1) ? c2 : c1);
-  $("coreoWord").textContent = t[0].toUpperCase();
+  $(h.id === "startScreen" ? "coreoWord" : "overWord").textContent = t[0].toUpperCase();
 }
 function renderTeams(){
   const box = $("teams"); box.innerHTML = "";
@@ -1698,14 +1822,24 @@ function renderTeams(){
 const cleanNick = v => String(v || "").replace(/[<>"'`\\]/g, "").replace(/\s+/g, " ").trim().slice(0, 12);
 $("nickInput").value = store.get("cucchiaio.nick", "");
 // the nickname is typed on the game's own keyboard, never the phone's
-const KB = { up: true, val: "", armAt: 0, down: null };
+// ---------- No bad words, anywhere (the server checks again) ----------
+const BAD = /(cazz|minchi|vaffanc|stronz|puttan|troi[ae]|merd|coglion|bastard|froci|ricchion|negr[oi]|zoccol|porcodi|porcamadon|diocan|dioporc|culatton|bocchin|pompin|fott|incul|mignott|baldracc|fuck|shit|bitch|cunt|dick|pussy|asshole|nigg|faggot|whore|slut|motherf|wank|twat|retard)/;
+const BAD_JOINED = /(cazz|minchi|vaffanc|puttan|stronz|fuck|cunt|nigg|froci|diocan|porcodi|dioporc|merda|coglion)/;
+function badText(t){
+  const map = { "0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "8": "b", "@": "a", "$": "s", "€": "e", "!": "i", "|": "i" };
+  const n = String(t || "").toLowerCase().replace(/[0134578@$€!|]/g, c => map[c]);
+  return BAD.test(n) || BAD_JOINED.test(n.replace(/[^a-z]/g, ""));
+}
+// ---------- The game's own keyboard: nickname (12 characters) or a banter line (80) ----------
+const KB = { up: true, val: "", armAt: 0, down: null, mode: "nick", max: 12 };
 function kbdRender(){
-  const rows = [["1","2","3","4","5","6","7","8","9","0"], ["q","w","e","r","t","y","u","i","o","p"], ["a","s","d","f","g","h","j","k","l"], ["shift","z","x","c","v","b","n","m","del"], ["_","-",".","space","ok"]];
+  const last = KB.mode === "taunt" ? ["è", "!", "?", "space", ",", "ok"] : ["_", "-", ".", "space", "ok"];
+  const rows = [["1","2","3","4","5","6","7","8","9","0"], ["q","w","e","r","t","y","u","i","o","p"], ["a","s","d","f","g","h","j","k","l"], ["shift","z","x","c","v","b","n","m","del"], last];
   const box = $("kbdKeys"); box.innerHTML = "";
   rows.forEach(row => {
     const r = document.createElement("div"); r.className = "kbd-row";
     row.forEach(k => {
-      const b = document.createElement("button"); b.type = "button"; b.className = "key k-" + k;
+      const b = document.createElement("button"); b.type = "button"; b.className = "key k-" + ({ "!": "excl", "?": "q2", ",": "comma", "è": "egrave" }[k] || k);
       b.textContent = k === "shift" ? (KB.up ? "▲ ABC" : "△ abc") : k === "del" ? "⌫" : k === "space" ? tr("spazio") : k === "ok" ? tr("Fatto") : (/[a-z]/.test(k) && KB.up ? k.toUpperCase() : k);
       b.addEventListener("pointerdown", e => { e.preventDefault(); if (performance.now() < KB.armAt) return; KB.down = k; b.classList.add("on"); });
       b.addEventListener("pointerup", e => { e.preventDefault(); b.classList.remove("on"); if (KB.down === k && performance.now() >= KB.armAt) kbdPress(k); KB.down = null; });
@@ -1717,32 +1851,119 @@ function kbdRender(){
   });
   $("kbdText").textContent = KB.val || "";
   $("kbdText").classList.toggle("empty", !KB.val);
-  $("kbdCount").textContent = KB.val.length + "/12";
+  $("kbdCount").textContent = KB.val.length + "/" + KB.max;
 }
+function kbdWarn(msg){ const lab = document.querySelector("#kbd .kbd-label"); lab.textContent = msg; lab.classList.add("warn"); buzz([40, 60, 40]); }
 function kbdPress(k){
   buzz(8);
-  if (k === "ok") return kbdClose();
+  if (k === "ok") return kbdClose(true);
   if (k === "shift") KB.up = !KB.up;
   else if (k === "del") KB.val = KB.val.slice(0, -1);
-  else if (KB.val.length < 12) {
+  else if (KB.val.length < KB.max) {
     const ch = k === "space" ? " " : (/[a-z]/.test(k) && KB.up ? k.toUpperCase() : k);
     if (!(ch === " " && (!KB.val || KB.val.endsWith(" ")))) KB.val += ch;
     if (/[a-zA-Z]/.test(ch) && KB.up && KB.val.length === 1) KB.up = false;   // capital first letter, then lower case
   }
-  $("nickInput").value = KB.val;
-  store.set("cucchiaio.nick", cleanNick(KB.val));
+  if (KB.mode === "nick") { $("nickInput").value = KB.val; if (!badText(KB.val)) store.set("cucchiaio.nick", cleanNick(KB.val)); }
   kbdRender();
 }
-function kbdOpen(why){ if (!$("kbd").hidden) return;
-  const lab = document.querySelector("#kbd .kbd-label"); lab.textContent = why ? tr("Per giocare scegli prima il tuo soprannome") : tr("Il tuo soprannome"); lab.classList.toggle("warn", !!why); KB.armAt = performance.now() + 350; KB.down = null; KB.val = $("nickInput").value || ""; KB.up = !KB.val; $("kbd").hidden = false; $("nickInput").classList.add("editing"); kbdRender(); }
+function kbdOpen(why, mode = "nick"){ if (!$("kbd").hidden) return;
+  KB.mode = mode; KB.max = mode === "taunt" ? 80 : 12;
+  const lab = document.querySelector("#kbd .kbd-label");
+  lab.textContent = mode === "taunt" ? tr("Il tuo sfottò") : why ? tr("Per giocare scegli prima il tuo soprannome") : tr("Il tuo soprannome"); lab.classList.toggle("warn", !!why);
+  KB.armAt = performance.now() + 350; KB.down = null;
+  KB.val = mode === "taunt" ? (SAY.text || "") : ($("nickInput").value || ""); KB.up = !KB.val;
+  $("kbd").hidden = false; $("kbd").classList.toggle("wide", mode === "taunt"); if (mode === "nick") $("nickInput").classList.add("editing"); kbdRender(); }
 // the tap that closes the keyboard must not also press what lies under it
 document.addEventListener("click", e => { if (performance.now() < (KB.blockUntil || 0)) { e.stopPropagation(); e.preventDefault(); } }, true);
-function kbdClose(){ KB.blockUntil = performance.now() + 450; if (cleanNick(KB.val).length >= 2) $("nickBtn").classList.remove("need"); $("kbd").hidden = true; $("nickInput").classList.remove("editing"); $("nickInput").value = cleanNick(KB.val); store.set("cucchiaio.nick", cleanNick(KB.val)); renderRanks(); renderHome(); srvProfile(); }
+function kbdClose(fromOk){
+  if (KB.mode === "taunt") {
+    const t = cleanTaunt(KB.val);
+    if (fromOk && t && badText(t)) return kbdWarn(tr("Questa frase non si può scrivere: niente parolacce"));
+    KB.blockUntil = performance.now() + 450; $("kbd").hidden = true;
+    SAY.text = badText(t) ? "" : t; renderSay(); return;
+  }
+  const nick = cleanNick(KB.val);
+  if (fromOk && nick && badText(nick)) return kbdWarn(tr("Soprannome non ammesso: niente parolacce"));
+  KB.blockUntil = performance.now() + 450;
+  if (badText(nick)) { KB.val = store.get("cucchiaio.nick", ""); }
+  if (cleanNick(KB.val).length >= 2) $("nickBtn").classList.remove("need");
+  $("kbd").hidden = true; $("nickInput").classList.remove("editing"); $("nickInput").value = cleanNick(KB.val); store.set("cucchiaio.nick", cleanNick(KB.val)); renderRanks(); renderHome(); srvProfile();
+}
 $("nickInput").addEventListener("pointerdown", e => { e.preventDefault(); });
 $("nickInput").addEventListener("click", e => { e.preventDefault(); kbdOpen(false); });
 $("nickBtn").addEventListener("click", () => kbdOpen(false));   // opens when the finger lifts, so the same touch can never hit a key
 $("nickInput").addEventListener("focus", e => { e.target.blur(); kbdOpen(false); });
-document.addEventListener("pointerdown", e => { if (!$("kbd").hidden && !e.target.closest("#kbd") && e.target.id !== "nickInput" && !e.target.closest("#nickBtn")) kbdClose(); }, true);
+document.addEventListener("pointerdown", e => { if (!$("kbd").hidden && !e.target.closest("#kbd") && e.target.id !== "nickInput" && !e.target.closest("#nickBtn") && !e.target.closest("#sayBtn")) kbdClose(false); }, true);
+
+// ---------- Banter: one line per match, written right after it ----------
+const cleanTaunt = v => String(v || "").replace(/[<>"`\\]/g, "").replace(/\s+/g, " ").trim().slice(0, 80);
+const SAY = { text: "", sent: false, sending: false, gid: null };
+function resetSay(){ SAY.text = ""; SAY.sent = false; SAY.sending = false; SAY.gid = G && G.localId; renderSay(); }
+function renderSay(){
+  const b = $("sayBtn"); if (!b) return;
+  b.classList.toggle("sent", SAY.sent); b.classList.toggle("empty", !SAY.text);
+  $("sayText").textContent = SAY.sent ? "“" + SAY.text + "”" : SAY.text || tr("Scrivi il tuo sfottò…");
+  $("sayHint").textContent = SAY.sent ? tr("Inviato alla curva") : tr("Una frase per partita · max 80 caratteri");
+  $("sayGo").textContent = SAY.sent ? "✓" : SAY.sending ? "…" : tr("INVIA");
+}
+async function sendSay(){
+  if (SAY.sent || SAY.sending) return;
+  if (!SAY.text) return kbdOpen(false, "taunt");
+  if (badText(SAY.text)) { SAY.text = ""; renderSay(); return; }
+  SAY.sending = true; renderSay();
+  const t = TEAMS[teamIdx][0], nick = cleanNick(store.get("cucchiaio.nick", "")) || "Tifoso";
+  let ok = false;
+  if (srv.ok && !srv.legacy) {
+    try {
+      let gid = (store.get("pm.gameIds", {}))[SAY.gid];
+      if (!gid) { await srvFlush(); gid = (store.get("pm.gameIds", {}))[SAY.gid]; }
+      if (gid) { await sb("rpc/post_taunt", { body: { p_game_id: gid, p_text: SAY.text } }); ok = true; }
+    } catch (e) {
+      SAY.sending = false;
+      if (/bad words/.test(e.message)) { SAY.text = ""; renderSay(); return; }
+      if (/already/.test(e.message)) { SAY.sent = true; renderSay(); return; }
+    }
+  }
+  if (!ok) {   // no server: the line stays on this phone
+    const list = store.get("cucchiaio.taunts", []);
+    list.unshift({ league: LEAGUE, season: seasonId(), team: t, nick, body: SAY.text, at: Date.now(), me: true });
+    store.set("cucchiaio.taunts", list.slice(0, 100));
+  }
+  SAY.sending = false; SAY.sent = true; srv.tauntsAt = 0; renderSay();
+}
+$("sayBtn").onclick = e => { if (SAY.sent) return; if (e.target.closest("#sayGo") && SAY.text) sendSay(); else kbdOpen(false, "taunt"); };
+
+// ---------- Banter wall of the league ----------
+let tauntFrom = "startScreen";
+async function loadTaunts(){
+  if (srv.ok && !srv.legacy && Date.now() - (srv.tauntsAt || 0) > 15000) {
+    srv.tauntsAt = Date.now();
+    try { srv.taunts = await sb(`taunts?league=eq.${LEAGUE}&season=eq.${encodeURIComponent(seasonId())}&select=nick,team,body,created_at,player_id&order=created_at.desc&limit=80`); }
+    catch (e) { srv.tauntsAt = 0; }
+  }
+  renderTaunts();
+}
+function openTaunts(from){ tauntFrom = from; $(from).hidden = true; $("tauntScreen").hidden = false; renderTaunts(); loadTaunts(); }
+function renderTaunts(){
+  const box = $("tauntList"); if (!box || $("tauntScreen").hidden) return;
+  $("tauntTitle").textContent = tr("Sfottò") + " · " + leagueName() + " · " + seasonLabel(seasonId()).split(" · ")[0];
+  const local = store.get("cucchiaio.taunts", []).filter(x => x.league === LEAGUE && x.season === seasonId()).map(x => ({ nick: x.nick, team: x.team, body: x.body, at: x.at, me: true }));
+  const list = srv.ok && srv.taunts ? srv.taunts.map(x => ({ nick: x.nick, team: x.team, body: x.body, at: Date.parse(x.created_at), me: x.player_id === srv.uid })) : local;
+  box.textContent = "";
+  if (!list.length) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = tr("Ancora nessuno sfottò questa settimana. Il primo puoi scriverlo tu, alla fine di una partita."); box.appendChild(e); return; }
+  const ago = at => { const m = Math.max(1, Math.round((Date.now() - at) / 60000)); return m < 60 ? tr("{n} min fa", { n: m }) : m < 1440 ? tr("{n} h fa", { n: Math.round(m / 60) }) : tr("{n} g fa", { n: Math.round(m / 1440) }); };
+  list.forEach(x => {
+    const r = document.createElement("div"); r.className = "tmsg" + (x.me ? " me" : "");
+    const col = (TEAMS.find(t => t[0] === x.team) || ["", "#888"])[1];
+    r.innerHTML = `<i></i><div class="tb"><div class="th"><b></b><span class="tt"></span><span class="ta"></span></div><div class="tx"></div></div>`;
+    r.querySelector("i").style.background = col;
+    r.querySelector("b").textContent = x.nick; r.querySelector(".tt").textContent = x.team; r.querySelector(".ta").textContent = ago(x.at);
+    r.querySelector(".tx").textContent = x.body;
+    box.appendChild(r);
+  });
+}
+
 // you play under a nickname: without one the match does not start
 let needNickTimer = null;
 $("playBtn").onclick = () => {
@@ -1811,6 +2032,12 @@ function openSettings(from){ settingsFrom = from; $(from).hidden = true; $("sett
 $("settingsBtn").onclick = () => openSettings("startScreen");
 $("pauseSettings").onclick = () => openSettings("pauseScreen");
 $("settingsBack").onclick = () => { $("settingsScreen").hidden = true; $(settingsFrom).hidden = false; };
+$("compBtn").onclick = openComp;
+$("tauntBtn").onclick = () => openTaunts("startScreen");
+$("overTaunts").onclick = () => openTaunts("overScreen");
+$("tauntBack").onclick = () => { $("tauntScreen").hidden = true; $(tauntFrom).hidden = false; };
+$("compVeil").onclick = closeComp;
+$("histHomeBtn").onclick = () => openHistory("startScreen");
 $("rankBtn").onclick = () => { srvLoad(); document.querySelector("#rankScreen [data-rank]").dataset.tab = "teams"; $("startScreen").hidden = true; $("rankScreen").hidden = false; renderRanks(); };
 function renderProfile(){
   const st = Object.assign({}, EMPTY_STATS, myStats()), L = levelOf(st.points);
@@ -2584,14 +2811,14 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
     start.hidden = true; scr.hidden = false;
   }
   // as soon as Chrome is ready, the button glows: one tap and the install window opens
-  const ready = () => { label.textContent = "Installa ora"; btn.classList.add("go"); };
+  const ready = () => { label.textContent = tr("Installa ora"); btn.classList.add("go"); };
   if (window.__bip) ready();
   window.addEventListener("bipready", ready);
   let waiting = false;
   btn.onclick = async () => {
     if (window.__bip) {
       const bip = window.__bip; window.__bip = null;
-      btn.classList.remove("go"); label.textContent = "Installa l'app";
+      btn.classList.remove("go"); label.textContent = tr("Installa");
       try { bip.prompt(); await bip.userChoice; } catch (e) {}
       return;
     }
@@ -2602,11 +2829,11 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
     }
     if (android && fromChrome) {
       // already in Chrome: Chrome needs a few more seconds on the page before it allows the install
-      waiting = true; btn.classList.add("go"); label.textContent = "Preparo l'installazione…";
+      waiting = true; btn.classList.add("go"); label.textContent = tr("Attendi…");
       const bip = await waitPrompt(45000);
       waiting = false;
       if (bip) { ready(); return; }
-      btn.classList.remove("go"); label.textContent = "Installa l'app";
+      btn.classList.remove("go"); label.textContent = tr("Installa");
       // Chrome stays silent when the game is already installed on this phone
       sheet("Riprova tra poco", ["Chrome non ha ancora dato il via libera: chiudi e riapri la pagina, poi tocca di nuovo <b>Installa l'app</b>."]);
       return;
