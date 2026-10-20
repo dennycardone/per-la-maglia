@@ -218,15 +218,17 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 .rlist.full{max-height:none;overflow:visible}
 .rlist.full.teams{display:grid;grid-template-columns:1fr 1fr;column-gap:18px;row-gap:2px}
 .rlist.full.fans{display:grid;grid-template-columns:1fr 1fr;column-gap:18px;row-gap:2px;align-content:start}
-.rlist.full .rrow{gap:6px;grid-template-columns:22px 10px minmax(88px,1fr) 54px 104px minmax(56px,.9fr);padding:4px 8px;font-size:15px}
+.rlist.full .rrow{gap:6px;grid-template-columns:22px 10px minmax(88px,1fr) 58px 58px minmax(56px,.9fr);padding:4px 8px;font-size:15px}
 .rlist.full.fans .rrow{grid-template-columns:24px 12px minmax(0,1fr) auto}
 .rlist.full.fans .rempty{grid-column:1 / -1}
-.rhd{display:grid;gap:6px;grid-template-columns:22px 10px minmax(88px,1fr) 54px 104px minmax(56px,.9fr);padding:0 8px 2px;font-family:var(--label);font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.rhd{display:grid;gap:6px;grid-template-columns:22px 10px minmax(88px,1fr) 58px 58px minmax(56px,.9fr);padding:0 8px 2px;font-family:var(--label);font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
 .rhd span:nth-child(4),.rhd span:nth-child(5),.rlist.full .pts{text-align:right}
 .rec{display:flex;gap:6px;justify-content:flex-end;align-items:baseline;min-width:0;color:var(--amber);font-variant-numeric:tabular-nums}
 .rec small{color:var(--mute);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:54px}
 .mvp{font-size:13px;color:#e8d9a8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.rhd span:nth-child(6){text-align:left}
+.rhd span:nth-child(6){text-align:left;padding-left:4px}
+.rname{font-size:14px;color:#cfd8d1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;padding-left:4px}
+.mvpTag{margin-left:6px;padding:0 6px;border-radius:999px;background:rgba(255,194,75,.2);color:var(--amber);font-size:11px;font-weight:700;letter-spacing:.08em}
 .rempty.sm{padding:2px 8px 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
 .kbd{position:fixed;left:0;right:0;bottom:0;z-index:60;padding:8px max(10px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 8px) max(10px,env(safe-area-inset-left,0px));
   background:rgba(8,12,20,.97);border-top:1px solid rgba(255,194,75,.35);box-shadow:0 -10px 30px rgba(0,0,0,.5);touch-action:none}
@@ -530,7 +532,7 @@ I18N.en = {
   "Classifica squadre": "Team table", "Tocca una squadra per vedere i suoi tifosi": "Tap a team to see its fans",
   "Tifosi {t}": "{t} fans", "Chi ha giocato {t} questa settimana, con il suo totale": "Who played for {t} this week, with their total",
   "← Tutte le squadre · tifosi {t}": "← All teams · {t} fans", "Nessuno ha ancora giocato {t} questa settimana.": "Nobody has played for {t} this week yet.",
-  "Squadra": "Team", "Punti": "Points", "Record": "Best", "record": "best", "Indietro": "Back", "🏆 Albo d'oro": "🏆 Hall of fame", "Albo d'oro": "Hall of fame",
+  "Squadra": "Team", "Punti": "Points", "Record": "Best", "Giocatore": "Player", "record": "best", "Indietro": "Back", "🏆 Albo d'oro": "🏆 Hall of fame", "Albo d'oro": "Hall of fame",
   "Albo d'oro · Serie A": "Hall of fame · Serie A", "Tutte le settimane giocate. Tocca una settimana per la classifica completa.": "Every week played. Tap a week for the full table.",
   "Ancora nessuna settimana conclusa: il primo campione arriva lunedì.": "No week finished yet: the first champion arrives on Monday.",
   "Classifica finale della settimana": "Final table of the week", "Carico la settimana…": "Loading the week…", "Carico i tifosi…": "Loading fans…",
@@ -1081,17 +1083,17 @@ function renderHistory(){
   $("histHint").textContent = tr("Classifica finale della settimana");
   const rows = weekTable(histWeek);
   if (rows === null) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = tr("Carico la settimana…"); list.appendChild(e); return; }
-  const hd = document.createElement("div"); hd.className = "rhd"; hd.innerHTML = `<span></span><span></span><span>${tr("Squadra")}</span><span>${tr("Punti")}</span><span>${tr("Record")}</span><span>MVP</span>`;
+  const hd = document.createElement("div"); hd.className = "rhd"; hd.innerHTML = `<span></span><span></span><span>${tr("Squadra")}</span><span>${tr("Punti")}</span><span>${tr("Record")}</span><span>${tr("Giocatore")}</span>`;
   const hd2 = hd.cloneNode(true); hd.style.gridArea = "1 / 1"; hd2.style.gridArea = "1 / 2"; list.append(hd, hd2);
   const half = Math.max(1, Math.ceil(rows.length / 2));
   rows.forEach((x, k) => {
     const r = document.createElement("div"); r.className = "rrow" + (x.team === TEAMS[teamIdx][0] ? " me" : "");
-    r.innerHTML = `<span class="pos">${k + 1}</span><i></i><span class="who"></span><span class="pts"></span><span class="rec"></span><span class="mvp"></span>`;
+    r.innerHTML = `<span class="pos">${k + 1}</span><i></i><span class="who"></span><span class="pts"></span><span class="rec"></span><span class="rname"></span>`;
     r.querySelector("i").style.background = color(x.team);
     r.querySelector(".who").textContent = (k === 0 ? "🏆 " : "") + x.team;
     r.querySelector(".pts").textContent = num(x.pts);
-    const rc = r.querySelector(".rec"); if (x.rec) { rc.textContent = num(x.rec.pts) + " "; const sm = document.createElement("small"); sm.textContent = x.rec.name; rc.appendChild(sm); } else rc.textContent = "–";
-    r.querySelector(".mvp").textContent = x.mvp ? "👑 " + x.mvp.name : "–";
+    r.querySelector(".rec").textContent = x.rec ? num(x.rec.pts) : "–";
+    r.querySelector(".rname").textContent = x.rec ? x.rec.name : "";
     r.style.gridArea = `${(k % half) + 2} / ${k < half ? 1 : 2}`;
     list.appendChild(r);
   });
@@ -1249,8 +1251,8 @@ function renderRanks(){
       const p = document.createElement("span"); p.className = "pts"; p.textContent = pts.toLocaleString(LOC());
       r.append(a, i, w, p);
       if (full && tab === "teams") {
-        const rc = document.createElement("span"); rc.className = "rec"; if (rec) { rc.textContent = rec.pts.toLocaleString(LOC()) + " "; const sm = document.createElement("small"); sm.textContent = rec.name; rc.appendChild(sm); } else rc.textContent = "–"; r.appendChild(rc);
-        const mv = document.createElement("span"); mv.className = "mvp"; const m = mvps[who]; mv.textContent = m ? "👑 " + m.name : "–"; r.appendChild(mv);
+        const rc = document.createElement("span"); rc.className = "rec"; rc.textContent = rec ? rec.pts.toLocaleString(LOC()) : "–"; r.appendChild(rc);
+        const rn = document.createElement("span"); rn.className = "rname"; rn.textContent = rec ? rec.name : ""; r.appendChild(rn);
       }
       list.appendChild(r);
     };
@@ -1260,7 +1262,7 @@ function renderRanks(){
       const hint = box.querySelector(".rhint"); if (hint) hint.textContent = tr("Tocca una squadra per vedere i suoi tifosi");
       const rows = teamRows();
       if (full) {
-        const hd = document.createElement("div"); hd.className = "rhd"; hd.innerHTML = `<span></span><span></span><span>${tr("Squadra")}</span><span>${tr("Punti")}</span><span>${tr("Record")}</span><span>MVP</span>`;
+        const hd = document.createElement("div"); hd.className = "rhd"; hd.innerHTML = `<span></span><span></span><span>${tr("Squadra")}</span><span>${tr("Punti")}</span><span>${tr("Record")}</span><span>${tr("Giocatore")}</span>`;
         const hd2 = hd.cloneNode(true); hd.style.gridArea = "1 / 1"; hd2.style.gridArea = "1 / 2";
         list.appendChild(hd); list.appendChild(hd2);
       }
@@ -1278,7 +1280,7 @@ function renderRanks(){
         bk.onclick = () => { box.dataset.tab = "teams"; renderRanks(); }; list.appendChild(bk);
       }
       if (!rows.length) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = tr("Nessuno ha ancora giocato {t} questa settimana.", { t: sq(team, "per") }); list.appendChild(e); }
-      else rows.slice(0, 100).forEach((r, k) => row(k + 1, color, (k === 0 ? "👑 " : "") + r.name, "", r.pts, r.me, r.lv));
+      else rows.slice(0, 100).forEach((r, k) => { row(k + 1, color, (k === 0 ? "👑 " : "") + r.name, "", r.pts, r.me, r.lv); if (k === 0) { const b = document.createElement("span"); b.className = "mvpTag"; b.textContent = "MVP"; list.lastChild.querySelector(".who").appendChild(b); } });
     }
     box.querySelector(".rstatus").textContent = seasonLabel(sid) + " · " + seasonLeft().toLowerCase() + ". " + tr(rankStatus());
   });
