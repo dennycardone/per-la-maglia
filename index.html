@@ -169,6 +169,11 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .hbtn{pointer-events:auto;appearance:none;width:32px;height:28px;border-radius:8px;border:1px solid rgba(238,242,234,.25);background:rgba(5,8,14,.55);color:var(--chalk);font-family:var(--display);font-weight:900;font-size:15px;letter-spacing:.05em;cursor:pointer}
 .hbtn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .panel.single{max-width:420px;display:flex}
+.setgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:32px}
+.settitle{font-size:clamp(32px,5.5vw,48px)!important}
+.rules.values{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.rules.values span{padding:8px 10px;border-radius:8px;background:rgba(238,242,234,.05);border:1px solid rgba(238,242,234,.12)}
+@media (max-width:560px){.setgrid{grid-template-columns:1fr}.rules.values{grid-template-columns:1fr 1fr}}
 .setrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid rgba(238,242,234,.1)}
 .setrow b{display:block;font-family:var(--label);font-weight:700;font-size:17px;letter-spacing:.04em}
 .setrow span{display:block;margin-top:2px;font-size:13px;color:var(--mute);line-height:1.35}
@@ -230,7 +235,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 .rname{font-size:14px;color:#cfd8d1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;padding-left:4px}
 .mvpTag{margin-left:6px;padding:0 6px;border-radius:999px;background:rgba(255,194,75,.2);color:var(--amber);font-size:11px;font-weight:700;letter-spacing:.08em}
 .rempty.sm{padding:2px 8px 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
-.kbd{position:fixed;left:0;right:0;bottom:0;z-index:60;padding:8px max(10px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 8px) max(10px,env(safe-area-inset-left,0px));
+.kbd{position:fixed;left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 6px);z-index:60;padding:8px 10px 10px;border-radius:14px;border:2px solid var(--amber)!important;outline:4px solid rgba(5,8,14,.85);
   background:rgba(8,12,20,.97);border-top:1px solid rgba(255,194,75,.35);box-shadow:0 -10px 30px rgba(0,0,0,.5);touch-action:none}
 .kbd-top{display:flex;align-items:baseline;gap:12px;max-width:760px;margin:0 auto 6px;padding:0 4px}
 .kbd-label{font-family:var(--label);font-weight:700;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
@@ -325,12 +330,10 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
       <div class="eyebrow">Il Cucchiaio · Classifica dei tifosi</div>
       <h1>Per la Maglia</h1>
       <p class="lede">Sei solo davanti al portiere. Appena compare il pallone lui ti viene incontro: tieni premuto per caricare il tiro, trascina su o giù per scegliere l'arco (alto è più sicuro, teso vale di più) e rilascia al momento giusto per scavalcarlo. Hai 3 palloni.</p>
-      <div class="rules"><span>Sotto la traversa <b>×3</b></span><span>Al volo <b>×2</b></span><span>Arco teso fino a <b>×1,5</b></span><span>Rilascio perfetto <b>+100</b></span><span>Faccia a faccia <b>+50</b></span><span>Serie fino a <b>×3</b></span></div>
       <label class="label" for="nickInput">Il tuo soprannome</label>
       <input id="nickInput" class="nick" maxlength="12" autocomplete="off" spellcheck="false" readonly inputmode="none" placeholder="Come vuoi comparire in classifica">
       <button class="champ" id="champ" type="button" hidden></button>
       <div class="homeTeam" id="homeTeam"></div>
-      <div class="best" id="bestLine"></div>
       <button class="btn ghost small install" id="installBtn" type="button"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Installa l'app</span></button>
       <div class="hint">Si gioca con il telefono in orizzontale</div>
     </div>
@@ -395,14 +398,14 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 </section>
 
 <section class="screen" id="settingsScreen" hidden>
-  <div class="panel">
-    <div class="col">
-      <div class="eyebrow">Impostazioni</div>
-      <h1>Il tuo stadio</h1>
-      <p class="lede">Le scelte restano salvate su questo dispositivo.</p>
-      <button class="btn ghost" id="settingsBack" type="button">Indietro</button>
+  <div class="panel wide setpanel">
+    <div class="rhead">
+      <div class="rh1"><h1 class="settitle">Impostazioni</h1><div class="note">Le scelte restano salvate su questo dispositivo.</div></div>
+      <button class="btn ghost small" id="settingsBack" type="button">Indietro</button>
     </div>
-    <div class="col" id="settingsList"></div>
+    <div class="setgrid" id="settingsList"></div>
+    <div class="label">Valore dei tiri</div>
+    <div class="rules values"><span>Sotto la traversa <b>×3</b></span><span>Al volo <b>×2</b></span><span>Arco teso fino a <b>×1,5</b></span><span>Rilascio perfetto <b>+100</b></span><span>Faccia a faccia <b>+50</b></span><span>Serie fino a <b>×3</b></span></div>
   </div>
 </section>
 
@@ -553,7 +556,7 @@ I18N.en = {
   "Piccoli colpi al tiro e al gol.": "Small taps on shots and goals.", "Non disponibile su questo telefono (per esempio su iPhone).": "Not available on this phone (for example on iPhone).",
   "Grafica leggera": "Light graphics", "Meno effetti e risoluzione ridotta, per telefoni meno potenti.": "Fewer effects and lower resolution, for less powerful phones.",
   "Colori per daltonici": "Colour-blind colours", "Errori in blu invece che in rosso e contorni più marcati sulla tua squadra.": "Misses in blue instead of red and stronger outlines on your team.",
-  "Sì": "On", "No": "Off", "Lingua": "Language", "La lingua di tutto il gioco.": "The language of the whole game.",
+  "Sì": "On", "No": "Off", "Valore dei tiri": "Shot values", "Lingua": "Language", "La lingua di tutto il gioco.": "The language of the whole game.",
   "Numero di maglia": "Shirt number", "Il numero del tuo giocatore in campo.": "Your player's number on the pitch.",
   "Tutorial": "Tutorial", "Rifai i tre tiri di prova alla prossima partita.": "Replay the three practice shots in your next game.", "Rivedi": "Replay", "Alla prossima partita": "Next game",
   // install
@@ -814,12 +817,12 @@ function buildCrowd(){
   });
   // advertising boards
   const pw = Math.max(150, W / 5);
-  const texts = ["PER LA MAGLIA", "FORZA " + t[0].toUpperCase(), tr("CLASSIFICA DEI TIFOSI")];
+  const texts = ["PER LA MAGLIA", "FORZA " + t[0].toUpperCase()];
   g.font = `700 ${Math.round(boardH * 0.6)}px "Barlow Condensed", sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
   for (let i = 0, x = 0; x < W; i++, x += pw) {
     g.fillStyle = i % 2 ? "#0b1424" : "#101d33"; g.fillRect(x, boardY, pw, boardH);
-    g.fillStyle = i % 3 === 1 ? (t[1] === "#f2f2f2" ? "#ffcf5a" : t[1]) : "rgba(255,207,90,.85)";
-    g.fillText(texts[i % 3], x + pw / 2, boardY + boardH / 2 + 1);
+    g.fillStyle = i % 2 === 1 ? (t[1] === "#f2f2f2" ? "#ffcf5a" : t[1]) : "rgba(255,207,90,.85)";
+    g.fillText(texts[i % 2], x + pw / 2, boardY + boardH / 2 + 1);
     g.fillStyle = "rgba(255,255,255,.08)"; g.fillRect(x, boardY, 1, boardH);
   }
   g.textAlign = "left";
@@ -1584,7 +1587,7 @@ function renderTeams(){
   });
   $("playBtn").textContent = tr("Gioca {t}", { t: sq(TEAMS[teamIdx][0], "per") });
   const best = store.get("cucchiaio.best", 0);
-  $("bestLine").textContent = best ? "Record personale: " + best.toLocaleString(LOC()) : "";
+
 }
 const cleanNick = v => String(v || "").replace(/[<>"'`\\]/g, "").replace(/\s+/g, " ").trim().slice(0, 12);
 $("nickInput").value = store.get("cucchiaio.nick", "");
