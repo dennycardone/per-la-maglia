@@ -151,7 +151,7 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .coreo{position:absolute;left:-30px;right:-30px;top:-20px;height:58%;background:radial-gradient(circle,rgba(255,255,255,.5) 1.2px,transparent 1.7px) 0 0/7px 7px,repeating-linear-gradient(180deg,var(--c1) 0 34px,var(--c2) 34px 68px);
   transform:perspective(600px) rotateX(28deg);transform-origin:50% 0;opacity:.85;-webkit-mask:linear-gradient(180deg,#000 50%,transparent);mask:linear-gradient(180deg,#000 50%,transparent);animation:sway 7s ease-in-out infinite}
 @keyframes sway{50%{transform:perspective(600px) rotateX(28deg) translateY(3px)}}
-.coreoWord{position:absolute;left:0;right:0;top:2px;text-align:center;font-family:var(--display);font-weight:900;font-size:clamp(70px,17vw,150px);letter-spacing:.05em;color:rgba(5,8,14,.32);white-space:nowrap;transform:perspective(600px) rotateX(28deg);transform-origin:50% 0;-webkit-mask:linear-gradient(180deg,#000 40%,transparent 80%);mask:linear-gradient(180deg,#000 40%,transparent 80%)}
+.coreoWord{position:absolute;left:0;right:0;top:2px;text-align:center;font-family:var(--display);font-weight:900;font-size:clamp(70px,17vw,150px);letter-spacing:.05em;color:rgba(5,8,14,.62);-webkit-text-stroke:2px rgba(255,255,255,.35);white-space:nowrap;transform:perspective(600px) rotateX(28deg);transform-origin:50% 0;-webkit-mask:linear-gradient(180deg,#000 40%,transparent 80%);mask:linear-gradient(180deg,#000 40%,transparent 80%)}
 .puffs i{position:absolute;width:56vw;height:56vw;max-width:520px;max-height:520px;border-radius:50%;background:radial-gradient(circle,var(--s1) 0,transparent 62%);opacity:.75;will-change:transform}
 .puffs i:nth-child(2n){background:radial-gradient(circle,var(--s2) 0,transparent 62%)}
 .puffs i:nth-child(1){left:-18%;bottom:-30%;animation:rise 9s ease-in-out infinite}
@@ -622,7 +622,7 @@ I18N.en = {
   "Piccoli colpi al tiro e al gol.": "Small taps on shots and goals.", "Non disponibile su questo telefono (per esempio su iPhone).": "Not available on this phone (for example on iPhone).",
   "Grafica leggera": "Light graphics", "Meno effetti e risoluzione ridotta, per telefoni meno potenti.": "Fewer effects and lower resolution, for less powerful phones.",
   "Colori per daltonici": "Colour-blind colours", "Errori in blu invece che in rosso e contorni più marcati sulla tua squadra.": "Misses in blue instead of red and stronger outlines on your team.",
-  "Sì": "On", "No": "Off", "Valore dei tiri": "Shot values", "GIOCA": "PLAY", "Prima scegli la squadra": "Pick your team first", "presto": "soon",
+  "Sì": "On", "No": "Off", "Valore dei tiri": "Shot values", " è {n}° in classifica questa settimana": " is #{n} in the table this week", "GIOCA": "PLAY", "Prima scegli la squadra": "Pick your team first", "presto": "soon",
   "Ciao {n}": "Hi {n}", "Benvenuto, tifoso": "Welcome, fan", "↓ Scegli la tua squadra per iniziare ↓": "↓ Pick your team to start ↓",
   "20 tifoserie di Serie A si sfidano ogni settimana · ": "20 Serie A fan bases compete every week · ", "la tua manca": "yours is missing", "Lingua": "Language", "La lingua di tutto il gioco.": "The language of the whole game.",
   "Numero di maglia": "Shirt number", "Il numero del tuo giocatore in campo.": "Your player's number on the pitch.",
@@ -1650,10 +1650,8 @@ function renderHome(){
   const b = document.createElement("b"); b.textContent = sq(me, "", true); el.appendChild(b);
   let txt;
   if (!rows.some(x => x.pts > 0)) txt = tr(" · classifica della settimana ancora vuota: segna i primi punti!");
-  else if (i === 0) { const gap = r.pts - (rows[1] ? rows[1].pts : 0); txt = rows[1] ? tr(" è 1° questa settimana · +{g} {t}", { g: gap.toLocaleString(LOC()), t: sq(rows[1].name, "su") }) : tr(" è 1° questa settimana"); }
-  else txt = tr(" è {n}° questa settimana · −{g} {t}", { n: i + 1, g: (rows[i - 1].pts - r.pts).toLocaleString(LOC()), t: sq(rows[i - 1].name, "da") });
+  else txt = tr(" è {n}° in classifica questa settimana", { n: i + 1 });
   el.appendChild(document.createTextNode(txt));
-  const sm = document.createElement("small"); sm.textContent = seasonLeft(); el.appendChild(sm);
 }
 const LEAGUES = [["serie-a", "Serie A", "f-it", true], ["premier", "Premier", "f-en", false], ["laliga", "LaLiga", "f-es", false], ["bundesliga", "Bundesliga", "f-de", false], ["ligue1", "Ligue 1", "f-fr", false]];
 function renderLeagues(){
@@ -2072,7 +2070,6 @@ function drawScene(){
   drawTrail(v);
   drawBall(v);
   drawGoalFront(v);
-  drawFlag(v);
   drawArc(v);
   if (rainA > 0.01) {
     ctx.fillStyle = `rgba(20,30,50,${0.22 * rainA})`; ctx.fillRect(0, 0, W, H);
