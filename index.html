@@ -209,6 +209,24 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 .rec{display:flex;gap:6px;justify-content:flex-end;align-items:baseline;min-width:0;color:var(--amber);font-variant-numeric:tabular-nums}
 .rec small{color:var(--mute);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:92px}
 .rempty.sm{padding:2px 8px 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.kbd{position:fixed;left:0;right:0;bottom:0;z-index:60;padding:8px max(10px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 8px) max(10px,env(safe-area-inset-left,0px));
+  background:rgba(8,12,20,.97);border-top:1px solid rgba(255,194,75,.35);box-shadow:0 -10px 30px rgba(0,0,0,.5);touch-action:none}
+.kbd-top{display:flex;align-items:baseline;gap:12px;max-width:760px;margin:0 auto 6px;padding:0 4px}
+.kbd-label{font-family:var(--label);font-weight:700;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.kbd-text{flex:1;font-family:var(--display);font-weight:900;font-size:24px;line-height:1;color:var(--amber);min-height:24px}
+.kbd-text::after{content:"";display:inline-block;width:2px;height:20px;margin-left:2px;background:var(--amber);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.kbd-count{font-family:var(--label);font-size:12px;color:var(--mute)}
+.kbd-keys{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:5px}
+.kbd-row{display:flex;gap:5px;justify-content:center}
+.key{appearance:none;flex:1 1 0;max-width:68px;height:clamp(30px,8.5vh,44px);border:0;border-radius:6px;background:rgba(238,242,234,.1);color:var(--chalk);font-family:var(--label);font-weight:700;font-size:18px;cursor:pointer;-webkit-user-select:none;user-select:none}
+.key:active{background:rgba(255,194,75,.35)}
+.key.k-shift,.key.k-del{flex:1.5 1 0;max-width:100px;font-size:14px}
+.key.k-space{flex:5 1 0;max-width:340px;font-size:14px}
+.key.k-ok{flex:2 1 0;max-width:140px;background:var(--amber);color:#1a1205;font-family:var(--display);font-weight:900}
+.nick.editing{border-color:var(--amber);background:rgba(255,194,75,.08)}
+.rback{appearance:none;border:0;background:none;color:var(--amber);font-family:var(--label);font-weight:700;font-size:13px;letter-spacing:.06em;text-align:left;padding:2px 8px 6px;cursor:pointer}
+.rhead .eyebrow{font-size:15px}
 .rfoot{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline}
 .rfoot .honours{display:flex;flex-direction:row;flex-wrap:wrap;gap:4px 12px}
 .rfoot .honours .label{font-size:11px}
@@ -268,7 +286,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
       <p class="lede">Sei solo davanti al portiere. Appena compare il pallone lui ti viene incontro: tieni premuto per caricare il tiro, trascina su o giù per scegliere l'arco (alto è più sicuro, teso vale di più) e rilascia al momento giusto per scavalcarlo. Hai 3 palloni.</p>
       <div class="rules"><span>Sotto la traversa <b>×3</b></span><span>Al volo <b>×2</b></span><span>Arco teso fino a <b>×1,5</b></span><span>Rilascio perfetto <b>+100</b></span><span>Faccia a faccia <b>+50</b></span><span>Serie fino a <b>×3</b></span></div>
       <label class="label" for="nickInput">Il tuo soprannome</label>
-      <input id="nickInput" class="nick" maxlength="16" autocomplete="off" spellcheck="false" placeholder="Come vuoi comparire in classifica">
+      <input id="nickInput" class="nick" maxlength="16" autocomplete="off" spellcheck="false" readonly inputmode="none" placeholder="Come vuoi comparire in classifica">
       <div class="homeTeam" id="homeTeam"></div>
       <div class="best" id="bestLine"></div>
       <button class="btn ghost small install" id="installBtn" type="button"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Installa l'app</span></button>
@@ -283,11 +301,15 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
   </div>
 </section>
 
+<div class="kbd" id="kbd" hidden>
+  <div class="kbd-top"><span class="kbd-label">Il tuo soprannome</span><span class="kbd-text" id="kbdText"></span><span class="kbd-count" id="kbdCount"></span></div>
+  <div class="kbd-keys" id="kbdKeys"></div>
+</div>
+
 <section class="screen" id="rankScreen" hidden>
   <div class="panel wide" data-rank data-full data-tab="teams">
     <div class="rhead">
-      <div class="rh1"><div class="eyebrow">Classifica dei tifosi · <span class="seasonName"></span></div><h1 class="rtitle">Squadre</h1></div>
-      <div class="tabs" role="tablist"><button class="tab" type="button" data-tab="teams" aria-pressed="true">Squadre</button><button class="tab" type="button" data-tab="fans" aria-pressed="false">Tifosi</button></div>
+      <div class="rh1"><div class="eyebrow"><span class="rtitle">Classifica squadre</span> · <span class="seasonName"></span></div><div class="note rhint">Tocca una squadra per vedere i suoi tifosi</div></div>
       <button class="btn ghost small" id="rankBack" type="button">Indietro</button>
     </div>
     <div class="rlist"></div>
@@ -342,7 +364,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
       <button class="btn ghost" id="profileBack" type="button">Indietro</button>
     </div>
     <div class="col">
-      <div class="label">Statistiche</div>
+      <div class="label" id="profileLabel">Statistiche</div>
       <div class="stats" id="profileStats"></div>
       <div class="note" id="profileNote"></div>
       <div class="label">Dati di bilanciamento</div>
@@ -365,7 +387,6 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
     <div class="col">
       <div class="label">Classifica</div>
       <div class="rank" data-rank data-tab="teams">
-        <div class="tabs" role="tablist"><button class="tab" type="button" data-tab="teams" aria-pressed="true">Squadre</button><button class="tab" type="button" data-tab="fans" aria-pressed="false">Tifosi</button></div>
         <div class="rlist"></div>
         <div class="note rstatus"></div>
       </div>
@@ -767,7 +788,8 @@ async function submitOnline(team, game){
     cur.teams[team] = (cur.teams[team] || 0) + game.score; cur.best = Math.max(cur.best || 0, game.score);
     cur.bestBy = cur.bestBy || {}; cur.bestBy[team] = Math.max(cur.bestBy[team] || 0, game.score);
     seasons[sid] = cur;
-    await ref.set({ team, nick: cleanNick(store.get("cucchiaio.nick", "")), seasons, stats: addStats(d.stats || {}, game), updated: Date.now() });
+    const teamStats = Object.assign({}, d.teamStats || {}); teamStats[team] = addStats(teamStats[team] || {}, game);
+    await ref.set({ team, nick: cleanNick(store.get("cucchiaio.nick", "")), seasons, stats: addStats(d.stats || {}, game), teamStats, updated: Date.now() });
     return true;
   } catch (e) { online.writeFailed = true; renderRanks(); return false; }
 }
@@ -901,7 +923,8 @@ function renderRanks(){
     };
     const title = box.querySelector(".rtitle");
     if (tab === "teams") {
-      if (title) title.textContent = "Squadre";
+      if (title) title.textContent = "Classifica squadre";
+      const hint = box.querySelector(".rhint"); if (hint) hint.textContent = "Tocca una squadra per vedere i suoi tifosi";
       const rows = teamRows();
       if (full) {
         const hd = document.createElement("div"); hd.className = "rhd"; hd.innerHTML = "<span></span><span></span><span>Squadra</span><span>Punti</span><span>Record</span>";
@@ -914,8 +937,12 @@ function renderRanks(){
     } else {
       const team = rankTeam || mine, color = (TEAMS.find(t => t[0] === team) || ["", "#888"])[1];
       if (title) title.textContent = "Tifosi " + sq(team, "di");
+      const hint = box.querySelector(".rhint"); if (hint) hint.textContent = "Chi ha giocato " + sq(team, "per") + " questa settimana, con il suo totale";
       const rows = fansOf(team, sid);
-      if (!full) { const hd = document.createElement("div"); hd.className = "rempty sm"; hd.textContent = "Tifosi " + sq(team, "di") + " questa settimana"; list.appendChild(hd); }
+      if (!full) {
+        const bk = document.createElement("button"); bk.type = "button"; bk.className = "rback"; bk.textContent = "← Tutte le squadre · tifosi " + sq(team, "di");
+        bk.onclick = () => { box.dataset.tab = "teams"; renderRanks(); }; list.appendChild(bk);
+      }
       if (!rows.length) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = "Nessuno ha ancora giocato " + sq(team, "per") + " questa settimana."; list.appendChild(e); }
       else rows.slice(0, 100).forEach((r, k) => row(k + 1, color, r.name, "", r.pts, r.me, r.lv));
     }
@@ -1076,6 +1103,7 @@ function gameOver(){
   fb[sid][t[0]][who] = (fb[sid][t[0]][who] || 0) + G.score; store.set("cucchiaio.fans", fb);
   const prevLv = levelOf(store.get("cucchiaio.stats", EMPTY_STATS).points).lv;
   const newStats = addStats(store.get("cucchiaio.stats", EMPTY_STATS), G); store.set("cucchiaio.stats", newStats);
+  const ts = store.get("cucchiaio.teamStats", {}); ts[t[0]] = addStats(ts[t[0]] || EMPTY_STATS, G); store.set("cucchiaio.teamStats", ts);
   const nl = levelOf(newStats.points);
   countUp($("finalScore"), G.score);
   // contribution to the team this week (shared table only)
@@ -1169,8 +1197,44 @@ function renderTeams(){
 }
 const cleanNick = v => String(v || "").replace(/[<>"'`\\]/g, "").replace(/\s+/g, " ").trim().slice(0, 16);
 $("nickInput").value = store.get("cucchiaio.nick", "");
-$("nickInput").addEventListener("input", e => { store.set("cucchiaio.nick", cleanNick(e.target.value)); });
-$("nickInput").addEventListener("keydown", e => { if (e.key === "Enter") e.target.blur(); });
+// the nickname is typed on the game's own keyboard, never the phone's
+const KB = { up: true, val: "" };
+function kbdRender(){
+  const rows = [["1","2","3","4","5","6","7","8","9","0"], ["q","w","e","r","t","y","u","i","o","p"], ["a","s","d","f","g","h","j","k","l"], ["shift","z","x","c","v","b","n","m","del"], ["_","-",".","space","ok"]];
+  const box = $("kbdKeys"); box.innerHTML = "";
+  rows.forEach(row => {
+    const r = document.createElement("div"); r.className = "kbd-row";
+    row.forEach(k => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "key k-" + k;
+      b.textContent = k === "shift" ? (KB.up ? "▲ ABC" : "△ abc") : k === "del" ? "⌫" : k === "space" ? "spazio" : k === "ok" ? "Fatto" : (/[a-z]/.test(k) && KB.up ? k.toUpperCase() : k);
+      b.addEventListener("pointerdown", e => { e.preventDefault(); kbdPress(k); });
+      r.appendChild(b);
+    });
+    box.appendChild(r);
+  });
+  $("kbdText").textContent = KB.val || "";
+  $("kbdText").classList.toggle("empty", !KB.val);
+  $("kbdCount").textContent = KB.val.length + "/16";
+}
+function kbdPress(k){
+  buzz(8);
+  if (k === "ok") return kbdClose();
+  if (k === "shift") KB.up = !KB.up;
+  else if (k === "del") KB.val = KB.val.slice(0, -1);
+  else if (KB.val.length < 16) {
+    const ch = k === "space" ? " " : (/[a-z]/.test(k) && KB.up ? k.toUpperCase() : k);
+    if (!(ch === " " && (!KB.val || KB.val.endsWith(" ")))) KB.val += ch;
+    if (/[a-zA-Z]/.test(ch) && KB.up && KB.val.length === 1) KB.up = false;   // capital first letter, then lower case
+  }
+  $("nickInput").value = KB.val;
+  store.set("cucchiaio.nick", cleanNick(KB.val));
+  kbdRender();
+}
+function kbdOpen(){ KB.val = $("nickInput").value || ""; KB.up = !KB.val; $("kbd").hidden = false; $("nickInput").classList.add("editing"); kbdRender(); }
+function kbdClose(){ $("kbd").hidden = true; $("nickInput").classList.remove("editing"); $("nickInput").value = cleanNick(KB.val); store.set("cucchiaio.nick", cleanNick(KB.val)); renderRanks(); }
+$("nickInput").addEventListener("pointerdown", e => { e.preventDefault(); kbdOpen(); });
+$("nickInput").addEventListener("focus", e => { e.target.blur(); kbdOpen(); });
+document.addEventListener("pointerdown", e => { if (!$("kbd").hidden && !e.target.closest("#kbd") && e.target.id !== "nickInput") kbdClose(); }, true);
 $("playBtn").onclick = startGame;
 $("againBtn").onclick = startGame;
 $("pauseBtn").onclick = pauseGame;
@@ -1209,15 +1273,19 @@ function openSettings(from){ settingsFrom = from; $(from).hidden = true; $("sett
 $("settingsBtn").onclick = () => openSettings("startScreen");
 $("pauseSettings").onclick = () => openSettings("pauseScreen");
 $("settingsBack").onclick = () => { $("settingsScreen").hidden = true; $(settingsFrom).hidden = false; };
-$("rankBtn").onclick = () => { $("startScreen").hidden = true; $("rankScreen").hidden = false; renderRanks(); };
+$("rankBtn").onclick = () => { document.querySelector("#rankScreen [data-rank]").dataset.tab = "teams"; $("startScreen").hidden = true; $("rankScreen").hidden = false; renderRanks(); };
 function renderProfile(){
   const st = Object.assign({}, EMPTY_STATS, myStats()), L = levelOf(st.points);
   $("lvTitle").textContent = L.name; $("lvNum").textContent = "Livello " + L.lv;
   $("lvNext").textContent = `${st.points.toLocaleString("it-IT")} / ${L.next.toLocaleString("it-IT")} punti`;
   $("lvFill").style.width = Math.round(Math.min(1, Math.max(0, L.frac)) * 100) + "%";
   $("lvText").textContent = st.games ? `Mancano ${(L.next - st.points).toLocaleString("it-IT")} punti al livello ${L.lv + 1}. Il livello compare accanto al tuo nome nella classifica Tifosi.` : "Gioca la prima partita: ogni punto che segni fa crescere il tuo livello di tifoso.";
-  const acc = st.shots ? Math.round(st.goals / st.shots * 100) + "%" : "–";
-  const cells = [[st.games, "Partite"], [st.points.toLocaleString("it-IT"), "Punti totali"], [st.best.toLocaleString("it-IT"), "Record"], [st.goals, "Gol"], [acc, "Precisione"], [st.perfect, "Perfetti"], [st.top, "Sotto la traversa"], [st.bestStreak, "Serie max"], [TEAMS[teamIdx][0], "Squadra"]];
+  // the numbers are those played for the team you have chosen; the level counts every match
+  const team = TEAMS[teamIdx][0], doc = sharedMode() && online.docs.find(d => d.id === online.uid);
+  const tst = Object.assign({}, EMPTY_STATS, (doc && doc.teamStats && doc.teamStats[team]) || store.get("cucchiaio.teamStats", {})[team] || {});
+  $("profileLabel").textContent = "Statistiche " + sq(team, "per").replace(/^per /, "con ").replace(/^con l'/, "con l'");
+  const acc = tst.shots ? Math.round(tst.goals / tst.shots * 100) + "%" : "–";
+  const cells = [[tst.games, "Partite"], [tst.points.toLocaleString("it-IT"), "Punti"], [tst.best.toLocaleString("it-IT"), "Record"], [tst.goals, "Gol"], [acc, "Precisione"], [tst.perfect, "Perfetti"], [tst.top, "Sotto la traversa"], [tst.bestStreak, "Serie max"], [st.games, "Partite in totale"]];
   $("profileStats").innerHTML = cells.map(([v, k]) => `<div class="stat"><div class="v">${v}</div><div class="k">${k}</div></div>`).join("");
   $("profileNote").textContent = sharedMode() && online.docs.some(d => d.id === online.uid) ? "Statistiche salvate sul tuo account." : "Statistiche salvate su questo dispositivo.";
 }
@@ -1243,7 +1311,11 @@ $("anaCopy").onclick = async () => {
 };
 $("profileBtn").onclick = () => { $("startScreen").hidden = true; $("profileScreen").hidden = false; renderProfile(); renderAnalytics(); };
 $("profileBack").onclick = () => { $("profileScreen").hidden = true; $("startScreen").hidden = false; };
-$("rankBack").onclick = () => { $("rankScreen").hidden = true; $("startScreen").hidden = false; };
+$("rankBack").onclick = () => {
+  const box = document.querySelector("#rankScreen [data-rank]");
+  if (box.dataset.tab === "fans") { box.dataset.tab = "teams"; renderRanks(); return; }   // from a team's fans back to the table
+  $("rankScreen").hidden = true; $("startScreen").hidden = false;
+};
 $("menuBtn").onclick = () => { $("overScreen").hidden = true; renderTeams(); $("startScreen").hidden = false; if (!demo) startDemo(); };
 
 // ---------- Sound (synthesized, starts on the first touch) ----------
