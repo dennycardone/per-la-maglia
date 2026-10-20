@@ -769,7 +769,7 @@ function nextShot(){
     else if (windOn) note = ["Si alza il vento", setup.wind > 0 ? "A favore: il pallone vola più lungo" : "Contro: il pallone cade più corto"];
     else if (windTurn) note = ["Il vento gira", setup.wind > 0 ? "Ora è a favore" : "Ora è contro"];
     else if (windOff) note = ["Il vento cala", "Si torna a tirare come sempre"];
-    if (note) showNote([note]);
+    // weather changes show only in the chips at the top
     prevWx = { rain: !!setup.rain, wind: setup.wind || 0 };
     weatherTurn();
   }
@@ -1263,7 +1263,7 @@ function updateHud(){
 let popTimer = null;
 function pop(big, sub, cls, tm){
   const p = $("pop"); $("popBig").textContent = big; $("popSub").textContent = sub;
-  const m = $("popMs"); m.textContent = tm ? tm.text : ""; m.className = "ms" + (tm && tm.perfect ? " perfect" : "");
+  const m = $("popMs"); m.textContent = ""; m.className = "ms";   // no timing details on screen
   p.className = "pop " + cls; void p.offsetWidth; p.classList.add("on");
   clearTimeout(popTimer); popTimer = setTimeout(hidePop, 1200);
 }
