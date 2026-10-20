@@ -1,5 +1,5 @@
 // Per la Maglia — service worker: the game works offline after the first visit.
-const CACHE = "perlamaglia-v17";
+const CACHE = "perlamaglia-v18";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {

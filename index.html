@@ -220,7 +220,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 .kbd-keys{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:5px}
 .kbd-row{display:flex;gap:5px;justify-content:center}
 .key{appearance:none;flex:1 1 0;max-width:68px;height:clamp(30px,8.5vh,44px);border:0;border-radius:6px;background:rgba(238,242,234,.1);color:var(--chalk);font-family:var(--label);font-weight:700;font-size:18px;cursor:pointer;-webkit-user-select:none;user-select:none}
-.key:active{background:rgba(255,194,75,.35)}
+.key.on{background:rgba(255,194,75,.35)}
 .key.k-shift,.key.k-del{flex:1.5 1 0;max-width:100px;font-size:14px}
 .key.k-space{flex:5 1 0;max-width:340px;font-size:14px}
 .key.k-ok{flex:2 1 0;max-width:140px;background:var(--amber);color:#1a1205;font-family:var(--display);font-weight:900}
@@ -1276,7 +1276,7 @@ function renderTeams(){
 const cleanNick = v => String(v || "").replace(/[<>"'`\\]/g, "").replace(/\s+/g, " ").trim().slice(0, 16);
 $("nickInput").value = store.get("cucchiaio.nick", "");
 // the nickname is typed on the game's own keyboard, never the phone's
-const KB = { up: true, val: "" };
+const KB = { up: true, val: "", armAt: 0, down: null };
 function kbdRender(){
   const rows = [["1","2","3","4","5","6","7","8","9","0"], ["q","w","e","r","t","y","u","i","o","p"], ["a","s","d","f","g","h","j","k","l"], ["shift","z","x","c","v","b","n","m","del"], ["_","-",".","space","ok"]];
   const box = $("kbdKeys"); box.innerHTML = "";
@@ -1285,7 +1285,10 @@ function kbdRender(){
     row.forEach(k => {
       const b = document.createElement("button"); b.type = "button"; b.className = "key k-" + k;
       b.textContent = k === "shift" ? (KB.up ? "▲ ABC" : "△ abc") : k === "del" ? "⌫" : k === "space" ? "spazio" : k === "ok" ? "Fatto" : (/[a-z]/.test(k) && KB.up ? k.toUpperCase() : k);
-      b.addEventListener("pointerdown", e => { e.preventDefault(); kbdPress(k); });
+      b.addEventListener("pointerdown", e => { e.preventDefault(); if (performance.now() < KB.armAt) return; KB.down = k; b.classList.add("on"); });
+      b.addEventListener("pointerup", e => { e.preventDefault(); b.classList.remove("on"); if (KB.down === k && performance.now() >= KB.armAt) kbdPress(k); KB.down = null; });
+      b.addEventListener("pointerleave", () => { b.classList.remove("on"); if (KB.down === k) KB.down = null; });
+      b.addEventListener("pointercancel", () => { b.classList.remove("on"); KB.down = null; });
       r.appendChild(b);
     });
     box.appendChild(r);
@@ -1308,9 +1311,10 @@ function kbdPress(k){
   store.set("cucchiaio.nick", cleanNick(KB.val));
   kbdRender();
 }
-function kbdOpen(){ KB.val = $("nickInput").value || ""; KB.up = !KB.val; $("kbd").hidden = false; $("nickInput").classList.add("editing"); kbdRender(); }
+function kbdOpen(){ if (!$("kbd").hidden) return; KB.armAt = performance.now() + 350; KB.down = null; KB.val = $("nickInput").value || ""; KB.up = !KB.val; $("kbd").hidden = false; $("nickInput").classList.add("editing"); kbdRender(); }
 function kbdClose(){ $("kbd").hidden = true; $("nickInput").classList.remove("editing"); $("nickInput").value = cleanNick(KB.val); store.set("cucchiaio.nick", cleanNick(KB.val)); renderRanks(); srvProfile(); }
-$("nickInput").addEventListener("pointerdown", e => { e.preventDefault(); kbdOpen(); });
+$("nickInput").addEventListener("pointerdown", e => { e.preventDefault(); });
+$("nickInput").addEventListener("click", e => { e.preventDefault(); kbdOpen(); });   // opens when the finger lifts, so the same touch can never hit a key
 $("nickInput").addEventListener("focus", e => { e.target.blur(); kbdOpen(); });
 document.addEventListener("pointerdown", e => { if (!$("kbd").hidden && !e.target.closest("#kbd") && e.target.id !== "nickInput") kbdClose(); }, true);
 $("playBtn").onclick = startGame;
