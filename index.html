@@ -145,7 +145,68 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .overtake small{display:block;margin-top:4px;font-family:var(--label);font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
 .lvline{display:flex;justify-content:space-between;gap:12px;font-family:var(--label);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
 .lvline span:last-child{color:var(--mute);font-weight:600}
-#startScreen{background:linear-gradient(90deg,rgba(5,8,14,.92) 0%,rgba(5,8,14,.78) 50%,rgba(5,8,14,.5) 100%);-webkit-backdrop-filter:blur(1.5px);backdrop-filter:blur(1.5px)}
+/* ---------- Home: curva with choreography up top, flares rising from below ---------- */
+#startScreen.home{display:block;padding:0;background:#05080e;-webkit-backdrop-filter:none;backdrop-filter:none;--c1:#ffc24b;--c2:#111827;--s1:rgba(255,194,75,.8);--s2:rgba(255,255,255,.6);--ttl:#ffc24b}
+.hbg{position:absolute;inset:0;overflow:hidden}
+.coreo{position:absolute;left:-30px;right:-30px;top:-20px;height:58%;background:radial-gradient(circle,rgba(255,255,255,.5) 1.2px,transparent 1.7px) 0 0/7px 7px,repeating-linear-gradient(180deg,var(--c1) 0 34px,var(--c2) 34px 68px);
+  transform:perspective(600px) rotateX(28deg);transform-origin:50% 0;opacity:.85;-webkit-mask:linear-gradient(180deg,#000 50%,transparent);mask:linear-gradient(180deg,#000 50%,transparent);animation:sway 7s ease-in-out infinite}
+@keyframes sway{50%{transform:perspective(600px) rotateX(28deg) translateY(3px)}}
+.coreoWord{position:absolute;left:0;right:0;top:2px;text-align:center;font-family:var(--display);font-weight:900;font-size:clamp(70px,17vw,150px);letter-spacing:.05em;color:rgba(5,8,14,.32);white-space:nowrap;transform:perspective(600px) rotateX(28deg);transform-origin:50% 0;-webkit-mask:linear-gradient(180deg,#000 40%,transparent 80%);mask:linear-gradient(180deg,#000 40%,transparent 80%)}
+.puffs i{position:absolute;width:56vw;height:56vw;max-width:520px;max-height:520px;border-radius:50%;background:radial-gradient(circle,var(--s1) 0,transparent 62%);opacity:.75;will-change:transform}
+.puffs i:nth-child(2n){background:radial-gradient(circle,var(--s2) 0,transparent 62%)}
+.puffs i:nth-child(1){left:-18%;bottom:-30%;animation:rise 9s ease-in-out infinite}
+.puffs i:nth-child(2){left:8%;bottom:-38%;animation:rise 11s ease-in-out -3s infinite}
+.puffs i:nth-child(3){left:32%;bottom:-34%;animation:rise 10s ease-in-out -6s infinite}
+.puffs i:nth-child(4){left:55%;bottom:-40%;animation:rise 12s ease-in-out -2s infinite}
+.puffs i:nth-child(5){left:76%;bottom:-32%;animation:rise 9.5s ease-in-out -5s infinite}
+.puffs i:nth-child(6){left:20%;bottom:-10%;opacity:.35;animation:rise 14s ease-in-out -8s infinite}
+.puffs i:nth-child(7){left:62%;bottom:-12%;opacity:.35;animation:rise 13s ease-in-out -4s infinite}
+@keyframes rise{0%{transform:translate(0,8%) scale(.9)}50%{transform:translate(4%,-10%) scale(1.08)}100%{transform:translate(0,8%) scale(.9)}}
+.beams{position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,240,200,.08) 38%,transparent 46%),linear-gradient(65deg,transparent 52%,rgba(255,240,200,.08) 60%,transparent 68%)}
+.hdim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,8,14,.55),rgba(5,8,14,0) 22%,rgba(5,8,14,.08) 62%,rgba(5,8,14,.88))}
+.light .puffs i:nth-child(n+5){display:none}
+@media (prefers-reduced-motion:reduce){.puffs i,.coreo{animation:none!important}}
+.htop{position:absolute;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;gap:8px;align-items:center;z-index:2}
+.leagues{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;touch-action:pan-x}
+.leagues::-webkit-scrollbar{display:none}
+.lgb{flex:none;display:flex;align-items:center;gap:6px;padding:6px 11px 6px 8px;border-radius:999px;background:rgba(5,8,14,.72);border:1px solid rgba(238,242,234,.18);font-family:var(--label);font-weight:700;font-size:13px;letter-spacing:.05em;color:var(--mute);white-space:nowrap;appearance:none;cursor:pointer}
+.lgb[aria-pressed="true"]{background:rgba(255,194,75,.18);border-color:var(--amber);color:var(--amber)}
+.lgb:disabled{cursor:default}
+.lgb small{font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
+.flag{width:18px;height:12px;border-radius:2px;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+.f-it{background:linear-gradient(90deg,#009246 33%,#fff 33% 66%,#ce2b37 66%)}
+.f-en{background:linear-gradient(90deg,transparent 42%,#ce1124 42% 58%,transparent 58%),linear-gradient(0deg,#fff 38%,#ce1124 38% 62%,#fff 62%)}
+.f-es{background:linear-gradient(0deg,#aa151b 25%,#f1bf00 25% 75%,#aa151b 75%)}
+.f-de{background:linear-gradient(0deg,#ffce00 33%,#dd0000 33% 66%,#000 66%)}
+.f-fr{background:linear-gradient(90deg,#002395 33%,#fff 33% 66%,#ed2939 66%)}
+.hicons{display:flex;gap:6px;flex:none}
+.hico{appearance:none;height:36px;min-width:36px;padding:0 9px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(5,8,14,.72);border:1px solid rgba(238,242,234,.22);color:var(--chalk);font-size:16px;font-family:var(--label);font-weight:700;cursor:pointer}
+.hico span{font-size:13px;letter-spacing:.04em}
+#installBtn{border-color:rgba(255,194,75,.6);color:var(--amber)}
+#installBtn.go{animation:pulse 1.2s ease-in-out infinite;background:rgba(255,194,75,.14)}
+.champ{position:absolute;left:max(12px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 54px);z-index:2;width:auto!important;max-width:46vw;padding:5px 10px!important;font-size:12px!important;gap:6px!important}
+.champ .cup{font-size:16px!important}
+.champ small{font-size:11px!important}
+.hcenter{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 58px);bottom:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:1;padding:0 16px}
+.who{appearance:none;border:0;background:none;cursor:pointer;font-family:var(--label);font-weight:700;font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:#e7eef2;text-shadow:0 2px 8px #000;padding:2px 8px;border-radius:6px}
+.who b{color:var(--amber)}
+.who .pen{opacity:.7;letter-spacing:0;margin-left:4px}
+.who.need{color:#ff8a7e}
+.who.shake,.bench.shake{animation:shake .4s}
+#nickInput{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.htitle{font-family:var(--display);font-weight:900;font-size:clamp(46px,10vw,78px);line-height:.86;color:#fff;-webkit-text-stroke:3px var(--ttl);paint-order:stroke fill;text-shadow:0 6px 24px rgba(0,0,0,.7);text-align:center}
+#playBtn.hplay{width:min(300px,70vw);height:60px;font-size:34px;box-shadow:0 0 0 6px rgba(255,194,75,.22),0 10px 30px rgba(0,0,0,.6)}
+#playBtn.hplay.off{background:rgba(5,8,14,.75);border:2px dashed rgba(255,194,75,.7);color:var(--amber);box-shadow:none;font-size:22px;width:min(340px,80vw)}
+#startScreen .homeTeam{padding:5px 12px;border-radius:999px;background:rgba(5,8,14,.72);border:0;font-size:13px;text-align:center;max-width:92vw}
+#startScreen .homeTeam small{display:inline;margin-left:6px}
+.hask{position:absolute;left:0;right:0;bottom:96px;text-align:center;font-family:var(--label);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);text-shadow:0 2px 8px #000;z-index:1;animation:pulse2 1.4s ease-in-out infinite}
+@keyframes pulse2{50%{opacity:.5}}
+.bench{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);display:flex;gap:6px;overflow-x:auto;padding:8px max(16px,env(safe-area-inset-left,0px)) 4px;scrollbar-width:none;touch-action:pan-x;z-index:2;-webkit-mask:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
+.bench::-webkit-scrollbar{display:none}
+.bj{flex:none;width:76px;padding:6px 0 5px;border-radius:10px;background:rgba(5,8,14,.75);border:1px solid rgba(238,242,234,.16);display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--chalk);font-family:var(--label);font-weight:700;font-size:12px;cursor:pointer;appearance:none;transition:transform .2s}
+.bj[aria-pressed="true"]{border:2px solid var(--amber);background:rgba(255,194,75,.16);color:var(--amber);transform:translateY(-6px)}
+.home.none .bj{box-shadow:0 0 0 1px rgba(255,194,75,.35)}
+@media (orientation:portrait){.htop{flex-wrap:wrap}.leagues{order:2;flex-basis:100%}.champ{top:calc(env(safe-area-inset-top,0px) + 96px);max-width:90vw}.hcenter{top:150px}.hico span{display:none}}
 .trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .trio .btn{font-size:17px;padding:11px 6px}
 .btn.small{font-size:16px;padding:9px}
@@ -324,26 +385,31 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 
 <div id="rotate" hidden><div><div class="phone"></div><p>Gira il telefono</p><small>Per la Maglia si gioca in orizzontale</small></div></div>
 
-<section class="screen" id="startScreen">
-  <div class="panel">
-    <div class="col">
-      <div class="eyebrow">Il Cucchiaio · Classifica dei tifosi</div>
-      <h1>Per la Maglia</h1>
-      <p class="lede">Sei solo davanti al portiere. Appena compare il pallone lui ti viene incontro: tieni premuto per caricare il tiro, trascina su o giù per scegliere l'arco (alto è più sicuro, teso vale di più) e rilascia al momento giusto per scavalcarlo. Hai 3 palloni.</p>
-      <label class="label" for="nickInput">Il tuo soprannome</label>
-      <input id="nickInput" class="nick" maxlength="12" autocomplete="off" spellcheck="false" readonly inputmode="none" placeholder="Come vuoi comparire in classifica">
-      <button class="champ" id="champ" type="button" hidden></button>
-      <div class="homeTeam" id="homeTeam"></div>
-      <button class="btn ghost small install" id="installBtn" type="button"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Installa l'app</span></button>
-      <div class="hint">Si gioca con il telefono in orizzontale</div>
-    </div>
-    <div class="col">
-      <div class="label">Per chi giochi?</div>
-      <div class="teams" id="teams"></div>
-      <button class="btn" id="playBtn" type="button">Gioca</button>
-      <div class="trio"><button class="btn ghost" id="rankBtn" type="button">Classifica</button><button class="btn ghost" id="profileBtn" type="button">Profilo</button><button class="btn ghost" id="settingsBtn" type="button">Impostazioni</button></div>
+<section class="screen home" id="startScreen">
+  <div class="hbg" aria-hidden="true">
+    <div class="coreo"></div><div class="coreoWord" id="coreoWord">PER LA MAGLIA</div>
+    <div class="puffs"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="beams"></div><div class="hdim"></div>
+  </div>
+  <div class="htop">
+    <div class="leagues" id="leagues"></div>
+    <div class="hicons">
+      <button class="hico" id="installBtn" type="button" aria-label="Installa l'app"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Installa l'app</span></button>
+      <button class="hico" id="rankBtn" type="button" aria-label="Classifica">🏆</button>
+      <button class="hico" id="profileBtn" type="button" aria-label="Profilo">👤</button>
+      <button class="hico" id="settingsBtn" type="button" aria-label="Impostazioni">⚙️</button>
     </div>
   </div>
+  <button class="champ" id="champ" type="button" hidden></button>
+  <div class="hcenter">
+    <button class="who" id="nickBtn" type="button"></button>
+    <input id="nickInput" class="nick" maxlength="12" autocomplete="off" spellcheck="false" readonly inputmode="none" tabindex="-1" aria-hidden="true">
+    <div class="htitle" id="htitle">Per la Maglia</div>
+    <button class="btn hplay" id="playBtn" type="button">GIOCA</button>
+    <div class="homeTeam" id="homeTeam"></div>
+  </div>
+  <div class="hask" id="hask" hidden>↓ Scegli la tua squadra per iniziare ↓</div>
+  <div class="bench" id="teams"></div>
 </section>
 
 <div class="kbd" id="kbd" hidden>
@@ -556,7 +622,9 @@ I18N.en = {
   "Piccoli colpi al tiro e al gol.": "Small taps on shots and goals.", "Non disponibile su questo telefono (per esempio su iPhone).": "Not available on this phone (for example on iPhone).",
   "Grafica leggera": "Light graphics", "Meno effetti e risoluzione ridotta, per telefoni meno potenti.": "Fewer effects and lower resolution, for less powerful phones.",
   "Colori per daltonici": "Colour-blind colours", "Errori in blu invece che in rosso e contorni più marcati sulla tua squadra.": "Misses in blue instead of red and stronger outlines on your team.",
-  "Sì": "On", "No": "Off", "Valore dei tiri": "Shot values", "Lingua": "Language", "La lingua di tutto il gioco.": "The language of the whole game.",
+  "Sì": "On", "No": "Off", "Valore dei tiri": "Shot values", "GIOCA": "PLAY", "Prima scegli la squadra": "Pick your team first", "presto": "soon",
+  "Ciao {n}": "Hi {n}", "Benvenuto, tifoso": "Welcome, fan", "↓ Scegli la tua squadra per iniziare ↓": "↓ Pick your team to start ↓",
+  "20 tifoserie di Serie A si sfidano ogni settimana · ": "20 Serie A fan bases compete every week · ", "la tua manca": "yours is missing", "Lingua": "Language", "La lingua di tutto il gioco.": "The language of the whole game.",
   "Numero di maglia": "Shirt number", "Il numero del tuo giocatore in campo.": "Your player's number on the pitch.",
   "Tutorial": "Tutorial", "Rifai i tre tiri di prova alla prossima partita.": "Replay the three practice shots in your next game.", "Rivedi": "Replay", "Alla prossima partita": "Next game",
   // install
@@ -581,6 +649,8 @@ const ART = { Atalanta: "l'", Fiorentina: "la", Inter: "l'", Juventus: "la", Laz
 const PREP = { "": { il: "il ", la: "la ", "l'": "l'" }, per: { il: "per il ", la: "per la ", "l'": "per l'" }, di: { il: "del ", la: "della ", "l'": "dell'" },
                a: { il: "al ", la: "alla ", "l'": "all'" }, da: { il: "dal ", la: "dalla ", "l'": "dall'" }, su: { il: "sul ", la: "sulla ", "l'": "sull'" } };
 function sq(name, prep = "", cap = false){ if (LANG !== "it") return name; const t = PREP[prep][ART[name] || "il"] + name; return cap ? t[0].toUpperCase() + t.slice(1) : t; }
+// a first-time player has no team yet: the home stays neutral until one is chosen
+let teamChosen = !!store.get("cucchiaio.teamName", "") || store.get("cucchiaio.team", -1) >= 0 || store.get("pennellata.team", -1) >= 0;
 const OLD_TEAMS = ["Milan","Inter","Juventus","Napoli","Roma","Lazio","Atalanta","Fiorentina","Bologna","Torino","Genoa","Bari","Palermo","Sampdoria","Udinese","Cagliari"];
 let teamIdx = (() => {
   const byName = TEAMS.findIndex(t => t[0] === store.get("cucchiaio.teamName", ""));
@@ -1564,6 +1634,16 @@ function renderChamp(){
 }
 function renderHome(){
   renderChamp();
+  const nick = cleanNick(store.get("cucchiaio.nick", ""));
+  const nb = $("nickBtn");
+  if (nb) {
+    nb.innerHTML = "";
+    if (!teamChosen) nb.textContent = nick ? tr("Ciao {n}", { n: nick }) : tr("Benvenuto, tifoso");
+    else { nb.append(document.createTextNode((nick || tr("Il tuo soprannome")) + " · ")); const b = document.createElement("b"); b.textContent = "N° " + (SET.num || 10); nb.append(b, document.createTextNode(" · " + TEAMS[teamIdx][0])); }
+    const pen = document.createElement("span"); pen.className = "pen"; pen.textContent = "✎"; nb.appendChild(pen);
+  }
+  if ($("hask")) $("hask").hidden = teamChosen;
+  if (!teamChosen) { const e = $("homeTeam"); e.innerHTML = ""; e.append(document.createTextNode(tr("20 tifoserie di Serie A si sfidano ogni settimana · "))); const b = document.createElement("b"); b.textContent = tr("la tua manca"); e.appendChild(b); return; }
   const el = $("homeTeam"); if (!el) return;
   const rows = teamRows(), me = TEAMS[teamIdx][0], i = rows.findIndex(r => r.name === me), r = rows[i];
   el.textContent = "";
@@ -1575,17 +1655,45 @@ function renderHome(){
   el.appendChild(document.createTextNode(txt));
   const sm = document.createElement("small"); sm.textContent = seasonLeft(); el.appendChild(sm);
 }
+const LEAGUES = [["serie-a", "Serie A", "f-it", true], ["premier", "Premier", "f-en", false], ["laliga", "LaLiga", "f-es", false], ["bundesliga", "Bundesliga", "f-de", false], ["ligue1", "Ligue 1", "f-fr", false]];
+function renderLeagues(){
+  const box = $("leagues"); if (!box) return; box.textContent = "";
+  LEAGUES.forEach(([id, name, flag, open]) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "lgb"; b.disabled = !open;
+    b.setAttribute("aria-pressed", id === LEAGUE ? "true" : "false");
+    b.innerHTML = `<span class="flag ${flag}"></span>${name}` + (open ? "" : ` <small>${tr("presto")}</small>`);
+    box.appendChild(b);
+  });
+}
+// the home takes the colours of the team: choreography, flares and the title's outline
+function homeTheme(){
+  const h = $("startScreen"); if (!h) return;
+  h.classList.toggle("none", !teamChosen); h.classList.toggle("light", LIGHT());
+  const light = c => { const n = parseInt(c.slice(1), 16); return ((n >> 16 & 255) * 299 + (n >> 8 & 255) * 587 + (n & 255) * 114) / 1000 > 200; };
+  if (!teamChosen) {
+    h.style.setProperty("--c1", "#ffc24b"); h.style.setProperty("--c2", "#141c2b");
+    h.style.setProperty("--s1", "rgba(255,194,75,.7)"); h.style.setProperty("--s2", "rgba(90,140,255,.5)"); h.style.setProperty("--ttl", "#ffc24b");
+    $("coreoWord").textContent = "PER LA MAGLIA"; return;
+  }
+  const t = TEAMS[teamIdx], c1 = t[1], c2 = t[2] === t[1] ? "#ffffff" : t[2];
+  h.style.setProperty("--c1", c1); h.style.setProperty("--c2", c2);
+  h.style.setProperty("--s1", hexA(c1 === "#111111" ? "#5a5a5a" : c1, .85)); h.style.setProperty("--s2", hexA(c2 === "#111111" || c2 === "#0b0b0b" || c2 === "#0d0d0d" ? "#ffffff" : c2, .6));
+  h.style.setProperty("--ttl", light(c1) ? c2 : c1);
+  $("coreoWord").textContent = t[0].toUpperCase();
+}
 function renderTeams(){
   const box = $("teams"); box.innerHTML = "";
   TEAMS.forEach((t, i) => {
     const b = document.createElement("button");
-    b.type = "button"; b.className = "chip"; b.id = "team-" + i;
-    b.setAttribute("aria-pressed", i === teamIdx ? "true" : "false");
-    b.innerHTML = jerseySVG(KIT[t[0]] || ["plain", t[1], t[2]]) + `<span>${t[0]}</span>`;
-    b.onclick = () => { teamIdx = i; store.set("cucchiaio.teamName", TEAMS[i][0]); renderTeams(); buildCrowd(); renderHome(); if (srv.ok) srvProfile(); };
+    b.type = "button"; b.className = "bj"; b.id = "team-" + i;
+    b.setAttribute("aria-pressed", teamChosen && i === teamIdx ? "true" : "false");
+    b.innerHTML = jerseySVG(KIT[t[0]] || ["plain", t[1], t[2]], 40) + `<span>${t[0]}</span>`;
+    b.onclick = () => { teamIdx = i; teamChosen = true; store.set("cucchiaio.teamName", TEAMS[i][0]); renderTeams(); buildCrowd(); renderHome(); if (srv.ok) srvProfile(); };
     box.appendChild(b);
   });
-  $("playBtn").textContent = tr("Gioca {t}", { t: sq(TEAMS[teamIdx][0], "per") });
+  homeTheme(); renderLeagues();
+  const sel = $("team-" + teamIdx); if (teamChosen && sel) requestAnimationFrame(() => { try { sel.scrollIntoView({ inline: "center", block: "nearest" }); } catch (e) {} });
+  $("playBtn").textContent = teamChosen ? tr("GIOCA") : tr("Prima scegli la squadra"); $("playBtn").classList.toggle("off", !teamChosen);
   const best = store.get("cucchiaio.best", 0);
 
 }
@@ -1631,21 +1739,23 @@ function kbdOpen(why){ if (!$("kbd").hidden) return;
   const lab = document.querySelector("#kbd .kbd-label"); lab.textContent = why ? tr("Per giocare scegli prima il tuo soprannome") : tr("Il tuo soprannome"); lab.classList.toggle("warn", !!why); KB.armAt = performance.now() + 350; KB.down = null; KB.val = $("nickInput").value || ""; KB.up = !KB.val; $("kbd").hidden = false; $("nickInput").classList.add("editing"); kbdRender(); }
 // the tap that closes the keyboard must not also press what lies under it
 document.addEventListener("click", e => { if (performance.now() < (KB.blockUntil || 0)) { e.stopPropagation(); e.preventDefault(); } }, true);
-function kbdClose(){ KB.blockUntil = performance.now() + 450; if (cleanNick(KB.val).length >= 2) $("nickInput").classList.remove("need"); $("kbd").hidden = true; $("nickInput").classList.remove("editing"); $("nickInput").value = cleanNick(KB.val); store.set("cucchiaio.nick", cleanNick(KB.val)); renderRanks(); srvProfile(); }
+function kbdClose(){ KB.blockUntil = performance.now() + 450; if (cleanNick(KB.val).length >= 2) $("nickBtn").classList.remove("need"); $("kbd").hidden = true; $("nickInput").classList.remove("editing"); $("nickInput").value = cleanNick(KB.val); store.set("cucchiaio.nick", cleanNick(KB.val)); renderRanks(); renderHome(); srvProfile(); }
 $("nickInput").addEventListener("pointerdown", e => { e.preventDefault(); });
-$("nickInput").addEventListener("click", e => { e.preventDefault(); kbdOpen(false); });   // opens when the finger lifts, so the same touch can never hit a key
+$("nickInput").addEventListener("click", e => { e.preventDefault(); kbdOpen(false); });
+$("nickBtn").addEventListener("click", () => kbdOpen(false));   // opens when the finger lifts, so the same touch can never hit a key
 $("nickInput").addEventListener("focus", e => { e.target.blur(); kbdOpen(false); });
-document.addEventListener("pointerdown", e => { if (!$("kbd").hidden && !e.target.closest("#kbd") && e.target.id !== "nickInput") kbdClose(); }, true);
+document.addEventListener("pointerdown", e => { if (!$("kbd").hidden && !e.target.closest("#kbd") && e.target.id !== "nickInput" && !e.target.closest("#nickBtn")) kbdClose(); }, true);
 // you play under a nickname: without one the match does not start
 let needNickTimer = null;
 $("playBtn").onclick = () => {
+  if (!teamChosen) { const t = $("teams"); t.classList.remove("shake"); void t.offsetWidth; t.classList.add("shake"); buzz([30, 40, 30]); return; }
   if (cleanNick(store.get("cucchiaio.nick", "")).length >= 2) return startGame();
-  const b = $("playBtn"), inp = $("nickInput");
+  const b = $("playBtn"), inp = $("nickBtn");
   b.textContent = tr("Prima scrivi il tuo soprannome"); b.classList.add("warn");
   inp.classList.remove("shake"); void inp.offsetWidth; inp.classList.add("shake", "need");
   buzz([40, 60, 40]);
   clearTimeout(needNickTimer);
-  needNickTimer = setTimeout(() => { b.classList.remove("warn"); b.textContent = tr("Gioca {t}", { t: sq(TEAMS[teamIdx][0], "per") }); }, 2200);
+  needNickTimer = setTimeout(() => { b.classList.remove("warn"); b.textContent = tr("GIOCA"); }, 2200);
   setTimeout(() => kbdOpen(true), 250);
 };
 $("againBtn").onclick = startGame;
@@ -1673,7 +1783,7 @@ function renderSettings(){
     sw.onclick = () => {
       if (key === "audio") { sfx.toggle(); syncSound(); }
       else if (key === "vibra") SET.vibra = !SET.vibra;
-      else if (key === "quality") { SET.quality = SET.quality === "leggera" ? "alta" : "leggera"; resize(); }
+      else if (key === "quality") { SET.quality = SET.quality === "leggera" ? "alta" : "leggera"; resize(); homeTheme(); }
       else if (key === "cb") { SET.cb = !SET.cb; document.body.classList.toggle("cb", SET.cb); }
       saveSet(); renderSettings();
     };
@@ -2348,7 +2458,7 @@ function frame(now){
   if (G && phase !== "over" && phase !== "menu") $("clock").textContent = fmt(now - G.start);
   updateGuide();
   crowdTick(dt);
-  if (setup) {
+  if (setup && $("startScreen").hidden) {
     if (ctx.reset) ctx.reset();
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     try { drawScene(); } catch (e) { console.warn(e); }
