@@ -191,7 +191,7 @@ body{position:fixed;inset:0;touch-action:none}
 .screen{overflow:hidden;touch-action:none;overscroll-behavior:none}
 .screen.tall{overflow-y:auto;touch-action:pan-y}
 .rlist{touch-action:pan-y;overscroll-behavior:contain}
-.panel.wide{max-width:1100px;display:flex;flex-direction:column;gap:8px}
+.panel.wide{width:min(100%,1100px)!important;max-width:1100px;display:flex;flex-direction:column;gap:8px;align-self:start;align-items:stretch}
 .rhead{display:flex;align-items:flex-end;gap:14px}
 .rhead .rh1{flex:1;min-width:0}
 .rhead h1{font-size:clamp(30px,5vw,44px)}
@@ -795,6 +795,77 @@ async function submitOnline(team, game){
 }
 const sharedMode = () => online.db && online.ready;
 
+// ---------- Shared leaderboard on the server (Supabase). If it cannot be reached, the phone's own data is used. ----------
+const SB = { url: "https://dhjnawjtqqkrcymycway.supabase.co",
+  key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoam5hd2p0cXFrcmN5bXljd2F5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0Nzc1MDIsImV4cCI6MjEwODA1MzUwMn0.i28bdNPelalL73rx1KmJnJfi3e9aYBAMVhjpYepvisQ" };
+const srv = { ok: false, uid: null, sid: null, week: {}, records: {}, winners: [], fans: {}, fansAt: {}, mine: {}, loading: false };
+async function sbAuth(){
+  let ses = store.get("pm.session", null);
+  const call = async (path, body) => {
+    const r = await fetch(SB.url + "/auth/v1/" + path, { method: "POST", headers: { apikey: SB.key, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error("auth " + r.status); const j = await r.json();
+    return { at: j.access_token, rt: j.refresh_token, exp: Date.now() + (j.expires_in || 3600) * 1000 - 60000, uid: j.user && j.user.id };
+  };
+  if (ses && ses.exp > Date.now()) return ses;
+  if (ses && ses.rt) { try { ses = await call("token?grant_type=refresh_token", { refresh_token: ses.rt }); store.set("pm.session", ses); return ses; } catch (e) {} }
+  ses = await call("signup", { data: {} }); store.set("pm.session", ses); return ses;
+}
+async function sb(path, opt = {}){
+  const ses = await sbAuth(); srv.uid = ses.uid;
+  const r = await fetch(SB.url + "/rest/v1/" + path, { method: opt.body ? "POST" : "GET",
+    headers: { apikey: SB.key, Authorization: "Bearer " + ses.at, "Content-Type": "application/json" }, body: opt.body ? JSON.stringify(opt.body) : undefined });
+  if (!r.ok) { const t = await r.text().catch(() => ""); throw new Error(r.status + " " + t); }
+  const tx = await r.text(); return tx ? JSON.parse(tx) : null;
+}
+async function srvLoad(){
+  if (srv.loading) return; srv.loading = true;
+  try {
+    const ses = await sbAuth(); srv.uid = ses.uid;
+    const sid = seasonId(), q = encodeURIComponent(sid);
+    const [week, rec, win, mine] = await Promise.all([
+      sb(`team_week?season=eq.${q}&select=team,pts,fans`),
+      sb(`team_record?season=eq.${q}&select=team,pts,nick`),
+      sb(`season_winners?season=lt.${q}&select=season,team,pts&order=season.desc&limit=4`),
+      sb(`player_team_stats?player_id=eq.${srv.uid}&select=*`)
+    ]);
+    srv.sid = sid; srv.week = {}; week.forEach(w => srv.week[w.team] = { pts: +w.pts, fans: w.fans });
+    srv.records = {}; rec.forEach(x => srv.records[x.team] = { pts: x.pts, name: x.nick });
+    srv.winners = win; srv.mine = {}; mine.forEach(m => srv.mine[m.team] = m);
+    srv.fans = {}; srv.ok = true;
+    await srvFlush();
+  } catch (e) { console.warn("server", e); }
+  srv.loading = false;
+  renderRanks(); if (!$("profileScreen").hidden) renderProfile();
+}
+async function srvFans(team){
+  if (srv.fansAt[team] && Date.now() - srv.fansAt[team] < 20000) return;
+  srv.fansAt[team] = Date.now();
+  try {
+    const rows = await sb(`team_fans?season=eq.${encodeURIComponent(seasonId())}&team=eq.${encodeURIComponent(team)}&select=player_id,nick,pts&order=pts.desc&limit=200`);
+    srv.fans[team] = rows.map(x => ({ me: x.player_id === srv.uid, name: x.nick, pts: +x.pts, lv: 0 }));
+  } catch (e) { srv.fansAt[team] = 0; }
+  renderRanks();
+}
+// games that could not be sent wait on the phone and go out at the next chance
+async function srvFlush(){
+  const queue = store.get("pm.queue", []);
+  while (queue.length) {
+    try { await sb("rpc/submit_game", { body: queue[0] }); }
+    catch (e) { if (/^4\d\d/.test(e.message) && !/too fast/.test(e.message)) queue.shift(); else break; store.set("pm.queue", queue); continue; }
+    queue.shift(); store.set("pm.queue", queue);
+  }
+}
+function srvSubmit(team, g, dur){
+  const q = store.get("pm.queue", []);
+  q.push({ p_team: team, p_score: g.score, p_shots: g.shots, p_goals: g.goals, p_perfect: g.perfect, p_top: g.top, p_best_streak: g.bestStreak,
+           p_duration: Math.round(dur * 10) / 10, p_nick: cleanNick(store.get("cucchiaio.nick", "")) || "Tifoso" });
+  store.set("pm.queue", q.slice(-20));
+  srvFlush().then(srvLoad);
+}
+function srvProfile(){
+  sb("rpc/set_profile", { body: { p_nick: cleanNick(store.get("cucchiaio.nick", "")) || "Tifoso", p_team: TEAMS[teamIdx][0] } }).then(() => { srv.fansAt = {}; }).catch(() => {});
+}
+
 // Weekly seasons (Monday 00:00 Europe/Rome). The team table resets every week; past winners stay in the honours list.
 function romeNow(){
   const p = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
@@ -835,6 +906,7 @@ function myStats(){
 }
 function seasonTotals(sid){
   const totals = {}, fans = {};
+  if (srv.ok && sid === srv.sid) { for (const [t, w] of Object.entries(srv.week)) { totals[t] = w.pts; fans[t] = w.fans; } return { totals, fans }; }
   if (sharedMode()) {
     for (const d of online.docs) {
       const ss = d.seasons && d.seasons[sid]; if (!ss) continue;
@@ -850,6 +922,7 @@ function teamRows(extra){
     .sort((a, b) => b.pts - a.pts || a.name.localeCompare(b.name));
 }
 function honours(){
+  if (srv.ok) return srv.winners.filter(w => w.pts > 0).map(w => ({ sid: w.season, team: w.team, pts: +w.pts }));
   const sids = new Set(), now = seasonId();
   if (sharedMode()) online.docs.forEach(d => Object.keys(d.seasons || {}).forEach(k => sids.add(k)));
   else Object.keys(store.get("cucchiaio.seasons", {})).forEach(k => sids.add(k));
@@ -862,6 +935,7 @@ function honours(){
 // record of the week for every team, with who made it
 function teamBests(sid){
   const out = {};
+  if (srv.ok && sid === srv.sid) return Object.assign(out, srv.records);
   if (sharedMode()) {
     for (const d of online.docs) {
       const ss = d.seasons && d.seasons[sid]; if (!ss) continue;
@@ -873,6 +947,7 @@ function teamBests(sid){
 }
 // everyone who played for a team this week, with their total for that team
 function fansOf(team, sid){
+  if (srv.ok) { if (!srv.fans[team]) { srvFans(team); return null; } return srv.fans[team]; }
   if (sharedMode()) {
     return online.docs.filter(d => d.seasons && d.seasons[sid] && d.seasons[sid].teams && d.seasons[sid].teams[team] > 0).map(d => ({
       me: d.id === online.uid, name: cleanNick(d.nick) || online.names[d.id] || (d.id === online.uid ? "Tu" : "Tifoso"),
@@ -896,6 +971,7 @@ function fanRows(){
   return best ? [{ me: true, name: cleanNick(store.get("cucchiaio.nick", "")) || "Tu", team: tm[0], color: tm[1], pts: best, lv: levelOf(store.get("cucchiaio.stats", EMPTY_STATS).points).lv }] : [];
 }
 function rankStatus(){
+  if (srv.ok) return "Classifica condivisa tra tutti i tifosi.";
   if (sharedMode()) {
     if (online.canWrite === false || online.writeFailed) return "Classifica condivisa. Con il tuo accesso a questa pagina puoi vederla, ma i tuoi punti restano su questo dispositivo.";
     return "Classifica condivisa tra tutti i tifosi, aggiornata in tempo reale.";
@@ -939,6 +1015,7 @@ function renderRanks(){
       if (title) title.textContent = "Tifosi " + sq(team, "di");
       const hint = box.querySelector(".rhint"); if (hint) hint.textContent = "Chi ha giocato " + sq(team, "per") + " questa settimana, con il suo totale";
       const rows = fansOf(team, sid);
+      if (rows === null) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = "Carico i tifosi…"; list.appendChild(e); box.querySelector(".rstatus").textContent = ""; return; }
       if (!full) {
         const bk = document.createElement("button"); bk.type = "button"; bk.className = "rback"; bk.textContent = "← Tutte le squadre · tifosi " + sq(team, "di");
         bk.onclick = () => { box.dataset.tab = "teams"; renderRanks(); }; list.appendChild(bk);
@@ -1128,6 +1205,7 @@ function gameOver(){
   $("stats").innerHTML = cells.map(([v,k]) => `<div class="stat"><div class="v">${v}</div><div class="k">${k}</div></div>`).join("");
   renderRanks();
   submitOnline(t[0], G).then(renderRanks);
+  srvSubmit(t[0], G, (end - G.start) / 1000);
   hidePop(); $("hud").hidden = true; $("info").hidden = true; $("overScreen").hidden = false;
   setTimeout(() => { if (phase === "over" || phase === "after") startDemo(); }, 900);
 }
@@ -1188,7 +1266,7 @@ function renderTeams(){
     b.type = "button"; b.className = "chip"; b.id = "team-" + i;
     b.setAttribute("aria-pressed", i === teamIdx ? "true" : "false");
     b.innerHTML = jerseySVG(KIT[t[0]] || ["plain", t[1], t[2]]) + `<span>${t[0]}</span>`;
-    b.onclick = () => { teamIdx = i; store.set("cucchiaio.teamName", TEAMS[i][0]); renderTeams(); buildCrowd(); renderHome(); };
+    b.onclick = () => { teamIdx = i; store.set("cucchiaio.teamName", TEAMS[i][0]); renderTeams(); buildCrowd(); renderHome(); if (srv.ok) srvProfile(); };
     box.appendChild(b);
   });
   $("playBtn").textContent = "Gioca " + sq(TEAMS[teamIdx][0], "per");
@@ -1231,7 +1309,7 @@ function kbdPress(k){
   kbdRender();
 }
 function kbdOpen(){ KB.val = $("nickInput").value || ""; KB.up = !KB.val; $("kbd").hidden = false; $("nickInput").classList.add("editing"); kbdRender(); }
-function kbdClose(){ $("kbd").hidden = true; $("nickInput").classList.remove("editing"); $("nickInput").value = cleanNick(KB.val); store.set("cucchiaio.nick", cleanNick(KB.val)); renderRanks(); }
+function kbdClose(){ $("kbd").hidden = true; $("nickInput").classList.remove("editing"); $("nickInput").value = cleanNick(KB.val); store.set("cucchiaio.nick", cleanNick(KB.val)); renderRanks(); srvProfile(); }
 $("nickInput").addEventListener("pointerdown", e => { e.preventDefault(); kbdOpen(); });
 $("nickInput").addEventListener("focus", e => { e.target.blur(); kbdOpen(); });
 document.addEventListener("pointerdown", e => { if (!$("kbd").hidden && !e.target.closest("#kbd") && e.target.id !== "nickInput") kbdClose(); }, true);
@@ -1273,7 +1351,7 @@ function openSettings(from){ settingsFrom = from; $(from).hidden = true; $("sett
 $("settingsBtn").onclick = () => openSettings("startScreen");
 $("pauseSettings").onclick = () => openSettings("pauseScreen");
 $("settingsBack").onclick = () => { $("settingsScreen").hidden = true; $(settingsFrom).hidden = false; };
-$("rankBtn").onclick = () => { document.querySelector("#rankScreen [data-rank]").dataset.tab = "teams"; $("startScreen").hidden = true; $("rankScreen").hidden = false; renderRanks(); };
+$("rankBtn").onclick = () => { srvLoad(); document.querySelector("#rankScreen [data-rank]").dataset.tab = "teams"; $("startScreen").hidden = true; $("rankScreen").hidden = false; renderRanks(); };
 function renderProfile(){
   const st = Object.assign({}, EMPTY_STATS, myStats()), L = levelOf(st.points);
   $("lvTitle").textContent = L.name; $("lvNum").textContent = "Livello " + L.lv;
@@ -1282,7 +1360,13 @@ function renderProfile(){
   $("lvText").textContent = st.games ? `Mancano ${(L.next - st.points).toLocaleString("it-IT")} punti al livello ${L.lv + 1}. Il livello compare accanto al tuo nome nella classifica Tifosi.` : "Gioca la prima partita: ogni punto che segni fa crescere il tuo livello di tifoso.";
   // the numbers are those played for the team you have chosen; the level counts every match
   const team = TEAMS[teamIdx][0], doc = sharedMode() && online.docs.find(d => d.id === online.uid);
-  const tst = Object.assign({}, EMPTY_STATS, (doc && doc.teamStats && doc.teamStats[team]) || store.get("cucchiaio.teamStats", {})[team] || {});
+  let tst = Object.assign({}, EMPTY_STATS, (doc && doc.teamStats && doc.teamStats[team]) || store.get("cucchiaio.teamStats", {})[team] || {});
+  if (srv.ok) {
+    const m = srv.mine[team];
+    tst = m ? { games: m.games, points: +m.points, best: m.best, shots: m.shots, goals: m.goals, perfect: m.perfect, top: m.top, bestStreak: m.best_streak } : Object.assign({}, EMPTY_STATS);
+    const all = Object.values(srv.mine);
+    st.games = Math.max(st.games, all.reduce((a, x) => a + x.games, 0));
+  }
   $("profileLabel").textContent = "Statistiche " + sq(team, "per").replace(/^per /, "con ").replace(/^con l'/, "con l'");
   const acc = tst.shots ? Math.round(tst.goals / tst.shots * 100) + "%" : "–";
   const cells = [[tst.games, "Partite"], [tst.points.toLocaleString("it-IT"), "Punti"], [tst.best.toLocaleString("it-IT"), "Record"], [tst.goals, "Gol"], [acc, "Precisione"], [tst.perfect, "Perfetti"], [tst.top, "Sotto la traversa"], [tst.bestStreak, "Serie max"], [st.games, "Partite in totale"]];
@@ -1843,6 +1927,8 @@ window.addEventListener("resize", resize);
 resize();
 renderTeams();
 startOnline();
+srvLoad();
+setInterval(() => { if (document.visibilityState === "visible" && phase !== "hold" && phase !== "flight") srvLoad(); }, 60000);
 startDemo();
 requestAnimationFrame(frame);
 })();
