@@ -59,9 +59,14 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--chalk);overfl
 .center{flex:1;min-width:0;text-align:center;font-family:var(--label);font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#c3ccc6;text-shadow:0 1px 6px rgba(0,0,0,.8);padding-top:4px}
 .coach{display:block;margin:6px auto 0;max-width:44ch;color:var(--chalk);letter-spacing:.02em;text-transform:none;font-family:var(--body);font-weight:500;font-size:13px;line-height:1.35}
 .right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-.lives{display:flex;gap:6px}
-.life{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 45%,#cfd6d0 70%,#8d968f);box-shadow:0 0 0 2px rgba(0,0,0,.35);transition:opacity .3s,transform .3s}
-.life.lost{opacity:.18;transform:scale(.75)}
+.lives{display:flex;gap:7px;align-items:center;padding:5px 10px 5px 12px;border-radius:999px;background:rgba(5,8,14,.88);border:1.5px solid rgba(255,194,75,.55);box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.lives .ll{font-family:var(--label);font-weight:700;font-size:12px;letter-spacing:.14em;color:var(--amber);margin-right:2px}
+.life{position:relative;width:26px;height:26px;transition:opacity .3s,transform .3s}
+.life svg{display:block;width:100%;height:100%}
+.life.lost{opacity:.35;transform:scale(.8)}
+.life.lost::after{content:"";position:absolute;inset:-2px;background:linear-gradient(45deg,transparent 44%,#ff5a4e 44% 56%,transparent 56%),linear-gradient(-45deg,transparent 44%,#ff5a4e 44% 56%,transparent 56%)}
+.life.gone{animation:lifeLost .6s}
+@keyframes lifeLost{0%{transform:scale(1.4)}100%{transform:scale(.8)}}
 .clock{font-family:var(--label);font-weight:600;font-size:13px;letter-spacing:.06em;color:var(--mute);font-variant-numeric:tabular-nums}
 .sound{pointer-events:auto;appearance:none;border:1px solid rgba(238,242,234,.22);background:rgba(5,8,14,.45);color:var(--mute);border-radius:999px;padding:4px 10px;font-family:var(--label);font-weight:600;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
 .sound:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
@@ -744,20 +749,27 @@ function nextShot(){
   const speed = setup.vk > 6.2 ? "veloce" : setup.vk > 5.3 ? "media" : "lenta";
   const fill = setup.chargeTime < 0.48 ? "rapida" : setup.chargeTime < 0.66 ? "media" : "lenta";
   const wx = [setup.rain ? "Pioggia" : "", windText(setup.wind)].filter(Boolean).join(" · ");
-  $("setupInfo").textContent = `${Math.round(setup.d)} m · Carica ${fill} · ` + (setup.type === "furbo" ? "Portiere furbo: finta e riparte" : `Portiere classico: velocità ${speed}`);
+  $("setupInfo").textContent = ""; $("setupInfo").hidden = true;
   const wb = $("wxBar"); wb.innerHTML = "";
   if (setup.rain) { const c = document.createElement("span"); c.className = "wxc rain"; c.textContent = "Pioggia · palla pesante"; wb.appendChild(c); }
   if (setup.wind) { const c = document.createElement("span"); c.className = "wxc " + (setup.wind > 0 ? "fav" : "con");
     c.textContent = (setup.wind > 0 ? "Vento a favore " : "Vento contro ") + Math.round(Math.abs(setup.wind)) + " m/s " + (setup.wind > 0 ? "→" : "←"); wb.appendChild(c); }
   wb.hidden = !wb.childElementCount;
   if (!demo && G) {
-    const notes = [];
-    if (setup.rain && !prevWx.rain) notes.push(["Inizia a piovere", "Palla pesante: serve più potenza, rimbalza poco"]);
-    if (!setup.rain && prevWx.rain) notes.push(["Smette di piovere", "Il pallone torna leggero"]);
-    if (setup.wind && !prevWx.wind) notes.push(["Si alza il vento", setup.wind > 0 ? "A favore: il pallone vola più lungo" : "Contro: il pallone cade più corto"]);
-    else if (setup.wind && prevWx.wind && Math.sign(setup.wind) !== Math.sign(prevWx.wind)) notes.push(["Il vento gira", setup.wind > 0 ? "Ora è a favore" : "Ora è contro"]);
-    if (!setup.wind && prevWx.wind) notes.push(["Il vento cala", "Si torna a tirare come sempre"]);
-    if (notes.length) showNote(notes.slice(0, 2));
+    // one message only, even when rain and wind change together
+    const rainOn = setup.rain && !prevWx.rain, rainOff = !setup.rain && prevWx.rain;
+    const windOn = setup.wind && !prevWx.wind, windOff = !setup.wind && prevWx.wind;
+    const windTurn = setup.wind && prevWx.wind && Math.sign(setup.wind) !== Math.sign(prevWx.wind);
+    const wTxt = setup.wind > 0 ? "vento a favore" : "vento contro";
+    let note = null;
+    if (rainOff && windOff) note = ["Torna il sereno", "Niente pioggia né vento"];
+    else if (rainOn && (windOn || windTurn)) note = ["Arriva il temporale", `Pioggia e ${wTxt}`];
+    else if (rainOn) note = ["Inizia a piovere", "Palla pesante: serve più potenza"];
+    else if (rainOff) note = ["Smette di piovere", windOn || windTurn ? `Ora c'è ${wTxt}` : "Il pallone torna leggero"];
+    else if (windOn) note = ["Si alza il vento", setup.wind > 0 ? "A favore: il pallone vola più lungo" : "Contro: il pallone cade più corto"];
+    else if (windTurn) note = ["Il vento gira", setup.wind > 0 ? "Ora è a favore" : "Ora è contro"];
+    else if (windOff) note = ["Il vento cala", "Si torna a tirare come sempre"];
+    if (note) showNote([note]);
     prevWx = { rain: !!setup.rain, wind: setup.wind || 0 };
     weatherTurn();
   }
@@ -771,7 +783,7 @@ function showNote(list){
   const n = $("wxNote"); n.textContent = "";
   list.forEach(([title, sub]) => { const d = document.createElement("div"), b = document.createElement("b"), sm = document.createElement("small"); b.textContent = title; sm.textContent = sub; d.append(b, sm); n.appendChild(d); });
   n.hidden = false; void n.offsetWidth; n.classList.add("on");
-  clearTimeout(noteTimer); noteTimer = setTimeout(() => { n.classList.remove("on"); noteTimer = setTimeout(() => { n.hidden = true; }, 400); }, 2600);
+  clearTimeout(noteTimer); noteTimer = setTimeout(() => { n.classList.remove("on"); noteTimer = setTimeout(() => { n.hidden = true; }, 400); }, 2000);
 }
 
 // ---------- Leaderboard: shared online when the page can reach its store, local otherwise ----------
@@ -1243,8 +1255,10 @@ function updateHud(){
   $("mult").textContent = "×" + Math.min(3, 1 + 0.1 * G.streak).toFixed(1);
   const hot = G.streak >= 5;
   $("multBox").classList.toggle("hot", hot); $("fire").hidden = !hot;
-  const lv = $("lives"); lv.innerHTML = "";
-  for (let i = 0; i < C.lives; i++) { const d = document.createElement("div"); d.className = "life" + (i >= G.lives ? " lost" : ""); lv.appendChild(d); }
+  const lv = $("lives"), was = +(lv.dataset.n || C.lives); lv.innerHTML = '<span class="ll">PALLONI</span>';
+  const ball = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#fff" stroke="#111" stroke-width="1.2"/><path d="M12 7.2l3.6 2.6-1.4 4.2H9.8L8.4 9.8z" fill="#111"/><path d="M12 7.2V3.2M15.6 9.8l3.9-1.3M14.2 14l2.4 3.3M9.8 14l-2.4 3.3M8.4 9.8L4.5 8.5" stroke="#111" stroke-width="1.1"/></svg>';
+  for (let i = 0; i < C.lives; i++) { const d = document.createElement("div"); d.className = "life" + (i >= G.lives ? " lost" : "") + (i === G.lives && G.lives < was ? " gone" : ""); d.innerHTML = ball; lv.appendChild(d); }
+  lv.dataset.n = G.lives;
 }
 let popTimer = null;
 function pop(big, sub, cls, tm){
@@ -1440,11 +1454,24 @@ $("menuBtn").onclick = () => { $("overScreen").hidden = true; renderTeams(); $("
 // ---------- Sound (synthesized, starts on the first touch) ----------
 const sfx = (() => {
   let ac = null, noise = null, on = store.get("cucchiaio.sound", true);
+  let tag = null;
   function init(){
-    if (ac) { try { if (ac.state === "suspended") ac.resume(); } catch (e) {} return; }
     if (!on) return;
+    // iPhone: play through the media channel so the silent switch does not mute the game
+    try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {}
+    if (!tag && !navigator.audioSession) {
+      try { tag = new Audio("data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"); tag.loop = true; tag.volume = 0.01; tag.setAttribute("playsinline", ""); } catch (e) {}
+    }
+    if (tag) { try { const pr = tag.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (e) {} }
+    if (ac) {
+      try { if (ac.state !== "running") ac.resume(); } catch (e) {}
+      try { const b = ac.createBuffer(1, 1, 22050), s = ac.createBufferSource(); s.buffer = b; s.connect(ac.destination); s.start(0); } catch (e) {}
+      return;
+    }
     try {
       ac = new (window.AudioContext || window.webkitAudioContext)();
+      try { const b = ac.createBuffer(1, 1, 22050), s = ac.createBufferSource(); s.buffer = b; s.connect(ac.destination); s.start(0); } catch (e) {}
+      if (ac.state !== "running") ac.resume();
       const n = ac.sampleRate * 2; noise = ac.createBuffer(1, n, ac.sampleRate);
       const d = noise.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
     } catch (e) { ac = null; }
@@ -1488,6 +1515,9 @@ const sfx = (() => {
     }
   };
 })();
+// any real tap (finger lifted) unlocks or wakes the audio: iPhone only allows it there
+["touchend", "click", "keydown"].forEach(ev => document.addEventListener(ev, () => sfx.init(), { capture: true, passive: true }));
+document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => sfx.init(), 0); });
 function buzz(p){ if (!SET.vibra || demo) return; try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
 function syncSound(){ const b = $("soundBtn"); b.textContent = sfx.on ? "Audio sì" : "Audio no"; b.setAttribute("aria-pressed", sfx.on ? "true" : "false"); }
 $("soundBtn").onclick = () => { sfx.toggle(); syncSound(); };
@@ -1586,6 +1616,7 @@ function drawScene(){
     }
   }
   if (flashT > 0) { ctx.globalAlpha = 0.3 * flashT; ctx.fillStyle = TEAMS[teamIdx][1]; ctx.fillRect(0, L.roofH, W, L.boardY - L.roofH); ctx.globalAlpha = 1; }
+  drawStandFlags();
   drawSParts();
   // mowing stripes on both halves of the pitch, aligned to the world
   for (let x = -10, i = 0; x < setup.d + 8; x += 2, i++) {
@@ -1683,6 +1714,29 @@ function drawGoalFront(v){
   }
 }
 
+// a few team flags waving in the stands (faster when the crowd celebrates; they lean with the wind)
+function drawStandFlags(){
+  if (!crowdL) return;
+  const t = TEAMS[teamIdx], c1 = t[1], c2 = t[2] === t[1] ? "#ffffff" : t[2], now = performance.now(), tt = now / 1000;
+  const cheer = now < crowdCheer, n = LIGHT() ? 3 : 6, wind = (setup && setup.wind) || 0;
+  for (let i = 0; i < n; i++) {
+    const bx = W * (0.08 + i * (0.84 / (n - 1))) + (i % 2 ? 14 : -10), by = L.boardY * (0.55 + (i % 3) * 0.12);
+    const pole = Math.max(26, H * 0.11), fw = Math.max(26, H * 0.085), fh = fw * 0.66;
+    const sway = Math.sin(tt * (cheer ? 5 : 1.6) + i * 1.7) * (cheer ? 0.35 : 0.12) + wind * 0.03;
+    const tx = bx + Math.sin(sway) * pole, ty = by - Math.cos(sway) * pole;
+    ctx.strokeStyle = "rgba(220,224,218,.75)"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tx, ty); ctx.stroke();
+    const dir = wind < -1 ? -1 : 1, seg = 6, top = [], bot = [];
+    for (let k = 0; k <= seg; k++) {
+      const u = k / seg, wave = Math.sin(tt * (cheer ? 9 : 4) - u * 4 + i) * fh * 0.18 * u;
+      top.push([tx + dir * u * fw, ty + wave]); bot.push([tx + dir * u * fw, ty + fh + wave]);
+    }
+    // two horizontal bands in the team colours
+    const mid = top.map((p, k) => [p[0], (p[1] + bot[k][1]) / 2]);
+    ctx.fillStyle = c1; ctx.beginPath(); top.forEach((p, k) => k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); for (let k = seg; k >= 0; k--) ctx.lineTo(mid[k][0], mid[k][1]); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = c2; ctx.beginPath(); mid.forEach((p, k) => k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); for (let k = seg; k >= 0; k--) ctx.lineTo(bot[k][0], bot[k][1]); ctx.closePath(); ctx.fill();
+  }
+}
 // corner flag beside the goal: it hangs limp when calm and streams with the wind (direction and strength)
 let prevWindDir = 1;
 function drawFlag(v){
