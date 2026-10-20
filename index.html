@@ -191,6 +191,27 @@ body{position:fixed;inset:0;touch-action:none}
 .screen{overflow:hidden;touch-action:none;overscroll-behavior:none}
 .screen.tall{overflow-y:auto;touch-action:pan-y}
 .rlist{touch-action:pan-y;overscroll-behavior:contain}
+.panel.wide{max-width:1100px;display:flex;flex-direction:column;gap:8px}
+.rhead{display:flex;align-items:flex-end;gap:14px}
+.rhead .rh1{flex:1;min-width:0}
+.rhead h1{font-size:clamp(30px,5vw,44px)}
+.rhead .tabs{width:240px}
+.rhead .btn{width:auto;padding:9px 16px}
+button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;width:100%}
+.rlist.full{max-height:none;overflow:visible}
+.rlist.full.teams{display:grid;grid-template-columns:1fr 1fr;column-gap:18px;row-gap:2px}
+.rlist.full.fans{display:grid;grid-template-columns:1fr 1fr;column-gap:18px;row-gap:2px;align-content:start}
+.rlist.full .rrow{grid-template-columns:24px 12px minmax(0,1fr) 72px 150px;padding:4px 8px;font-size:15px}
+.rlist.full.fans .rrow{grid-template-columns:24px 12px minmax(0,1fr) auto}
+.rlist.full.fans .rempty{grid-column:1 / -1}
+.rhd{display:grid;grid-template-columns:24px 12px minmax(0,1fr) 72px 150px;gap:8px;padding:0 8px 2px;font-family:var(--label);font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.rhd span:nth-child(4),.rhd span:nth-child(5),.rlist.full .pts{text-align:right}
+.rec{display:flex;gap:6px;justify-content:flex-end;align-items:baseline;min-width:0;color:var(--amber);font-variant-numeric:tabular-nums}
+.rec small{color:var(--mute);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:92px}
+.rempty.sm{padding:2px 8px 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.rfoot{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline}
+.rfoot .honours{display:flex;flex-direction:row;flex-wrap:wrap;gap:4px 12px}
+.rfoot .honours .label{font-size:11px}
 .lvbar{height:10px;border-radius:999px;background:rgba(238,242,234,.1);overflow:hidden}
 .lvbar i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#ffc24b,#ff9a3c);transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
 @media (orientation:landscape) and (min-width:560px){
@@ -263,22 +284,14 @@ body{position:fixed;inset:0;touch-action:none}
 </section>
 
 <section class="screen" id="rankScreen" hidden>
-  <div class="panel">
-    <div class="col">
-      <div class="eyebrow">Classifica dei tifosi</div>
-      <h1>Chi spinge di più</h1>
-      <p class="lede">Ogni partita somma i tuoi punti a quelli della tua squadra. Nella classifica Squadre vince la tifoseria che segna di più nella settimana; in quella Tifosi conta il tuo record della settimana in una singola partita.</p>
-      <div class="season"><b class="seasonName"></b><span class="seasonLeft"></span></div>
-      <div class="honours"></div>
-      <button class="btn ghost" id="rankBack" type="button">Indietro</button>
+  <div class="panel wide" data-rank data-full data-tab="teams">
+    <div class="rhead">
+      <div class="rh1"><div class="eyebrow">Classifica dei tifosi · <span class="seasonName"></span></div><h1 class="rtitle">Squadre</h1></div>
+      <div class="tabs" role="tablist"><button class="tab" type="button" data-tab="teams" aria-pressed="true">Squadre</button><button class="tab" type="button" data-tab="fans" aria-pressed="false">Tifosi</button></div>
+      <button class="btn ghost small" id="rankBack" type="button">Indietro</button>
     </div>
-    <div class="col">
-      <div class="rank" data-rank data-tab="teams">
-        <div class="tabs" role="tablist"><button class="tab" type="button" data-tab="teams" aria-pressed="true">Squadre</button><button class="tab" type="button" data-tab="fans" aria-pressed="false">Tifosi</button></div>
-        <div class="rlist"></div>
-        <div class="note rstatus"></div>
-      </div>
-    </div>
+    <div class="rlist"></div>
+    <div class="rfoot"><span class="note rstatus"></span><span class="honours"></span></div>
   </div>
 </section>
 
@@ -397,6 +410,11 @@ const LIGHT = () => SET.quality === "leggera";
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 const cv = $("cv"), ctx = cv.getContext("2d");
 let W = 0, H = 0, DPR = 1;
+// Italian articles: "per la Lazio", "dell'Inter", "al Milan"
+const ART = { Atalanta: "l'", Fiorentina: "la", Inter: "l'", Juventus: "la", Lazio: "la", Roma: "la", Udinese: "l'" };
+const PREP = { "": { il: "il ", la: "la ", "l'": "l'" }, per: { il: "per il ", la: "per la ", "l'": "per l'" }, di: { il: "del ", la: "della ", "l'": "dell'" },
+               a: { il: "al ", la: "alla ", "l'": "all'" }, da: { il: "dal ", la: "dalla ", "l'": "dall'" }, su: { il: "sul ", la: "sulla ", "l'": "sull'" } };
+function sq(name, prep = "", cap = false){ const t = PREP[prep][ART[name] || "il"] + name; return cap ? t[0].toUpperCase() + t.slice(1) : t; }
 const OLD_TEAMS = ["Milan","Inter","Juventus","Napoli","Roma","Lazio","Atalanta","Fiorentina","Bologna","Torino","Genoa","Bari","Palermo","Sampdoria","Udinese","Cagliari"];
 let teamIdx = (() => {
   const byName = TEAMS.findIndex(t => t[0] === store.get("cucchiaio.teamName", ""));
@@ -681,9 +699,9 @@ function weatherTurn(){
   // decide the weather of the shot after this one (the next situation is calibrated with it)
   if (!G || demo || G.shots < 2) return;
   const r = Math.random;
-  if (!WX.rain) { if (r() < 0.12) WX.rain = true; } else if (r() < 0.22) WX.rain = false;
-  if (!WX.wind) { if (r() < 0.15) WX.wind = (r() < 0.5 ? -1 : 1) * (2.5 + r() * 3.5); }
-  else if (r() < 0.2) WX.wind = 0;
+  if (!WX.rain) { if (r() < 0.2) WX.rain = true; } else if (r() < 0.17) WX.rain = false;
+  if (!WX.wind) { if (r() < 0.25) WX.wind = (r() < 0.5 ? -1 : 1) * (2.5 + r() * 3.5); }
+  else if (r() < 0.15) WX.wind = 0;
   else { const m = clamp(Math.abs(WX.wind) + (r() - 0.5) * 2, 1.5, 6.5); WX.wind = Math.sign(WX.wind) * m; }   // gusts
 }
 let prevWx = { rain: false, wind: 0 };
@@ -700,17 +718,15 @@ function nextShot(){
     if (setup.wind && !prevWx.wind) notes.push(["Si alza il vento", setup.wind > 0 ? "A favore: il pallone vola più lungo" : "Contro: il pallone cade più corto"]);
     else if (setup.wind && prevWx.wind && Math.sign(setup.wind) !== Math.sign(prevWx.wind)) notes.push(["Il vento gira", setup.wind > 0 ? "Ora è a favore" : "Ora è contro"]);
     if (!setup.wind && prevWx.wind) notes.push(["Il vento cala", "Si torna a tirare come sempre"]);
-    if (G.curvaNext) { G.curvaNext = false; curva = true; notes.unshift(["Il tiro della curva", "Tutto lo stadio canta per te"]); sfx.chant(6); crowdCheer = performance.now() + 4000; }
-    else curva = false;
-    if (notes.length) showNote(notes[0][0], notes.slice(0, 2).map(n => n === notes[0] ? n[1] : n[0] + ": " + n[1]).join(" · "), curva);
+    if (notes.length) showNote(notes[0][0], notes.slice(0, 2).map(n => n === notes[0] ? n[1] : n[0] + ": " + n[1]).join(" · "));
     prevWx = { rain: !!setup.rain, wind: setup.wind || 0 };
     weatherTurn();
-  } else curva = false;
+  }
   // continuous sequence: the keeper starts coming out (and the power starts rising) as soon as the shot appears
   fingerDown = false;
   phase = "hold";
 }
-let fingerDown = false, kRun = 0, prevKx = null, kMoving = false, crowdCheer = 0, crowdSad = 0, curva = false, rainA = 0, windA = 0, flareT = 0;
+let fingerDown = false, kRun = 0, prevKx = null, kMoving = false, crowdCheer = 0, crowdSad = 0, rainA = 0, windA = 0;
 let noteTimer = null;
 function showNote(title, sub, gold){
   const n = $("wxNote"); n.innerHTML = `<b>${title}</b><small>${sub}</small>`; n.classList.toggle("gold", !!gold);
@@ -749,6 +765,7 @@ async function submitOnline(team, game){
     const seasons = JSON.parse(JSON.stringify(d.seasons || {}));
     const cur = seasons[sid] || { teams: {}, best: 0 };
     cur.teams[team] = (cur.teams[team] || 0) + game.score; cur.best = Math.max(cur.best || 0, game.score);
+    cur.bestBy = cur.bestBy || {}; cur.bestBy[team] = Math.max(cur.bestBy[team] || 0, game.score);
     seasons[sid] = cur;
     await ref.set({ team, nick: cleanNick(store.get("cucchiaio.nick", "")), seasons, stats: addStats(d.stats || {}, game), updated: Date.now() });
     return true;
@@ -820,6 +837,30 @@ function honours(){
     return top && top[1] > 0 ? { sid, team: top[0], pts: top[1] } : null;
   }).filter(Boolean);
 }
+// record of the week for every team, with who made it
+function teamBests(sid){
+  const out = {};
+  if (sharedMode()) {
+    for (const d of online.docs) {
+      const ss = d.seasons && d.seasons[sid]; if (!ss) continue;
+      const by = ss.bestBy || (d.team && ss.best ? { [d.team]: ss.best } : {});
+      for (const [n, p] of Object.entries(by)) if (!out[n] || p > out[n].pts) out[n] = { pts: +p || 0, name: cleanNick(d.nick) || online.names[d.id] || (d.id === online.uid ? "Tu" : "Tifoso") };
+    }
+  } else Object.assign(out, (store.get("cucchiaio.teamBest", {})[sid]) || {});
+  return out;
+}
+// everyone who played for a team this week, with their total for that team
+function fansOf(team, sid){
+  if (sharedMode()) {
+    return online.docs.filter(d => d.seasons && d.seasons[sid] && d.seasons[sid].teams && d.seasons[sid].teams[team] > 0).map(d => ({
+      me: d.id === online.uid, name: cleanNick(d.nick) || online.names[d.id] || (d.id === online.uid ? "Tu" : "Tifoso"),
+      pts: d.seasons[sid].teams[team], lv: levelOf((d.stats || {}).points || 0).lv
+    })).sort((a, b) => b.pts - a.pts);
+  }
+  const mine = cleanNick(store.get("cucchiaio.nick", "")) || "Tu", lv = levelOf(store.get("cucchiaio.stats", EMPTY_STATS).points).lv;
+  const f = ((store.get("cucchiaio.fans", {})[sid]) || {})[team] || {};
+  return Object.entries(f).filter(([, p]) => p > 0).map(([name, pts]) => ({ me: name === mine, name, pts, lv: name === mine ? lv : 0 })).sort((a, b) => b.pts - a.pts);
+}
 function fanRows(){
   const sid = seasonId();
   if (sharedMode()) {
@@ -839,31 +880,46 @@ function rankStatus(){
   }
   return "Classifica salvata su questo dispositivo.";
 }
+let rankTeam = null;   // team shown in the "Tifosi" tab (defaults to yours)
 function renderRanks(){
+  const sid = seasonId(), bests = teamBests(sid), mine = TEAMS[teamIdx][0];
   document.querySelectorAll("[data-rank]").forEach(box => {
-    const tab = box.dataset.tab, list = box.querySelector(".rlist");
+    const tab = box.dataset.tab, list = box.querySelector(".rlist"), full = box.hasAttribute("data-full");
     box.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-pressed", b.dataset.tab === tab ? "true" : "false"));
-    list.textContent = "";
-    const row = (pos, color, who, sub, pts, me, lv) => {
-      const r = document.createElement("div"); r.className = "rrow" + (me ? " me" : "");
+    list.textContent = ""; list.className = "rlist" + (full ? " full " + tab : "");
+    const row = (pos, color, who, sub, pts, me, lv, rec, onTap) => {
+      const r = document.createElement(onTap ? "button" : "div"); r.className = "rrow" + (me ? " me" : ""); if (onTap) { r.type = "button"; r.onclick = onTap; }
       const a = document.createElement("span"); a.className = "pos"; a.textContent = pos;
       const i = document.createElement("i"); i.style.background = color;
       const w = document.createElement("span"); w.className = "who"; w.textContent = who;
       if (lv) { const b = document.createElement("span"); b.className = "lv"; b.textContent = "Liv. " + lv; w.appendChild(b); }
       if (sub) { const sm = document.createElement("small"); sm.textContent = sub; w.appendChild(sm); }
       const p = document.createElement("span"); p.className = "pts"; p.textContent = pts.toLocaleString("it-IT");
-      r.append(a, i, w, p); list.appendChild(r);
+      r.append(a, i, w, p);
+      if (full && tab === "teams") { const rc = document.createElement("span"); rc.className = "rec"; if (rec) { rc.textContent = rec.pts.toLocaleString("it-IT") + " "; const sm = document.createElement("small"); sm.textContent = rec.name; rc.appendChild(sm); } else rc.textContent = "–"; r.appendChild(rc); }
+      list.appendChild(r);
     };
+    const title = box.querySelector(".rtitle");
     if (tab === "teams") {
-      const rows = teamRows(), mine = TEAMS[teamIdx][0];
-      if (!rows.some(r => r.pts > 0)) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = "Nessun punto ancora: gioca una partita per aprire la classifica."; list.appendChild(e); }
-      else rows.forEach((r, k) => row(k + 1, r.color, r.name, sharedMode() && r.fans ? `${r.fans} ${r.fans === 1 ? "tifoso" : "tifosi"}` : "", r.pts, r.name === mine));
+      if (title) title.textContent = "Squadre";
+      const rows = teamRows();
+      if (full) {
+        const hd = document.createElement("div"); hd.className = "rhd"; hd.innerHTML = "<span></span><span></span><span>Squadra</span><span>Punti</span><span>Record</span>";
+        const hd2 = hd.cloneNode(true); hd.style.gridArea = "1 / 1"; hd2.style.gridArea = "1 / 2";
+        list.appendChild(hd); list.appendChild(hd2);
+      }
+      rows.forEach((r, k) => { row(k + 1, r.color, r.name, !full && bests[r.name] ? `record ${bests[r.name].pts.toLocaleString("it-IT")} · ${bests[r.name].name}` : "", r.pts, r.name === mine, 0, bests[r.name],
+        () => { rankTeam = r.name; box.dataset.tab = "fans"; renderRanks(); });
+        if (full) { const half = Math.ceil(rows.length / 2); list.lastChild.style.gridArea = `${(k % half) + 2} / ${k < half ? 1 : 2}`; } });
     } else {
-      const rows = fanRows();
-      if (!rows.length) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = "Nessun record ancora: il primo potresti essere tu."; list.appendChild(e); }
-      else rows.slice(0, 50).forEach((r, k) => row(k + 1, r.color, r.name, r.team, r.pts, r.me, r.lv));
+      const team = rankTeam || mine, color = (TEAMS.find(t => t[0] === team) || ["", "#888"])[1];
+      if (title) title.textContent = "Tifosi " + sq(team, "di");
+      const rows = fansOf(team, sid);
+      if (!full) { const hd = document.createElement("div"); hd.className = "rempty sm"; hd.textContent = "Tifosi " + sq(team, "di") + " questa settimana"; list.appendChild(hd); }
+      if (!rows.length) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = "Nessuno ha ancora giocato " + sq(team, "per") + " questa settimana."; list.appendChild(e); }
+      else rows.slice(0, 100).forEach((r, k) => row(k + 1, color, r.name, "", r.pts, r.me, r.lv));
     }
-    box.querySelector(".rstatus").textContent = seasonLabel(seasonId()) + " · " + seasonLeft().toLowerCase() + ". " + rankStatus();
+    box.querySelector(".rstatus").textContent = seasonLabel(sid) + " · " + seasonLeft().toLowerCase() + ". " + rankStatus();
   });
   renderHome();
   document.querySelectorAll(".seasonName").forEach(e => e.textContent = seasonLabel(seasonId()));
@@ -882,14 +938,14 @@ function renderRanks(){
     });
   });
 }
-document.querySelectorAll("[data-rank] .tab").forEach(b => b.addEventListener("click", () => { b.closest("[data-rank]").dataset.tab = b.dataset.tab; renderRanks(); }));
+document.querySelectorAll("[data-rank] .tab").forEach(b => b.addEventListener("click", () => { if (b.dataset.tab === "fans") rankTeam = null; b.closest("[data-rank]").dataset.tab = b.dataset.tab; renderRanks(); }));
 
 // ---------- Flow ----------
 function startGame(){
   stopDemo(); wparts = []; sparts = []; pickTheme();
   if (WX.rain || WX.wind || (ready && (ready.rain || ready.wind))) { ready = null; gen = null; }
-  WX.rain = false; WX.wind = 0; prevWx = { rain: false, wind: 0 }; curva = false;
-  G = { curvaNext: false, score: 0, lives: C.lives, streak: 0, bestStreak: 0, shots: 0, goals: 0, top: 0, perfect: 0, start: performance.now(), miss: {} };
+  WX.rain = false; WX.wind = 0; prevWx = { rain: false, wind: 0 };
+  G = { score: 0, lives: C.lives, streak: 0, bestStreak: 0, shots: 0, goals: 0, top: 0, perfect: 0, start: performance.now(), miss: {} };
   $("startScreen").hidden = true; $("overScreen").hidden = true; $("hud").hidden = false; $("info").hidden = false;
   $("coach").hidden = coached;
   lastCharge = null; nextShot(); phase = "ready"; updateHud();
@@ -977,8 +1033,6 @@ function resolve(res){
     pop(label, `+${pts}` + (tags.length ? " · " + tags.join(" · ") : ""), zone === 3 || tm.perfect ? "gold" : "goal", tm);
     flashT = 1; buzz([30, 40, 70]); emitCelebration(); crowdCheer = performance.now() + 2200; sfx.roar(zone === 3 || tm.perfect || G.streak >= 5 ? 1 : 0.7);
     if (G.streak >= 5) sfx.chant(G.streak - 4);
-    if (curva) { emitCelebration(); emitCelebration(); flashT = 1.6; crowdCheer = performance.now() + 3500; }
-    if (G.goals % 10 === 0) G.curvaNext = true;
   } else {
     G.lives--; G.streak = 0; crowdSad = performance.now() + 1400;
     G.miss[res.label] = (G.miss[res.label] || 0) + 1;
@@ -1005,15 +1059,21 @@ function gameOver(){
   const passed = before.slice(posA, posB).filter(r => r.name !== t[0] && r.pts > 0).map(r => r.name);
   const ot = $("overtake");
   if (G.score > 0 && posA < posB && (passed.length || posA === 0)) {
-    const names = passed.length > 2 ? `${passed.slice(0, 2).join(", ")} e altre ${passed.length - 2}` : passed.join(" e ");
+    const pn = passed.map(n => sq(n)), names = pn.length > 2 ? `${pn.slice(0, 2).join(", ")} e altre ${pn.length - 2}` : pn.join(" e ");
     ot.innerHTML = "";
-    ot.append(document.createTextNode(passed.length ? `${t[0]} ha superato ${names}!` : `${t[0]} sale in testa!`));
+    ot.append(document.createTextNode(passed.length ? `${sq(t[0], "", true)} ha superato ${names}!` : `${sq(t[0], "", true)} sale in testa!`));
     const sm = document.createElement("small"); sm.textContent = posA === 0 ? "Primo posto della settimana" : `Ora ${posA + 1}° in classifica`; ot.appendChild(sm);
     ot.hidden = false; sfx.roar(1);
   } else ot.hidden = true;
   const sid = seasonId();
   const seasons = store.get("cucchiaio.seasons", {}); seasons[sid] = seasons[sid] || {}; seasons[sid][t[0]] = (seasons[sid][t[0]] || 0) + G.score; store.set("cucchiaio.seasons", seasons);
   const sb = store.get("cucchiaio.seasonBest", {}); sb[sid] = Math.max(sb[sid] || 0, G.score); store.set("cucchiaio.seasonBest", sb);
+  const who = cleanNick(store.get("cucchiaio.nick", "")) || "Tu";
+  const tb = store.get("cucchiaio.teamBest", {}); tb[sid] = tb[sid] || {};
+  if (G.score > 0 && (!tb[sid][t[0]] || G.score > tb[sid][t[0]].pts)) tb[sid][t[0]] = { pts: G.score, name: who };
+  store.set("cucchiaio.teamBest", tb);
+  const fb = store.get("cucchiaio.fans", {}); fb[sid] = fb[sid] || {}; fb[sid][t[0]] = fb[sid][t[0]] || {};
+  fb[sid][t[0]][who] = (fb[sid][t[0]][who] || 0) + G.score; store.set("cucchiaio.fans", fb);
   const prevLv = levelOf(store.get("cucchiaio.stats", EMPTY_STATS).points).lv;
   const newStats = addStats(store.get("cucchiaio.stats", EMPTY_STATS), G); store.set("cucchiaio.stats", newStats);
   const nl = levelOf(newStats.points);
@@ -1025,7 +1085,7 @@ function gameOver(){
     const myWeek = ((mine && mine.seasons && mine.seasons[sid] && mine.seasons[sid].teams && mine.seasons[sid].teams[t[0]]) || 0) + G.score;
     const teamWeek = (after.find(r => r.name === t[0]) || {}).pts || myWeek;
     const pct = teamWeek ? Math.round(myWeek / teamWeek * 100) : 0;
-    $("cbLabel").textContent = `Tu: ${myWeek.toLocaleString("it-IT")} dei ${teamWeek.toLocaleString("it-IT")} punti del ${t[0]} questa settimana`;
+    $("cbLabel").textContent = `Tu: ${myWeek.toLocaleString("it-IT")} dei ${teamWeek.toLocaleString("it-IT")} punti ${sq(t[0], "di")} questa settimana`;
     $("cbPct").textContent = pct + "%";
     $("cbFill").style.width = "0%"; cb.hidden = false;
     requestAnimationFrame(() => requestAnimationFrame(() => { $("cbFill").style.width = Math.max(2, pct) + "%"; }));
@@ -1034,7 +1094,7 @@ function gameOver(){
   const log = store.get("cucchiaio.analytics", []);
   log.push({ t: Date.now(), dur: Math.round((end - G.start) / 100) / 10, shots: G.shots, goals: G.goals, score: G.score, perfect: G.perfect, miss: G.miss });
   store.set("cucchiaio.analytics", log.slice(-300));
-  $("contrib").innerHTML = `+${G.score.toLocaleString("it-IT")} punti per il <b>${t[0]}</b>` + (G.score > best && best > 0 ? " · nuovo record personale" : "") + (nl.lv > prevLv ? `<br>Sei salito al livello ${nl.lv}: <b>${nl.name}</b>` : "");
+  $("contrib").innerHTML = `+${G.score.toLocaleString("it-IT")} punti ${PREP.per[ART[t[0]] || "il"]}<b>${t[0]}</b>` + (G.score > best && best > 0 ? " · nuovo record personale" : "") + (nl.lv > prevLv ? `<br>Sei salito al livello ${nl.lv}: <b>${nl.name}</b>` : "");
   const acc = G.shots ? Math.round(G.goals / G.shots * 100) : 0;
   const cells = [[fmt(end - G.start),"Durata"],[G.shots,"Tiri"],[acc + "%","Precisione"],[G.goals,"Gol"],[G.top,"Sotto la traversa"],[G.perfect,"Perfetti"]];
   $("stats").innerHTML = cells.map(([v,k]) => `<div class="stat"><div class="v">${v}</div><div class="k">${k}</div></div>`).join("");
@@ -1085,11 +1145,11 @@ function renderHome(){
   const el = $("homeTeam"); if (!el) return;
   const rows = teamRows(), me = TEAMS[teamIdx][0], i = rows.findIndex(r => r.name === me), r = rows[i];
   el.textContent = "";
-  const b = document.createElement("b"); b.textContent = me; el.appendChild(b);
+  const b = document.createElement("b"); b.textContent = sq(me, "", true); el.appendChild(b);
   let txt;
   if (!rows.some(x => x.pts > 0)) txt = " · classifica della settimana ancora vuota: segna i primi punti!";
-  else if (i === 0) { const gap = r.pts - (rows[1] ? rows[1].pts : 0); txt = ` è 1° questa settimana · +${gap.toLocaleString("it-IT")} su ${rows[1] ? rows[1].name : "tutti"}`; }
-  else txt = ` è ${i + 1}° questa settimana · −${(rows[i - 1].pts - r.pts).toLocaleString("it-IT")} dal ${rows[i - 1].name}`;
+  else if (i === 0) { const gap = r.pts - (rows[1] ? rows[1].pts : 0); txt = ` è 1° questa settimana · +${gap.toLocaleString("it-IT")} ${rows[1] ? sq(rows[1].name, "su") : "su tutti"}`; }
+  else txt = ` è ${i + 1}° questa settimana · −${(rows[i - 1].pts - r.pts).toLocaleString("it-IT")} ${sq(rows[i - 1].name, "da")}`;
   el.appendChild(document.createTextNode(txt));
   const sm = document.createElement("small"); sm.textContent = seasonLeft(); el.appendChild(sm);
 }
@@ -1103,7 +1163,7 @@ function renderTeams(){
     b.onclick = () => { teamIdx = i; store.set("cucchiaio.teamName", TEAMS[i][0]); renderTeams(); buildCrowd(); renderHome(); };
     box.appendChild(b);
   });
-  $("playBtn").textContent = "Gioca per il " + TEAMS[teamIdx][0];
+  $("playBtn").textContent = "Gioca " + sq(TEAMS[teamIdx][0], "per");
   const best = store.get("cucchiaio.best", 0);
   $("bestLine").textContent = best ? "Record personale: " + best.toLocaleString("it-IT") : "";
 }
@@ -1557,31 +1617,20 @@ function drawAttacker(v){
   person(v, 0, 0, teamKit(), o);
 }
 function drawTrail(v){
-  if (curva) {
-    const t = TEAMS[teamIdx], c1 = t[1], c2 = t[2] === t[1] ? "#ffffff" : t[2];
+  const hot = G && G.streak >= 5;
+  if (hot) {   // on a streak the ball leaves a trail in the team's colours
+    const t = TEAMS[teamIdx], c1 = t[1], c2 = t[2] === t[1] ? "#ffffff" : t[2], glow = c1 === "#f2f2f2" ? "#ffcf5a" : c1;
     ctx.save(); ctx.globalCompositeOperation = "lighter";
     trail.forEach((p, i) => {
       const k = i / trail.length, q = S_(v, p[0], p[1]), r = Math.max(2.5, (0.06 + 0.16 * k) * v.sc);
       ctx.globalAlpha = 0.2 + 0.6 * k; ctx.fillStyle = i % 2 ? c1 : c2;
-      ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 7); ctx.fill();
-    });
-    ctx.restore(); ctx.globalAlpha = 1;
-    return;
-  }
-  const hot = G && G.streak >= 5;
-  if (hot) {
-    ctx.save(); ctx.globalCompositeOperation = "lighter";
-    trail.forEach((p, i) => {
-      const k = i / trail.length, q = S_(v, p[0], p[1]), r = Math.max(2, (0.05 + 0.14 * k) * v.sc);
-      ctx.globalAlpha = 0.15 + 0.55 * k;
-      ctx.fillStyle = k > 0.7 ? "#ffd36b" : k > 0.4 ? "#ff8a2a" : "#e2401c";
       ctx.beginPath(); ctx.arc(q.x + (Math.random() - .5) * 2, q.y + (Math.random() - .5) * 2, r, 0, 7); ctx.fill();
     });
     ctx.restore(); ctx.globalAlpha = 1;
     if (!sim.kicked) {
       const b = S_(v, sim.ball.x, sim.ball.y), r = Math.max(6, C.r * v.sc * 2.6);
       const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, r);
-      g.addColorStop(0, "rgba(255,170,60,.55)"); g.addColorStop(1, "rgba(255,90,30,0)");
+      g.addColorStop(0, hexA(glow, 0.55)); g.addColorStop(1, hexA(glow, 0));
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, 7); ctx.fill();
     }
     return;
@@ -1705,7 +1754,7 @@ function frame(now){
     if (setup && setup.wind) prevWindDir = Math.sign(setup.wind);
     if (rainA > 0.01) { const sl = 0.25 - ((setup && setup.wind) || 0) * 0.06; for (const d of rain) { d.y += d.v * dt; d.x -= d.v * sl * dt; if (d.y > H) { d.y = -20; d.x = Math.random() * (W + 120) - 60; } } }
     if (windA > 0.01) { const sp = Math.abs((setup && setup.wind) || 4) * 90; for (const g of gusts) { g.x += prevWindDir * sp * g.v * dt; if (g.x > W + 100) g.x = -20; if (g.x < -100) g.x = W + 20; } }
-    if (curva && phase !== "after") { flareT -= dt; if (flareT <= 0) { flareT = 0.35; const t = TEAMS[teamIdx]; for (let i = 0; i < 3; i++) sparts.push({ k: "smoke", x: Math.random() * W, y: L.boardY - 6, vx: rr(-10, 10), vy: rr(-30, -14), life: 2.4, max: 2.4, size: rr(14, 24), col: i % 2 ? (t[2] === "#111111" ? "#ffcf5a" : t[2]) : (t[1] === "#f2f2f2" ? "#ffcf5a" : t[1]) }); crowdCheer = performance.now() + 600; } }
+
   }
   if (sim) {
     if (prevKx != null) { const dx = Math.abs(sim.kx - prevKx); kMoving = dx > 0.004; kRun += dx * 4.2; }
