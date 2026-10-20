@@ -185,7 +185,7 @@ body.cb .pop.miss .big{color:#4aa3ff}
 body.cb .rrow.me,body.cb .chip[aria-pressed="true"]{outline:2px dashed var(--amber);outline-offset:-2px}
 body{-webkit-touch-callout:none}
 html,body{overscroll-behavior:none}
-.guide{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 62px);transform:translateX(-50%);z-index:30;width:min(560px,86vw);padding:12px 16px 10px;border-radius:10px;background:rgba(5,8,14,.86);border:1.5px solid rgba(255,194,75,.6);text-align:center;pointer-events:none;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.guide{transition:opacity .2s;position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 62px);transform:translateX(-50%);z-index:30;width:min(560px,86vw);padding:12px 16px 10px;border-radius:10px;background:rgba(5,8,14,.86);border:1.5px solid rgba(255,194,75,.6);text-align:center;pointer-events:none;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 .guide .gstep{font-family:var(--label);font-weight:700;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}
 .guide .gtext{margin-top:4px;font-family:var(--display);font-weight:900;font-size:clamp(16px,2.8vw,22px);line-height:1.1;color:var(--chalk)}
 .guide .gtext .hand{display:inline-block;animation:press 1.1s ease-in-out infinite}
@@ -749,14 +749,14 @@ const THEMES = {
   tramonto: { sky: ["#2b1838", "#8a4a4a"], roof: "#1a1222", tier: ["#1c1524", "#2a1f2e"], beam: 0.07, near: ["#2b5e31", "#14301c"], far: ["#1d3a22", "#2b5a33"], tint: "rgba(255,140,70,.10)" },
   pioggia:  { sky: ["#03060a", "#0a1018"], roof: "#070a10", tier: ["#0a1019", "#0e1724"], beam: 0.12, near: ["#16462b", "#0a2214"], far: ["#0b2617", "#123d25"], tint: "rgba(120,150,190,.06)" }
 };
-let THEME = "notte", crowdL = null, rain = [], gusts = [];
+let THEME = "notte", crowdL = null, rain = [], gusts = [], bgCanvas = null, crowdCanvas = null;
 function pickTheme(){ const k = ["notte", "tramonto"]; THEME = k[Math.floor(Math.random() * k.length)]; buildCrowd(); }
 function buildCrowd(){
   const t = TEAMS[teamIdx], { gy, farH, boardH, boardY, roofH } = L, th = THEMES[THEME];
-  const c = document.createElement("canvas"); c.width = Math.round(W * DPR); c.height = Math.round(H * DPR);
+  const c = bgCanvas || (bgCanvas = document.createElement("canvas")); c.width = Math.round(W * DPR); c.height = Math.round(H * DPR);
   const g = c.getContext("2d"); g.setTransform(DPR,0,0,DPR,0,0);
   // the crowd lives on its own layer so it can sway and jump
-  const cl = document.createElement("canvas"); cl.width = Math.round(W * DPR); cl.height = Math.round(boardY * DPR);
+  const cl = crowdCanvas || (crowdCanvas = document.createElement("canvas")); cl.width = Math.round(W * DPR); cl.height = Math.round(boardY * DPR);
   const cg = cl.getContext("2d"); cg.setTransform(DPR,0,0,DPR,0,0);
   let seed = 11 + teamIdx * 17; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   // sky and roof
@@ -1432,6 +1432,7 @@ function endPractice(){
 }
 function updateGuide(){
   if (!G || !G.practice || $("guide").hidden) return;
+  $("guide").style.opacity = phase === "after" ? "0" : "1";
   let t;
   if (phase === "hold" && !fingerDown && !sim.kicked) t = `<span class="hand">👆</span> ` + tr("Tieni premuto il dito sullo schermo: la potenza sale");
   else if (phase === "hold" && fingerDown) t = "↕ " + tr("Trascina su o giù per l'arco, poi alza il dito per tirare");
@@ -2344,11 +2345,19 @@ function frame(now){
   if (G && phase !== "over" && phase !== "menu") $("clock").textContent = fmt(now - G.start);
   updateGuide();
   crowdTick(dt);
-  if (setup) drawScene();
+  if (setup) {
+    if (ctx.reset) ctx.reset();
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    try { drawScene(); } catch (e) { console.warn(e); }
+  }
   requestAnimationFrame(frame);
 }
 
 window.addEventListener("resize", resize);
+// Android may throw the canvas away when memory is short or the app goes in the background: rebuild it
+cv.addEventListener("contextrestored", resize);
+window.addEventListener("orientationchange", () => setTimeout(resize, 250));
+document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => { if (cv.width !== Math.round(innerWidth * DPR) || cv.height !== Math.round(innerHeight * DPR)) resize(); }, 200); });
 resize();
 // ---------- Language for the fixed texts of the page ----------
 function trText(raw){
