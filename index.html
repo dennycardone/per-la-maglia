@@ -1236,7 +1236,8 @@ async function srvFans(team){
   srv.fansAt[team] = Date.now();
   try {
     const rows = await sb(`team_fans?${srv.legacy ? "" : "league=eq." + LEAGUE + "&"}season=eq.${encodeURIComponent(seasonId())}&team=eq.${encodeURIComponent(team)}&select=player_id,nick,pts&order=pts.desc&limit=200`);
-    srv.fans[team] = rows.map(x => ({ me: x.player_id === srv.uid, name: x.nick, pts: +x.pts, lv: 0 }));
+    const myNick = cleanNick(store.get("cucchiaio.nick", ""));
+    srv.fans[team] = rows.map(x => ({ me: x.player_id === srv.uid && x.nick === myNick, name: x.nick, pts: +x.pts, lv: 0 }));
   } catch (e) { srv.fansAt[team] = 0; }
   renderRanks();
 }
