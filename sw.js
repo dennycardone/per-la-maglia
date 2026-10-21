@@ -1,6 +1,7 @@
 // Per la Maglia — service worker: the game works offline after the first visit.
-const CACHE = "perlamaglia-v39";
-const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png",
+const CACHE = "perlamaglia-v43";
+const NEW = "https://perlamaglia.com/";
+const CORE = ["./", "./index.html", "./trasloco.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png",
   "./fonts/bigshouldersdisplay.woff", "./fonts/barlowcondensed-Medium.woff", "./fonts/barlowcondensed-SemiBold.woff", "./fonts/barlowcondensed-Bold.woff",
   "./fonts/barlow-Regular.woff", "./fonts/barlow-Medium.woff", "./fonts/barlow-SemiBold.woff"];
 
@@ -17,8 +18,12 @@ self.addEventListener("fetch", e => {
   // the page itself: try the network first so updates arrive, fall back to the cache offline
   if (req.mode === "navigate") {
     // only the game page is stored as the offline copy; privacy and terms pages are cached under their own name
-    const isGame = /\/(index\.html)?$/.test(url.pathname);
-    e.respondWith(fetch(req, { cache: "no-store" }).then(r => { const copy = r.clone(); caches.open(CACHE).then(c => c.put(isGame ? "./index.html" : req, copy)); return r; })
+    const root = new URL(self.registration.scope).pathname, isGame = url.pathname === root || url.pathname === root + "index.html";
+    // the game has moved to its own address: when this old one answers with a redirect,
+    // open the moving page instead, so the player's name, team and points come along
+    e.respondWith(fetch(req.url, { cache: "no-store", redirect: "manual", credentials: "same-origin" }).then(r => {
+      if (r.type === "opaqueredirect") return isGame ? caches.match("./trasloco.html").then(t => t || Response.redirect(NEW, 302)) : Response.redirect(NEW + url.pathname.replace(new URL(self.registration.scope).pathname, ""), 302);
+      const copy = r.clone(); caches.open(CACHE).then(c => c.put(isGame ? "./index.html" : req, copy)); return r; })
       .catch(() => isGame ? caches.match("./index.html") : caches.match(req)));
     return;
   }
