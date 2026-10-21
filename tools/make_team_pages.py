@@ -1,7 +1,7 @@
 # Per la Maglia - genera le pagine di squadra (link da condividere con anteprima) e i dati per le immagini di anteprima.
 # Uso: python3 tools/make_team_pages.py https://indirizzo-del-gioco/
 import json, re, sys, os, unicodedata, html
-SITE = (sys.argv[1] if len(sys.argv) > 1 else "https://dennycardone.github.io/per-la-maglia/").rstrip("/") + "/"
+SITE = (sys.argv[1] if len(sys.argv) > 1 else "https://perlamaglia.com/").rstrip("/") + "/"
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src = open(os.path.join(root, "index.html"), encoding="utf-8").read()
 teams = []

@@ -2,7 +2,7 @@
 
 Ogni tuo gol vale per la tua squadra. Scegli la tua squadra del cuore, scavalca il portiere col cucchiaio e porta punti alla classifica settimanale dei tifosi.
 
-Gioca: https://dennycardone.github.io/per-la-maglia/
+Gioca: https://perlamaglia.com/
 
 ## Pubblicare su GitHub Pages
 

@@ -9,11 +9,11 @@
   "orientation": "landscape",
   "background_color": "#05080e",
   "theme_color": "#05080e",
-  "id": "/per-la-maglia/app",
+  "id": "/app",
   "related_applications": [
     {
       "platform": "webapp",
-      "url": "https://dennycardone.github.io/per-la-maglia/manifest.webmanifest"
+      "url": "https://perlamaglia.com/manifest.webmanifest"
     }
   ],
   "icons": [
