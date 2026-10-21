@@ -13,10 +13,11 @@ window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault()
   if (!m) return;
   try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
   try {
-    if (localStorage.getItem("pm.arrived")) return;
-    var played = 0; try { played = (JSON.parse(localStorage.getItem("cucchiaio.stats")) || {}).games || 0; } catch (e) {}
-    if (!played) {
-      var d = JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g, "+").replace(/_/g, "/")))));
+    // the profile with more games wins, so an old copy never overwrites what was played here
+    var games = function (v) { try { return (JSON.parse(v) || {}).games || 0; } catch (e) { return 0; } };
+    var d = JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g, "+").replace(/_/g, "/")))));
+    if (d["pm.session"] && games(d["cucchiaio.stats"]) >= games(localStorage.getItem("cucchiaio.stats"))) {
+      Object.keys(localStorage).filter(function (k) { return /^(pm\.|cucchiaio\.|pennellata\.)/.test(k); }).forEach(function (k) { localStorage.removeItem(k); });
       Object.keys(d).forEach(function (k) { if (/^(pm\.|cucchiaio\.|pennellata\.)/.test(k) && typeof d[k] === "string") localStorage.setItem(k, d[k]); });
     }
     localStorage.setItem("pm.arrived", "1");
