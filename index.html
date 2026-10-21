@@ -204,9 +204,6 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .ovfeed{max-height:min(62vh,270px)}
 .ovsf{appearance:none;display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:999px;border:1px solid rgba(255,194,75,.55);background:none;color:var(--amber);font-family:var(--label);font-weight:700;font-size:12px;letter-spacing:.04em;cursor:pointer;white-space:nowrap}
 .orow{display:grid;grid-template-columns:20px 18px minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px 6px;border-radius:6px;font-family:var(--label);font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
-.rrow.zup,.orow.zup{box-shadow:inset 3px 0 0 #3ecf74}.rrow.zdown,.orow.zdown{box-shadow:inset 3px 0 0 #ff5a5a}
-.zleg{margin-left:10px;white-space:nowrap}.zleg i{display:inline-block;width:3px;height:11px;margin:0 4px -1px 8px;border-radius:1px}.zleg .zu{background:#3ecf74}.zleg .zd{background:#ff5a5a}
-.champ.down{border-color:rgba(255,90,90,.55);background:rgba(255,90,90,.1)}
 .orow i{width:9px;height:9px;border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
 .orow .p{color:var(--mute);text-align:right}
 .orow.me{background:rgba(255,194,75,.15);color:var(--amber)}
@@ -651,9 +648,8 @@ const TEAMS_B = [
 // Serie C 2026/27: the 20 biggest fan bases of the three groups
 const TEAMS_C = [["Bari","#f2f2f2","#c8102e"],["Casertana","#c8102e","#1c2f6b"],["Catania","#c8102e","#4aa3df"],["Cosenza","#c8102e","#1c2f6b"],["Crotone","#c8102e","#1c2f6b"],["Foggia","#c8102e","#111111"],["Lecco","#1c3f94","#6ec1e4"],["Livorno","#8b1a2e","#f2f2f2"],["Monopoli","#0a7a3b","#f2f2f2"],["Novara","#2a6fcf","#f2f2f2"],["Perugia","#c8102e","#f2f2f2"],["Pescara","#f2f2f2","#4aa3df"],["Potenza","#c8102e","#1c2f6b"],["Pro Vercelli","#f2f2f2","#111111"],["Ravenna","#f6c500","#c8102e"],["Reggiana","#7a1f2b","#f2f2f2"],["Salernitana","#6b1a2a","#f2f2f2"],["Spezia","#f2f2f2","#111111"],["Treviso","#f2f2f2","#6ec1e4"],["Union Brescia","#1f4fa3","#f2f2f2"]];
 const LEAGUE_TEAMS = { "serie-a": TEAMS_A, "serie-b": TEAMS_B, "serie-c": TEAMS_C };
-const ALL_TEAMS = [...TEAMS_A, ...TEAMS_B, ...TEAMS_C], TEAM_BY = Object.fromEntries(ALL_TEAMS.map(t => [t[0], t]));
-const BASE_LEAGUE = {}; for (const [l, arr] of Object.entries(LEAGUE_TEAMS)) arr.forEach(t => BASE_LEAGUE[t[0]] = l);
 let LEAGUE = (() => { try { return JSON.parse(localStorage.getItem("pm.league")) || "serie-a"; } catch (e) { return "serie-a"; } })(); if (!LEAGUE_TEAMS[LEAGUE]) LEAGUE = "serie-a";
+const teamKey = () => LEAGUE === "serie-a" ? "cucchiaio.teamName" : "pm.team." + LEAGUE;
 let TEAMS = LEAGUE_TEAMS[LEAGUE];
 const store = {
   get(k, d){ try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } },
@@ -758,9 +754,6 @@ I18N.en = {
   "Domande, segnalazioni o richieste sulla privacy.": "Questions, reports or privacy requests.", "caratteri Barlow e Big Shoulders (licenza SIL OFL)": "Barlow and Big Shoulders fonts (SIL OFL licence)",
   "Segnala o nascondi": "Report or mute", "Segnala come offensivo": "Report as offensive", "Nascondi i messaggi di questo tifoso": "Mute this fan's messages",
   "Gioco non ufficiale: non è affiliato né approvato da club, leghe o federazioni. I nomi delle squadre servono solo a indicare per chi tifi; le maglie sono disegni generici.": "Unofficial game: not affiliated with or endorsed by any club, league or federation. Team names only say who you support; kits are generic drawings.",
-  "{t} è promossa in {l}!": "{t} promoted to {l}!", "{t} è retrocessa in {l}": "{t} relegated to {l}",
-  "Difendi la categoria: le ultime 3 tornano giù lunedì": "Stay up: the bottom 3 go down on Monday", "Riportala su: le prime 3 salgono lunedì": "Bring them back: the top 3 go up on Monday",
-  "le prime 3 salgono": "top 3 go up", "le ultime 3 scendono": "bottom 3 go down",
   "Tutorial": "Tutorial", "Rifai i tre tiri di prova alla prossima partita.": "Replay the three practice shots in your next game.", "Rivedi": "Replay", "Alla prossima partita": "Next game",
   // install
   "Installa dal menu": "Install from the menu", "Apri il menu del browser e scegli <b>Installa app</b>.": "Open the browser menu and choose <b>Install app</b>.",
@@ -788,30 +781,16 @@ const PREP = { "": { il: "il ", lo: "lo ", la: "la ", "l'": "l'" }, per: { il: "
                a: { il: "al ", lo: "allo ", la: "alla ", "l'": "all'" }, da: { il: "dal ", lo: "dallo ", la: "dalla ", "l'": "dall'" }, su: { il: "sul ", lo: "sullo ", la: "sulla ", "l'": "sull'" } };
 function sq(name, prep = "", cap = false){ if (LANG !== "it") return name; const t = PREP[prep][ART[name] || "il"] + name; return cap ? t[0].toUpperCase() + t.slice(1) : t; }
 // a first-time player has no team yet: the home stays neutral until one is chosen
-// which division every team plays in this week: promotions and relegations move them every Monday
-let MEMBERS = store.get("pm.members", null);   // { season, map: { team: league }, moves: { team: [from, to] } }
-const leagueOf = name => (MEMBERS && MEMBERS.map && MEMBERS.map[name]) || BASE_LEAGUE[name];
-function buildLeagues(){
-  for (const l of Object.keys(LEAGUE_TEAMS)) LEAGUE_TEAMS[l] = ALL_TEAMS.filter(t => leagueOf(t[0]) === l).sort((a, b) => a[0].localeCompare(b[0]));
-  TEAMS = LEAGUE_TEAMS[LEAGUE];
-}
-buildLeagues();
-// the teams you support, one per division: they keep your support when they go up or down
+let teamChosen = LEAGUE === "serie-a" ? (!!store.get("cucchiaio.teamName", "") || store.get("cucchiaio.team", -1) >= 0 || store.get("pennellata.team", -1) >= 0) : TEAMS.some(t => t[0] === store.get(teamKey(), ""));
 const OLD_TEAMS = ["Milan","Inter","Juventus","Napoli","Roma","Lazio","Atalanta","Fiorentina","Bologna","Torino","Genoa","Bari","Palermo","Sampdoria","Udinese","Cagliari"];
-let MY = store.get("pm.myTeams", null);
-if (!Array.isArray(MY) || (!MY.length && (store.get("cucchiaio.teamName", "") || store.get("pm.team.serie-b", "") || store.get("pm.team.serie-c", "")))) {
-  MY = [];
-  const a = store.get("cucchiaio.teamName", "") || OLD_TEAMS[store.get("cucchiaio.team", store.get("pennellata.team", -1))];
-  [a, store.get("pm.team.serie-b", ""), store.get("pm.team.serie-c", "")].forEach(n => { if (n && TEAM_BY[n] && !MY.includes(n)) MY.push(n); });
-  store.set("pm.myTeams", MY);
-}
-const myTeamIn = l => MY.find(n => leagueOf(n) === l) || null;
-function pickTeam(name){ MY = [name].concat(MY.filter(n => n !== name && leagueOf(n) !== leagueOf(name))); store.set("pm.myTeams", MY); }
-// your team left this division since your last visit: open the division it plays in now
-if (!myTeamIn(LEAGUE) && MEMBERS && MEMBERS.moves) { const f = MY.find(n => MEMBERS.moves[n] && MEMBERS.moves[n][0] === LEAGUE); if (f) { LEAGUE = leagueOf(f); store.set("pm.league", LEAGUE); TEAMS = LEAGUE_TEAMS[LEAGUE]; } }
-// a first-time player has no team yet: the home stays neutral until one is chosen
-let teamChosen = !!myTeamIn(LEAGUE);
-let teamIdx = (() => { const m = myTeamIn(LEAGUE), i = m ? TEAMS.findIndex(t => t[0] === m) : -1; return i >= 0 ? i : Math.max(0, TEAMS.findIndex(t => t[0] === "Milan")); })();
+let teamIdx = (() => {
+  const byName = TEAMS.findIndex(t => t[0] === store.get(teamKey(), ""));
+  if (byName >= 0) return byName;
+  if (LEAGUE !== "serie-a") return 0;
+  const old = OLD_TEAMS[store.get("cucchiaio.team", store.get("pennellata.team", -1))];
+  const i = TEAMS.findIndex(t => t[0] === old);
+  return i >= 0 ? i : TEAMS.findIndex(t => t[0] === "Milan");
+})();
 let coached = store.get("cucchiaio.coached", false);
 let crowd = null;
 
@@ -1251,37 +1230,10 @@ async function sb(path, opt = {}){
   if (!r.ok) { const t = await r.text().catch(() => ""); throw new Error(r.status + " " + t); }
   const tx = await r.text(); return tx ? JSON.parse(tx) : null;
 }
-// promotions and relegations: the server says where every team plays this week (and last week, to show who moved)
-let pendingMembers = null;
-const inMatch = () => G && ["ready", "hold", "flight", "after"].includes(phase) && $("overScreen").hidden;
-async function srvMembers(){
-  try {
-    const rows = await sb("rpc/league_members_now", { body: {} });
-    if (!rows || !rows.length) return;
-    const now = rows.reduce((m, x) => x.season > m ? x.season : m, ""), map = {}, prev = {};
-    rows.forEach(x => (x.season === now ? map : prev)[x.team] = x.league);
-    const moves = {}; for (const t in map) if (prev[t] && prev[t] !== map[t]) moves[t] = [prev[t], map[t]];
-    const M = { season: now, map, moves };
-    if (MEMBERS && JSON.stringify(MEMBERS) === JSON.stringify(M)) return;
-    if (inMatch()) pendingMembers = M; else applyMembers(M);
-  } catch (e) {}
-}
-function applyMembers(M){
-  pendingMembers = null;
-  const cur = teamChosen && TEAMS[teamIdx] ? TEAMS[teamIdx][0] : null;
-  MEMBERS = M; store.set("pm.members", M); buildLeagues();
-  // your team went up or down: you follow it into its new division
-  if (cur && leagueOf(cur) !== LEAGUE) { LEAGUE = leagueOf(cur); store.set("pm.league", LEAGUE); TEAMS = LEAGUE_TEAMS[LEAGUE];
-    Object.assign(srv, { week: {}, records: {}, mvp: {}, winners: [], mine: {}, fans: {}, fansAt: {}, hist: {}, histAt: {}, taunts: null, tauntsAt: 0 }); }
-  const m = myTeamIn(LEAGUE), i = m ? TEAMS.findIndex(t => t[0] === m) : -1;
-  teamChosen = i >= 0; teamIdx = i >= 0 ? i : Math.max(0, TEAMS.findIndex(t => t[0] === cur));
-  renderLeagues(); renderTeams(); buildCrowd(); renderHome(); renderRanks();
-}
 async function srvLoad(){
   if (srv.loading) return; srv.loading = true;
   try {
     const ses = await sbAuth(); srv.uid = ses.uid;
-    await srvMembers();
     const sid = seasonId(), q = encodeURIComponent(sid);
     let week, rec, win, mine, mvp = [];
     try {
@@ -1368,7 +1320,7 @@ function renderHistory(){
   const list = $("histList"); if (!list || $("histScreen").hidden) return;
   list.textContent = ""; list.className = "rlist full hist" + (histWeek ? " teams wk" : "");
   const num = n => n.toLocaleString(LANG === "it" ? "it-IT" : "en-GB");
-  const color = team => (TEAM_BY[team] || ["", "#888"])[1];
+  const color = team => (TEAMS.find(t => t[0] === team) || ["", "#888"])[1];
   if (!histWeek) {
     $("histTitle").textContent = tr("Albo d'oro") + " · " + leagueName();
     $("histHint").textContent = tr("Tutte le settimane giocate. Tocca una settimana per la classifica completa.");
@@ -1529,7 +1481,7 @@ function fanRows(){
   const sid = seasonId();
   if (sharedMode()) {
     return online.docs.filter(d => d.seasons && d.seasons[sid] && d.seasons[sid].best > 0).map(d => {
-      const tm = TEAM_BY[d.team] || ["", "#888"];
+      const tm = TEAMS.find(t => t[0] === d.team) || ["", "#888"];
       return { id: d.id, me: d.id === online.uid, name: cleanNick(d.nick) || online.names[d.id] || (d.id === online.uid ? "Tu" : "Tifoso"), team: d.team || "", color: tm[1],
                pts: d.seasons[sid].best, lv: levelOf((d.stats || {}).points || 0).lv };
     }).sort((a, b) => b.pts - a.pts);
@@ -1577,13 +1529,11 @@ function renderRanks(){
         const hd2 = hd.cloneNode(true); hd.style.gridArea = "1 / 1"; hd2.style.gridArea = "1 / 2";
         list.appendChild(hd); list.appendChild(hd2);
       }
-      const zone = (k, n, pts) => (LEAGUE !== "serie-a" && k < 3 && pts > 0) ? " zup" : (LEAGUE !== "serie-c" && k >= n - 3) ? " zdown" : "";
       rows.forEach((r, k) => { row(k + 1, { team: r.name }, r.name, !full && bests[r.name] ? `${tr("record")} ${bests[r.name].pts.toLocaleString(LOC())} · ${bests[r.name].name}` : "", r.pts, r.name === mine, 0, bests[r.name],
         () => { rankTeam = r.name; box.dataset.tab = "fans"; renderRanks(); });
-        list.lastChild.className += zone(k, rows.length, r.pts);
         if (full) { const half = Math.ceil(rows.length / 2); list.lastChild.style.gridArea = `${(k % half) + 2} / ${k < half ? 1 : 2}`; } });
     } else {
-      const team = rankTeam || mine, color = (TEAM_BY[team] || ["", "#888"])[1];
+      const team = rankTeam || mine, color = (TEAMS.find(t => t[0] === team) || ["", "#888"])[1];
       if (title) title.textContent = tr("Tifosi {t}", { t: sq(team, "di") });
       const hint = box.querySelector(".rhint"); if (hint) hint.textContent = tr("Chi ha giocato {t} questa settimana, con il suo totale", { t: sq(team, "per") });
       const rows = fansOf(team, sid);
@@ -1596,8 +1546,6 @@ function renderRanks(){
       else rows.slice(0, 100).forEach((r, k) => { row(k + 1, { team }, (k === 0 ? "👑 " : "") + r.name, "", r.pts, r.me, r.lv); if (k === 0) { const b = document.createElement("span"); b.className = "mvpTag"; b.textContent = "MVP"; list.lastChild.querySelector(".who").appendChild(b); } });
     }
     const st = box.querySelector(".rstatus"); st.textContent = seasonLabel(sid) + " · "; const cd = document.createElement("span"); cd.className = "cd"; cd.textContent = seasonLeft(); st.appendChild(cd);
-    if (tab === "teams") { const zl = document.createElement("span"); zl.className = "zleg";
-      zl.innerHTML = (LEAGUE !== "serie-a" ? `<i class="zu"></i>${tr("le prime 3 salgono")} ` : "") + (LEAGUE !== "serie-c" ? `<i class="zd"></i>${tr("le ultime 3 scendono")}` : ""); st.appendChild(zl); }
   });
   renderHome();
   document.querySelectorAll(".seasonName").forEach(e => e.textContent = seasonLabel(seasonId()));
@@ -1610,7 +1558,7 @@ function renderRanks(){
     list.forEach(h => {
       const r = document.createElement("div"); r.className = "h";
       const a = document.createElement("span"); a.textContent = "Settimana " + (+h.sid.split("-W")[1]);
-      const i = document.createElement("i"); i.style.background = (TEAM_BY[h.team] || ["", "#888"])[1];
+      const i = document.createElement("i"); i.style.background = (TEAMS.find(t => t[0] === h.team) || ["", "#888"])[1];
       const b = document.createElement("span"); b.textContent = h.team + " · " + h.pts.toLocaleString(LOC());
       r.append(a, i, b); box.appendChild(r);
     });
@@ -1839,8 +1787,7 @@ function renderOverTable(rows, posA, posB){
   overMode = "table"; if ($("overFeed")) { $("overFeed").hidden = true; $("overTbl").hidden = false; $("overTaunts").textContent = tr("📣 Sfottò"); }
   const start = Math.max(0, Math.min(rows.length - 7, posA - 3)), mine = TEAMS[teamIdx][0];
   rows.slice(start, start + 7).forEach((x, k) => {
-    const r = document.createElement("div"), i = start + k;
-    r.className = "orow" + (x.name === mine ? " me" : "") + ((LEAGUE !== "serie-a" && i < 3 && x.pts > 0) ? " zup" : (LEAGUE !== "serie-c" && i >= rows.length - 3) ? " zdown" : "");
+    const r = document.createElement("div"), i = start + k; r.className = "orow" + (x.name === mine ? " me" : "");
     r.innerHTML = `<span class="p">${i + 1}</span><i></i><span class="nm"></span><span class="pt"></span>`;
     r.querySelector("i").outerHTML = teamIcon(x.name);
     r.querySelector(".nm").textContent = x.name;
@@ -1850,7 +1797,7 @@ function renderOverTable(rows, posA, posB){
   });
 }
 function teamIcon(name, size = 18){
-  const t = TEAM_BY[name]; if (!t) return '<span class="mj"></span>';
+  const t = TEAMS.find(x => x[0] === name); if (!t) return '<span class="mj"></span>';
   return '<span class="mj">' + jerseySVG(KIT[t[0]] || ["plain", t[1], t[2]], size) + "</span>";
 }
 function leagueName(){ for (const n of NATIONS) for (const d of n.divs) if (d[0] === LEAGUE) return d[1]; return ""; }
@@ -1896,17 +1843,6 @@ function jerseySVG(k, size = 22){
 }
 function renderChamp(){
   const c = $("champ"); if (!c) return;
-  if (pendingMembers && !inMatch()) { applyMembers(pendingMembers); return; }
-  const mv = MEMBERS && MEMBERS.moves && MEMBERS.season === seasonId() ? MY.filter(n => MEMBERS.moves[n]).map(n => [n, MEMBERS.moves[n]]) : [];
-  if (mv.length) {
-    const [t, [from, to]] = mv[0], up = ["serie-c", "serie-b", "serie-a"].indexOf(to) > ["serie-c", "serie-b", "serie-a"].indexOf(from);
-    const ln = id => { for (const n of NATIONS) for (const d of n.divs) if (d[0] === id) return d[1]; return ""; };
-    c.innerHTML = `<span class="cup">${up ? "⬆️" : "⬇️"}</span><span><b></b><small></small></span>`; c.classList.toggle("down", !up);
-    c.querySelector("b").textContent = up ? tr("{t} è promossa in {l}!", { t: sq(t, "", true), l: ln(to) }) : tr("{t} è retrocessa in {l}", { t: sq(t, "", true), l: ln(to) });
-    c.querySelector("small").textContent = up ? tr("Difendi la categoria: le ultime 3 tornano giù lunedì") : tr("Riportala su: le prime 3 salgono lunedì");
-    c.hidden = false; c.onclick = () => { $("rankBtn").click(); }; return;
-  }
-  c.classList.remove("down");
   const prev = (() => { const d = new Date(Date.now() - 7 * 864e5); const r = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome", year: "numeric", month: "2-digit", day: "2-digit" }).format(d).split("-").map(Number); return seasonOf(r[0], r[1], r[2]); })();
   const w = weekList().find(x => x.sid === prev);
   if (!w) { c.hidden = true; return; }
@@ -1967,7 +1903,7 @@ function renderLeagues(){
 function setLeague(id){
   if (!LEAGUE_TEAMS[id]) return;
   LEAGUE = id; store.set("pm.league", id); TEAMS = LEAGUE_TEAMS[id];
-  const name = myTeamIn(id) || "", i = TEAMS.findIndex(t => t[0] === name);
+  const name = store.get(teamKey(), ""), i = TEAMS.findIndex(t => t[0] === name);
   teamChosen = i >= 0; teamIdx = i >= 0 ? i : 0;
   Object.assign(srv, { week: {}, records: {}, mvp: {}, winners: [], mine: {}, fans: {}, fansAt: {}, hist: {}, histAt: {}, sid: null, ok: false, taunts: null, tauntsAt: 0 });
   renderLeagues(); renderTeams(); buildCrowd(); renderHome(); renderRanks(); srvLoad();
@@ -2000,7 +1936,7 @@ function renderTeams(){
     b.type = "button"; b.className = "bj"; b.id = "team-" + i;
     b.setAttribute("aria-pressed", teamChosen && i === teamIdx ? "true" : "false");
     b.innerHTML = jerseySVG(KIT[t[0]] || ["plain", t[1], t[2]], 40) + `<span${t[0].length > 12 && !t[0].includes(" ") ? ' style="font-size:.78em;letter-spacing:-.02em"' : ""}>${t[0]}</span>`;
-    b.onclick = () => { teamIdx = i; teamChosen = true; pickTeam(TEAMS[i][0]); renderTeams(); buildCrowd(); renderHome(); if (srv.ok) srvProfile(); };
+    b.onclick = () => { teamIdx = i; teamChosen = true; store.set(teamKey(), TEAMS[i][0]); renderTeams(); buildCrowd(); renderHome(); if (srv.ok) srvProfile(); };
     box.appendChild(b);
   });
   homeTheme(); renderLeagues();
@@ -2155,7 +2091,7 @@ function fillTaunts(box){
   const ago = at => { const m = Math.max(1, Math.round((Date.now() - at) / 60000)); return m < 60 ? tr("{n} min fa", { n: m }) : m < 1440 ? tr("{n} h fa", { n: Math.round(m / 60) }) : tr("{n} g fa", { n: Math.round(m / 1440) }); };
   list.forEach(x => {
     const r = document.createElement("div"); r.className = "tmsg" + (x.me ? " me" : "");
-    const col = (TEAM_BY[x.team] || ["", "#888"])[1];
+    const col = (TEAMS.find(t => t[0] === x.team) || ["", "#888"])[1];
     r.innerHTML = `<i></i><div class="tb"><div class="th"><b></b><span class="tt"></span><span class="ta"></span></div><div class="tx"></div></div>`;
     r.querySelector("i").outerHTML = teamIcon(x.team, 20);
     r.querySelector("b").textContent = x.nick; r.querySelector(".tt").textContent = x.team; r.querySelector(".ta").textContent = ago(x.at);
