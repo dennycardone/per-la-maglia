@@ -566,8 +566,6 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
     <div class="label">Info e privacy</div>
     <div class="setgrid" id="legalList"></div>
     <div class="note legalnote">Gioco non ufficiale: non è affiliato né approvato da club, leghe o federazioni. I nomi delle squadre servono solo a indicare per chi tifi; le maglie sono disegni generici.</div>
-    <div class="label">Valore dei tiri</div>
-    <div class="rules values"><span>Sotto la traversa <b>×3</b></span><span>Al volo <b>×2</b></span><span>Arco teso fino a <b>×1,5</b></span><span>Rilascio perfetto <b>+100</b></span><span>Faccia a faccia <b>+50</b></span><span>Serie fino a <b>×3</b></span></div>
   </div>
 </section>
 
@@ -973,6 +971,41 @@ const THEMES = {
 };
 let THEME = "notte", crowdL = null, rain = [], gusts = [], bgCanvas = null, crowdCanvas = null;
 function pickTheme(){ const k = ["notte", "tramonto"]; THEME = k[Math.floor(Math.random() * k.length)]; buildCrowd(); }
+// the team colour that stands out on a dark stadium: white or black kits use their second colour
+function lum(c){ const n = parseInt(c.slice(1), 16), f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(n >> 16 & 255) + 0.7152 * f(n >> 8 & 255) + 0.0722 * f(n & 255); }
+function contrast(a, b){ const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+function teamInk(t){
+  const c1 = t[1], c2 = t[2];
+  if (lum(c1) > 0.75) return lum(c2) > 0.05 ? c2 : "#ffffff";
+  if (lum(c1) < 0.02) return lum(c2) > 0.02 ? c2 : "#ffffff";
+  return c1;
+}
+// a fans' banner hung on the barrier: cloth in the team's colours, painted letters, ropes at the corners
+function drawBanner(g, x, y, w, h, t, text){
+  const c1 = t[1], c2 = t[2] === t[1] ? (lum(c1) > 0.4 ? "#111111" : "#ffffff") : t[2];
+  const ink = c2, weak = contrast(c1, ink) < 2.2;   // painted in the second colour; a weak contrast gets a thick dark outline
+  const sag = h * 0.12, waves = 5;
+  const edge = (yy, amp, dir) => { for (let i = 0; i <= 40; i++) { const k = i / 40, xx = x + k * w; const yv = yy + Math.sin(k * Math.PI) * sag * dir + Math.sin(k * Math.PI * waves) * amp; i ? g.lineTo(xx, yv) : g.moveTo(xx, yv); } };
+  const path = () => { g.beginPath(); edge(y, h * 0.03, 0.4); for (let i = 40; i >= 0; i--) { const k = i / 40, xx = x + k * w; g.lineTo(xx, y + h + Math.sin(k * Math.PI) * sag + Math.sin(k * Math.PI * waves + 1) * h * 0.05); } g.closePath(); };
+  g.save();
+  g.fillStyle = "rgba(0,0,0,.35)"; g.translate(2, 3); path(); g.fill(); g.translate(-2, -3);
+  path(); g.fillStyle = c1; g.fill(); g.clip();
+  g.fillStyle = c2; g.fillRect(x, y - h, w, h * 1.16); g.fillRect(x, y + h * 0.9, w, h);   // borders in the second colour
+  g.fillStyle = c1; g.beginPath(); edge(y + h * 0.15, h * 0.03, 0.4); for (let i = 40; i >= 0; i--) { const k = i / 40; g.lineTo(x + k * w, y + h * 0.86 + Math.sin(k * Math.PI) * sag); } g.closePath(); g.fill();
+  g.font = `900 ${Math.round(h * 0.56)}px "Big Shoulders Display", "Barlow Condensed", sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
+  let fs = h * 0.56; while (g.measureText(text).width > w * 0.86 && fs > 8) { fs -= 1; g.font = `900 ${Math.round(fs)}px "Big Shoulders Display", "Barlow Condensed", sans-serif`; }
+  g.lineJoin = "round"; g.strokeStyle = contrast(ink, "#000000") > contrast(ink, "#ffffff") ? (weak ? "#0b1530" : "rgba(0,0,0,.35)") : (weak ? "#ffffff" : "rgba(255,255,255,.25)"); g.lineWidth = Math.max(1.5, fs * (weak ? 0.16 : 0.07));
+  g.strokeText(text, x + w / 2, y + h * 0.53 + sag * 0.5); g.fillStyle = ink; g.fillText(text, x + w / 2, y + h * 0.53 + sag * 0.5);
+  // folds of the cloth
+  for (let i = 0; i < 7; i++) { const fx = x + w * (i + 0.5) / 7, gr = g.createLinearGradient(fx - w / 14, 0, fx + w / 14, 0);
+    gr.addColorStop(0, "rgba(0,0,0,0)"); gr.addColorStop(0.5, i % 2 ? "rgba(0,0,0,.14)" : "rgba(255,255,255,.10)"); gr.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = gr; g.fillRect(fx - w / 14, y - h, w / 7, h * 3); }
+  g.restore();
+  // ropes tied to the barrier
+  g.strokeStyle = "rgba(230,230,230,.7)"; g.lineWidth = 1.2;
+  [[x + 3, y + 2], [x + w - 3, y + 2]].forEach(([px, py]) => { g.beginPath(); g.moveTo(px, py); g.lineTo(px + (px < x + w / 2 ? -4 : 4), py - h * 0.28); g.stroke(); });
+  g.textAlign = "left";
+}
 function buildCrowd(){
   const t = TEAMS[teamIdx], { gy, farH, boardH, boardY, roofH } = L, th = THEMES[THEME];
   const c = bgCanvas || (bgCanvas = document.createElement("canvas")); c.width = Math.round(W * DPR); c.height = Math.round(H * DPR);
@@ -1013,7 +1046,7 @@ function buildCrowd(){
   g.fillStyle = "#05080d"; g.fillRect(0, upBot, W, balH);
   g.font = `700 ${Math.round(balH * 0.72)}px "Barlow Condensed", sans-serif`; g.textBaseline = "middle";
   const led = "FORZA " + t[0].toUpperCase() + "   ·   ";
-  const lw = g.measureText(led).width; g.fillStyle = t[1] === "#f2f2f2" ? "#ffcf5a" : t[1];
+  const lw = g.measureText(led).width; g.fillStyle = teamInk(t);
   g.shadowColor = g.fillStyle; g.shadowBlur = 6;
   for (let x = 8; x < W; x += lw) g.fillText(led, x, upBot + balH / 2 + 1);
   g.shadowBlur = 0;
@@ -1040,12 +1073,14 @@ function buildCrowd(){
   g.font = `700 ${Math.round(boardH * 0.6)}px "Barlow Condensed", sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
   for (let i = 0, x = 0; x < W; i++, x += pw) {
     g.fillStyle = i % 2 ? "#0b1424" : "#101d33"; g.fillRect(x, boardY, pw, boardH);
-    g.fillStyle = i % 2 === 1 ? (t[1] === "#f2f2f2" ? "#ffcf5a" : t[1]) : "rgba(255,207,90,.85)";
-    g.fillText(texts[i % 2], x + pw / 2, boardY + boardH / 2 + 1);
+    if (i % 2 === 0) { g.fillStyle = "rgba(255,207,90,.85)"; g.fillText(texts[0], x + pw / 2, boardY + boardH / 2 + 1); }
     g.fillStyle = "rgba(255,255,255,.08)"; g.fillRect(x, boardY, 1, boardH);
   }
   g.textAlign = "left";
   g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(0, boardY, W, 1);
+  // the fans' banners hang over every other board, in the team's colours
+  for (let i = 1, x = pw; x < W; i += 2, x += pw * 2) drawBanner(g, x + pw * 0.04, boardY - boardH * 0.12, pw * 0.92, boardH * 1.12, t, texts[1]);
+  g.font = `700 ${Math.round(boardH * 0.6)}px "Barlow Condensed", sans-serif`;
   // far half of the pitch, seen beyond the players
   const far = g.createLinearGradient(0, boardY + boardH, 0, gy); far.addColorStop(0, th.far[0]); far.addColorStop(1, th.far[1]);
   g.fillStyle = far; g.fillRect(0, boardY + boardH, W, farH);
@@ -2775,8 +2810,8 @@ function drawAttacker(v){
 function drawTrail(v){
   const hot = G && G.streak >= 5;
   if (hot) {   // on a streak the ball leaves a trail in the team's colours
-    const t = TEAMS[teamIdx], c1 = t[1], c2 = t[2] === t[1] ? "#ffffff" : t[2], glow = c1 === "#f2f2f2" ? "#ffcf5a" : c1;
-    ctx.save(); ctx.globalCompositeOperation = "lighter";
+    const t = TEAMS[teamIdx], c1 = t[1], c2 = t[2] === t[1] ? (lum(c1) > 0.4 ? "#111111" : "#ffffff") : t[2], glow = teamInk(t);
+    ctx.save();
     trail.forEach((p, i) => {
       const k = i / trail.length, q = S_(v, p[0], p[1]), r = Math.max(2.5, (0.06 + 0.16 * k) * v.sc);
       ctx.globalAlpha = 0.2 + 0.6 * k; ctx.fillStyle = i % 2 ? c1 : c2;
