@@ -625,7 +625,9 @@ const TEAMS_B = [
   ["Modena","#f9d71c","#1b3d8f"],["Padova","#f2f2f2","#c8102e"],["Palermo","#f4a6c0","#111111"],["Pisa","#1c3f94","#111111"],
   ["Sampdoria","#1f4fa3","#f2f2f2"],["Südtirol","#c8102e","#f2f2f2"],["Vicenza","#f2f2f2","#c8102e"],["Virtus Entella","#6ec1e4","#f2f2f2"]
 ];
-const LEAGUE_TEAMS = { "serie-a": TEAMS_A, "serie-b": TEAMS_B };
+// Serie C 2026/27: the 20 biggest fan bases of the three groups
+const TEAMS_C = [["Bari","#f2f2f2","#c8102e"],["Casertana","#c8102e","#1c2f6b"],["Catania","#c8102e","#4aa3df"],["Cosenza","#c8102e","#1c2f6b"],["Crotone","#c8102e","#1c2f6b"],["Foggia","#c8102e","#111111"],["Lecco","#1c3f94","#6ec1e4"],["Livorno","#8b1a2e","#f2f2f2"],["Monopoli","#0a7a3b","#f2f2f2"],["Novara","#2a6fcf","#f2f2f2"],["Perugia","#c8102e","#f2f2f2"],["Pescara","#f2f2f2","#4aa3df"],["Potenza","#c8102e","#1c2f6b"],["Pro Vercelli","#f2f2f2","#111111"],["Ravenna","#f6c500","#c8102e"],["Salernitana","#6b1a2a","#f2f2f2"],["Sambenedettese","#c8102e","#1c3f94"],["Spezia","#f2f2f2","#111111"],["Treviso","#f2f2f2","#6ec1e4"],["Union Brescia","#1f4fa3","#f2f2f2"]];
+const LEAGUE_TEAMS = { "serie-a": TEAMS_A, "serie-b": TEAMS_B, "serie-c": TEAMS_C };
 let LEAGUE = (() => { try { return JSON.parse(localStorage.getItem("pm.league")) || "serie-a"; } catch (e) { return "serie-a"; } })(); if (!LEAGUE_TEAMS[LEAGUE]) LEAGUE = "serie-a";
 const teamKey = () => LEAGUE === "serie-a" ? "cucchiaio.teamName" : "pm.team." + LEAGUE;
 let TEAMS = LEAGUE_TEAMS[LEAGUE];
@@ -740,9 +742,10 @@ const cv = $("cv"), ctx = cv.getContext("2d");
 let W = 0, H = 0, DPR = 1;
 // Italian articles: "per la Lazio", "dell'Inter", "al Milan"
 const ART = { Atalanta: "l'", Fiorentina: "la", Inter: "l'", Juventus: "la", Lazio: "la", Roma: "la", Udinese: "l'",
-  Arezzo: "l'", Ascoli: "l'", Avellino: "l'", Carrarese: "la", Cremonese: "la", Empoli: "l'", "Hellas Verona": "l'", "Juve Stabia": "la", Sampdoria: "la", "Virtus Entella": "la" };
-const PREP = { "": { il: "il ", la: "la ", "l'": "l'" }, per: { il: "per il ", la: "per la ", "l'": "per l'" }, di: { il: "del ", la: "della ", "l'": "dell'" },
-               a: { il: "al ", la: "alla ", "l'": "all'" }, da: { il: "dal ", la: "dalla ", "l'": "dall'" }, su: { il: "sul ", la: "sulla ", "l'": "sull'" } };
+  Arezzo: "l'", Ascoli: "l'", Avellino: "l'", Carrarese: "la", Cremonese: "la", Empoli: "l'", "Hellas Verona": "l'", "Juve Stabia": "la", Sampdoria: "la", "Virtus Entella": "la",
+  Casertana: "la", Salernitana: "la", Sambenedettese: "la", "Pro Vercelli": "la", "Union Brescia": "l'", Spezia: "lo" };
+const PREP = { "": { il: "il ", lo: "lo ", la: "la ", "l'": "l'" }, per: { il: "per il ", lo: "per lo ", la: "per la ", "l'": "per l'" }, di: { il: "del ", lo: "dello ", la: "della ", "l'": "dell'" },
+               a: { il: "al ", lo: "allo ", la: "alla ", "l'": "all'" }, da: { il: "dal ", lo: "dallo ", la: "dalla ", "l'": "dall'" }, su: { il: "sul ", lo: "sullo ", la: "sulla ", "l'": "sull'" } };
 function sq(name, prep = "", cap = false){ if (LANG !== "it") return name; const t = PREP[prep][ART[name] || "il"] + name; return cap ? t[0].toUpperCase() + t.slice(1) : t; }
 // a first-time player has no team yet: the home stays neutral until one is chosen
 let teamChosen = LEAGUE === "serie-a" ? (!!store.get("cucchiaio.teamName", "") || store.get("cucchiaio.team", -1) >= 0 || store.get("pennellata.team", -1) >= 0) : TEAMS.some(t => t[0] === store.get(teamKey(), ""));
@@ -919,7 +922,8 @@ Object.assign(KIT, {
   Modena: ["plain","#f9d71c","#1b3d8f","#1b3d8f","#1b3d8f"], Padova: ["plain","#f2f2f2","#c8102e","#f2f2f2","#c8102e"],
   Palermo: ["plain","#f4a6c0","#111111","#111111","#111111"], Pisa: ["stripes","#1c3f94","#111111","#111111","#111111"],
   Sampdoria: ["hoop","#1f4fa3","#f2f2f2","#f2f2f2","#1f4fa3"], "Südtirol": ["plain","#c8102e","#f2f2f2","#f2f2f2","#c8102e"],
-  Vicenza: ["stripes","#f2f2f2","#c8102e","#f2f2f2","#f2f2f2"], "Virtus Entella": ["plain","#6ec1e4","#f2f2f2","#f2f2f2","#6ec1e4"]
+  Vicenza: ["stripes","#f2f2f2","#c8102e","#f2f2f2","#f2f2f2"], "Virtus Entella": ["plain","#6ec1e4","#f2f2f2","#f2f2f2","#6ec1e4"],
+  "Bari": ["plain","#f2f2f2","#c8102e","#f2f2f2","#f2f2f2"], "Casertana": ["plain","#c8102e","#1c2f6b","#1c2f6b","#c8102e"], "Catania": ["stripes","#c8102e","#4aa3df","#1c2f6b","#1c2f6b"], "Cosenza": ["halves","#c8102e","#1c2f6b","#1c2f6b","#c8102e"], "Crotone": ["stripes","#c8102e","#1c2f6b","#f2f2f2","#c8102e"], "Foggia": ["stripes","#c8102e","#111111","#111111","#111111"], "Lecco": ["stripes","#1c3f94","#6ec1e4","#1c3f94","#1c3f94"], "Livorno": ["plain","#8b1a2e","#f2f2f2","#f2f2f2","#8b1a2e"], "Monopoli": ["plain","#0a7a3b","#f2f2f2","#f2f2f2","#0a7a3b"], "Novara": ["plain","#2a6fcf","#f2f2f2","#f2f2f2","#2a6fcf"], "Perugia": ["plain","#c8102e","#f2f2f2","#f2f2f2","#c8102e"], "Pescara": ["stripes","#f2f2f2","#4aa3df","#f2f2f2","#f2f2f2"], "Potenza": ["hoop","#c8102e","#1c2f6b","#1c2f6b","#c8102e"], "Pro Vercelli": ["plain","#f2f2f2","#111111","#111111","#f2f2f2"], "Ravenna": ["stripes","#f6c500","#c8102e","#c8102e","#c8102e"], "Salernitana": ["plain","#6b1a2a","#f2f2f2","#111111","#6b1a2a"], "Sambenedettese": ["stripes","#c8102e","#1c3f94","#1c3f94","#c8102e"], "Spezia": ["plain","#f2f2f2","#111111","#111111","#111111"], "Treviso": ["hoop","#f2f2f2","#6ec1e4","#f2f2f2","#f2f2f2"], "Union Brescia": ["plain","#1f4fa3","#f2f2f2","#f2f2f2","#1f4fa3"]
 });
 const KEEPER_KIT = ["plain","#ff8a1f","#14161a","#14161a","#ff8a1f"];
 function teamKit(){ const n = TEAMS[teamIdx][0]; return KIT[n] || ["plain", TEAMS[teamIdx][1], TEAMS[teamIdx][2], "#111111", "#111111"]; }
@@ -1798,7 +1802,7 @@ function renderHome(){
 }
 // competitions by nation, each with its divisions (a new one only needs "open": true and its teams)
 const NATIONS = [
-  { nat: "Italia", flag: "f-it", divs: [["serie-a", "Serie A", true], ["serie-b", "Serie B", true], ["serie-c", "Serie C", false]] },
+  { nat: "Italia", flag: "f-it", divs: [["serie-a", "Serie A", true], ["serie-b", "Serie B", true], ["serie-c", "Serie C", true]] },
   { nat: "Inghilterra", flag: "f-en", divs: [["premier", "Premier League", false], ["championship", "Championship", false]] },
   { nat: "Spagna", flag: "f-es", divs: [["laliga", "LaLiga", false], ["segunda", "Segunda", false]] },
   { nat: "Germania", flag: "f-de", divs: [["bundesliga", "Bundesliga", false], ["bundesliga2", "2. Bundesliga", false]] },
@@ -1858,7 +1862,7 @@ function renderTeams(){
     const b = document.createElement("button");
     b.type = "button"; b.className = "bj"; b.id = "team-" + i;
     b.setAttribute("aria-pressed", teamChosen && i === teamIdx ? "true" : "false");
-    b.innerHTML = jerseySVG(KIT[t[0]] || ["plain", t[1], t[2]], 40) + `<span>${t[0]}</span>`;
+    b.innerHTML = jerseySVG(KIT[t[0]] || ["plain", t[1], t[2]], 40) + `<span${t[0].length > 12 && !t[0].includes(" ") ? ' style="font-size:.78em;letter-spacing:-.02em"' : ""}>${t[0]}</span>`;
     b.onclick = () => { teamIdx = i; teamChosen = true; store.set(teamKey(), TEAMS[i][0]); renderTeams(); buildCrowd(); renderHome(); if (srv.ok) srvProfile(); };
     box.appendChild(b);
   });
