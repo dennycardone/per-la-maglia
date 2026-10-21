@@ -1,0 +1,422 @@
+[
+{
+"name": "Atalanta",
+"slug": "atalanta",
+"c1": "#1f63b5",
+"c2": "#0d0d0d",
+"the": "L'Atalanta"
+},
+{
+"name": "Bologna",
+"slug": "bologna",
+"c1": "#b0202b",
+"c2": "#1c2f5c",
+"the": "Il Bologna"
+},
+{
+"name": "Cagliari",
+"slug": "cagliari",
+"c1": "#b3202b",
+"c2": "#16305f",
+"the": "Il Cagliari"
+},
+{
+"name": "Como",
+"slug": "como",
+"c1": "#1c4f9c",
+"c2": "#f2f2f2",
+"the": "Il Como"
+},
+{
+"name": "Fiorentina",
+"slug": "fiorentina",
+"c1": "#6a2c91",
+"c2": "#f2f2f2",
+"the": "La Fiorentina"
+},
+{
+"name": "Frosinone",
+"slug": "frosinone",
+"c1": "#f6c500",
+"c2": "#1b3d8f",
+"the": "Il Frosinone"
+},
+{
+"name": "Genoa",
+"slug": "genoa",
+"c1": "#b3122b",
+"c2": "#14234a",
+"the": "Il Genoa"
+},
+{
+"name": "Inter",
+"slug": "inter",
+"c1": "#1462b4",
+"c2": "#0b0b0b",
+"the": "L'Inter"
+},
+{
+"name": "Juventus",
+"slug": "juventus",
+"c1": "#f2f2f2",
+"c2": "#151515",
+"the": "La Juventus"
+},
+{
+"name": "Lazio",
+"slug": "lazio",
+"c1": "#8fd2f2",
+"c2": "#f2f2f2",
+"the": "La Lazio"
+},
+{
+"name": "Lecce",
+"slug": "lecce",
+"c1": "#f6c500",
+"c2": "#d71920",
+"the": "Il Lecce"
+},
+{
+"name": "Milan",
+"slug": "milan",
+"c1": "#d4202c",
+"c2": "#111111",
+"the": "Il Milan"
+},
+{
+"name": "Monza",
+"slug": "monza",
+"c1": "#d4111f",
+"c2": "#f2f2f2",
+"the": "Il Monza"
+},
+{
+"name": "Napoli",
+"slug": "napoli",
+"c1": "#1aa3e0",
+"c2": "#f2f2f2",
+"the": "Il Napoli"
+},
+{
+"name": "Parma",
+"slug": "parma",
+"c1": "#f2f2f2",
+"c2": "#111111",
+"the": "Il Parma"
+},
+{
+"name": "Roma",
+"slug": "roma",
+"c1": "#9c1c32",
+"c2": "#f4b223",
+"the": "La Roma"
+},
+{
+"name": "Sassuolo",
+"slug": "sassuolo",
+"c1": "#00a04f",
+"c2": "#111111",
+"the": "Il Sassuolo"
+},
+{
+"name": "Torino",
+"slug": "torino",
+"c1": "#8b1d1a",
+"c2": "#f2f2f2",
+"the": "Il Torino"
+},
+{
+"name": "Udinese",
+"slug": "udinese",
+"c1": "#f2f2f2",
+"c2": "#111111",
+"the": "L'Udinese"
+},
+{
+"name": "Venezia",
+"slug": "venezia",
+"c1": "#111111",
+"c2": "#f28c28",
+"the": "Il Venezia"
+},
+{
+"name": "Arezzo",
+"slug": "arezzo",
+"c1": "#8b1a2e",
+"c2": "#f2f2f2",
+"the": "L'Arezzo"
+},
+{
+"name": "Ascoli",
+"slug": "ascoli",
+"c1": "#f2f2f2",
+"c2": "#111111",
+"the": "L'Ascoli"
+},
+{
+"name": "Avellino",
+"slug": "avellino",
+"c1": "#0a7a3b",
+"c2": "#f2f2f2",
+"the": "L'Avellino"
+},
+{
+"name": "Benevento",
+"slug": "benevento",
+"c1": "#f6c500",
+"c2": "#d71920",
+"the": "Il Benevento"
+},
+{
+"name": "Carrarese",
+"slug": "carrarese",
+"c1": "#f6c500",
+"c2": "#1b3d8f",
+"the": "La Carrarese"
+},
+{
+"name": "Catanzaro",
+"slug": "catanzaro",
+"c1": "#f6c500",
+"c2": "#c8102e",
+"the": "Il Catanzaro"
+},
+{
+"name": "Cesena",
+"slug": "cesena",
+"c1": "#f2f2f2",
+"c2": "#111111",
+"the": "Il Cesena"
+},
+{
+"name": "Cremonese",
+"slug": "cremonese",
+"c1": "#9a9a9a",
+"c2": "#c8102e",
+"the": "La Cremonese"
+},
+{
+"name": "Empoli",
+"slug": "empoli",
+"c1": "#1d4fa0",
+"c2": "#f2f2f2",
+"the": "L'Empoli"
+},
+{
+"name": "Hellas Verona",
+"slug": "hellas-verona",
+"c1": "#1c2f6b",
+"c2": "#f6c500",
+"the": "L'Hellas Verona"
+},
+{
+"name": "Juve Stabia",
+"slug": "juve-stabia",
+"c1": "#f6c500",
+"c2": "#1c2f6b",
+"the": "La Juve Stabia"
+},
+{
+"name": "Mantova",
+"slug": "mantova",
+"c1": "#f2f2f2",
+"c2": "#c8102e",
+"the": "Il Mantova"
+},
+{
+"name": "Modena",
+"slug": "modena",
+"c1": "#f9d71c",
+"c2": "#1b3d8f",
+"the": "Il Modena"
+},
+{
+"name": "Padova",
+"slug": "padova",
+"c1": "#f2f2f2",
+"c2": "#c8102e",
+"the": "Il Padova"
+},
+{
+"name": "Palermo",
+"slug": "palermo",
+"c1": "#f4a6c0",
+"c2": "#111111",
+"the": "Il Palermo"
+},
+{
+"name": "Pisa",
+"slug": "pisa",
+"c1": "#1c3f94",
+"c2": "#111111",
+"the": "Il Pisa"
+},
+{
+"name": "Sampdoria",
+"slug": "sampdoria",
+"c1": "#1f4fa3",
+"c2": "#f2f2f2",
+"the": "La Sampdoria"
+},
+{
+"name": "Südtirol",
+"slug": "sudtirol",
+"c1": "#c8102e",
+"c2": "#f2f2f2",
+"the": "Il Südtirol"
+},
+{
+"name": "Vicenza",
+"slug": "vicenza",
+"c1": "#f2f2f2",
+"c2": "#c8102e",
+"the": "Il Vicenza"
+},
+{
+"name": "Virtus Entella",
+"slug": "virtus-entella",
+"c1": "#6ec1e4",
+"c2": "#f2f2f2",
+"the": "La Virtus Entella"
+},
+{
+"name": "Bari",
+"slug": "bari",
+"c1": "#f2f2f2",
+"c2": "#c8102e",
+"the": "Il Bari"
+},
+{
+"name": "Casertana",
+"slug": "casertana",
+"c1": "#c8102e",
+"c2": "#1c2f6b",
+"the": "La Casertana"
+},
+{
+"name": "Catania",
+"slug": "catania",
+"c1": "#c8102e",
+"c2": "#4aa3df",
+"the": "Il Catania"
+},
+{
+"name": "Cosenza",
+"slug": "cosenza",
+"c1": "#c8102e",
+"c2": "#1c2f6b",
+"the": "Il Cosenza"
+},
+{
+"name": "Crotone",
+"slug": "crotone",
+"c1": "#c8102e",
+"c2": "#1c2f6b",
+"the": "Il Crotone"
+},
+{
+"name": "Foggia",
+"slug": "foggia",
+"c1": "#c8102e",
+"c2": "#111111",
+"the": "Il Foggia"
+},
+{
+"name": "Lecco",
+"slug": "lecco",
+"c1": "#1c3f94",
+"c2": "#6ec1e4",
+"the": "Il Lecco"
+},
+{
+"name": "Livorno",
+"slug": "livorno",
+"c1": "#8b1a2e",
+"c2": "#f2f2f2",
+"the": "Il Livorno"
+},
+{
+"name": "Monopoli",
+"slug": "monopoli",
+"c1": "#0a7a3b",
+"c2": "#f2f2f2",
+"the": "Il Monopoli"
+},
+{
+"name": "Novara",
+"slug": "novara",
+"c1": "#2a6fcf",
+"c2": "#f2f2f2",
+"the": "Il Novara"
+},
+{
+"name": "Perugia",
+"slug": "perugia",
+"c1": "#c8102e",
+"c2": "#f2f2f2",
+"the": "Il Perugia"
+},
+{
+"name": "Pescara",
+"slug": "pescara",
+"c1": "#f2f2f2",
+"c2": "#4aa3df",
+"the": "Il Pescara"
+},
+{
+"name": "Potenza",
+"slug": "potenza",
+"c1": "#c8102e",
+"c2": "#1c2f6b",
+"the": "Il Potenza"
+},
+{
+"name": "Pro Vercelli",
+"slug": "pro-vercelli",
+"c1": "#f2f2f2",
+"c2": "#111111",
+"the": "La Pro Vercelli"
+},
+{
+"name": "Ravenna",
+"slug": "ravenna",
+"c1": "#f6c500",
+"c2": "#c8102e",
+"the": "Il Ravenna"
+},
+{
+"name": "Reggiana",
+"slug": "reggiana",
+"c1": "#7a1f2b",
+"c2": "#f2f2f2",
+"the": "La Reggiana"
+},
+{
+"name": "Salernitana",
+"slug": "salernitana",
+"c1": "#6b1a2a",
+"c2": "#f2f2f2",
+"the": "La Salernitana"
+},
+{
+"name": "Spezia",
+"slug": "spezia",
+"c1": "#f2f2f2",
+"c2": "#111111",
+"the": "Lo Spezia"
+},
+{
+"name": "Treviso",
+"slug": "treviso",
+"c1": "#f2f2f2",
+"c2": "#6ec1e4",
+"the": "Il Treviso"
+},
+{
+"name": "Union Brescia",
+"slug": "union-brescia",
+"c1": "#1f4fa3",
+"c2": "#f2f2f2",
+"the": "L'Union Brescia"
+}
+]

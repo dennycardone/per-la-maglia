@@ -10,7 +10,12 @@ window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault()
 </script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#05080e">
-<meta name="description" content="Pallonetti a sfida tra tifoserie: scavalca il portiere e porta punti alla tua squadra.">
+<meta name="description" content="Scegli la squadra del cuore, fai il cucchiaio al portiere e porta punti alla tua tifoseria. Classifica dei tifosi ogni settimana.">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Per la Maglia">
+<meta property="og:title" content="Per la Maglia – Ogni gol vale per la tua squadra">
+<meta property="og:description" content="Scegli la squadra del cuore, fai il cucchiaio al portiere e porta punti alla tua tifoseria. Classifica dei tifosi ogni settimana.">
+<meta property="og:image" content="https://dennycardone.github.io/per-la-maglia/og/per-la-maglia.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:url" content="https://dennycardone.github.io/per-la-maglia/"><meta name="twitter:card" content="summary_large_image">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -297,6 +302,33 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .hbtn{pointer-events:auto;appearance:none;width:32px;height:28px;border-radius:8px;border:1px solid rgba(238,242,234,.25);background:rgba(5,8,14,.55);color:var(--chalk);font-family:var(--display);font-weight:900;font-size:15px;letter-spacing:.05em;cursor:pointer}
 .hbtn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .panel.single{max-width:420px;display:flex}
+.rb.curva{border-color:rgba(255,194,75,.7);color:var(--amber)}
+.online{position:absolute;top:calc(env(safe-area-inset-top,0px) + 16px);left:50%;transform:translateX(-50%);z-index:6;padding:5px 12px;border-radius:999px;background:rgba(5,8,14,.72);border:1px solid rgba(238,242,234,.16);font-family:var(--label);font-weight:700;font-size:13px;color:#cfd8d2;white-space:nowrap}
+.online i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3ecf74;box-shadow:0 0 8px #3ecf74;margin-right:6px;vertical-align:1px}
+.online b{color:var(--amber)}
+.hplay.train{background:rgba(238,242,234,.12);color:#eef2ea;border:2px solid rgba(238,242,234,.4);box-shadow:none}
+.closedTag{color:#ff8f8f;font-weight:700}
+.trainTag{position:fixed;top:calc(env(safe-area-inset-top,0px) + 70px);left:50%;transform:translateX(-50%);z-index:7;padding:4px 12px;border-radius:999px;background:rgba(5,8,14,.75);border:1px solid rgba(238,242,234,.25);font-family:var(--label);font-weight:700;font-size:12px;letter-spacing:.08em;color:#cfd8d2}
+.trainTag[hidden]{display:none}
+.ovbtns .share span{margin-left:6px}
+#inviteVeil{position:fixed;inset:0;z-index:85;background:rgba(3,5,9,.74);display:flex;align-items:center;justify-content:center;padding:12px}
+#inviteVeil[hidden]{display:none}
+.invbox{width:min(560px,100%);max-height:100%;overflow:auto;background:#0d1320;border:1.5px solid rgba(255,194,75,.6);border-radius:18px;padding:14px 16px;color:#e7eef2}
+.invt{font-family:var(--display);font-weight:900;font-size:28px;color:var(--amber);line-height:1}
+.invs{font-size:13px;color:#9fb0a8;margin:4px 0 9px}
+.invmsg{background:rgba(255,255,255,.06);border-radius:10px;padding:8px 11px;font-size:13.5px;line-height:1.35;margin-bottom:10px;word-break:break-word}
+.invgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.invgrid button{min-height:40px;border:0;border-radius:10px;color:#fff;font-family:var(--label);font-weight:700;font-size:14px}
+.invfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;font-size:12.5px;color:#9fb0a8}
+.invfoot b{color:var(--amber)}
+.invfoot button{border:1px solid rgba(238,242,234,.25);background:none;border-radius:8px;padding:6px 14px;color:#e7eef2;font-family:var(--label);font-weight:700;font-size:14px}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);z-index:95;padding:9px 16px;border-radius:12px;background:#0d1320;border:1px solid rgba(255,194,75,.6);color:#eef2ea;font-family:var(--label);font-weight:700;font-size:14px;max-width:90vw;text-align:center}
+.toast[hidden]{display:none}
+.refbox{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:rgba(255,194,75,.08);border:1px solid rgba(255,194,75,.35);margin:2px 0 12px}
+.refbox .rbig{white-space:nowrap;font-family:var(--display);font-weight:900;font-size:40px;color:var(--amber);line-height:1}
+.refbox .rbt b{display:block;font-family:var(--label);font-size:17px;color:var(--chalk)}
+.refbox .rbt small{font-size:12.5px;color:#9fb0a8}
+.badgeTag{margin-left:6px;font-size:13px}
 .legalnote{margin:10px 0 4px;font-size:12px;line-height:1.35;color:#8a9890}
 .switch.danger{border-color:rgba(255,95,95,.6);color:#ff8f8f}
 #askVeil{position:fixed;inset:0;z-index:80;background:rgba(3,5,9,.72);display:flex;align-items:center;justify-content:center;padding:16px}
@@ -441,6 +473,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 <body>
 <canvas id="cv" aria-label="Campo da gioco: tieni premuto e rilascia per il pallonetto"></canvas>
 
+<div class="trainTag" id="trainTag" hidden>ALLENAMENTO · non conta per la classifica</div>
 <div class="hud" id="hud" hidden>
   <div class="board">
     <div class="team" id="boardTeam">Milan</div>
@@ -476,6 +509,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
     <button class="rb" id="rankBtn" type="button"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 20V13h4v7M10 20V8h4v12M16 20v-9h4v9M3 20h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Classifica</span></button>
     <button class="rb" id="histHomeBtn" type="button"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8M10 17h4v3h-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Albo d'oro</span></button>
     <button class="rb" id="tauntBtn" type="button"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Sfottò</span></button>
+    <button class="rb curva" id="inviteBtn" type="button"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>Chiama la curva</button>
     <button class="rb" id="profileBtn" type="button"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Profilo</span></button>
     <button class="rb" id="settingsBtn" type="button"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Opzioni</span></button>
     <button class="rb inst" id="installBtn" type="button"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Installa</span></button>
@@ -483,6 +517,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
   <div class="compVeil" id="compVeil" hidden></div>
   <div class="compSheet" id="compSheet" hidden><div class="csh">Scegli il campionato</div><div id="compList"></div></div>
   <button class="champ" id="champ" type="button" hidden></button>
+  <div class="online" id="onlineChip" hidden></div>
   <div class="hcenter">
     <button class="hwho" id="nickBtn" type="button"></button>
     <input id="nickInput" class="nick" maxlength="12" autocomplete="off" spellcheck="false" readonly inputmode="none" tabindex="-1" aria-hidden="true">
@@ -555,6 +590,8 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
   </div>
 </section>
 
+<div id="inviteVeil" hidden><div class="invbox"><div class="invt">Chiama la curva</div><div class="invs" id="invSub"></div><div class="invmsg" id="invMsg"></div><div class="invgrid" id="invGrid"></div><div class="invfoot"><span id="invCount"></span><button type="button" id="invClose">Chiudi</button></div></div></div>
+<div class="toast" id="toast" hidden></div>
 <div id="askVeil" hidden><div class="askbox"><div class="askt" id="askTitle"></div><p id="askText"></p><div class="askb" id="askBtns"></div></div></div>
 <section class="screen" id="settingsScreen" hidden>
   <div class="panel wide setpanel">
@@ -577,6 +614,8 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
       <div class="lvline"><span id="lvNum">Livello 1</span><span id="lvNext"></span></div>
       <div class="lvbar"><i id="lvFill"></i></div>
       <p class="lede" id="lvText"></p>
+      <div class="label">Tifosi portati</div>
+      <div class="refbox" id="refBox"></div>
       <button class="btn ghost" id="profileBack" type="button">Indietro</button>
     </div>
     <div class="col">
@@ -602,7 +641,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
       <div class="ovbig" id="finalScore">0</div>
       <div class="ovline" id="overLine"></div>
       <button class="say" id="sayBtn" type="button"><span class="ic">📣</span><span class="in"><span id="sayText">Scrivi il tuo sfottò…</span><small id="sayHint">Una frase per partita · max 80 caratteri</small></span><span class="go" id="sayGo">INVIA</span></button>
-      <div class="ovbtns"><button class="btn" id="againBtn" type="button">RIGIOCA</button><button class="btn ghost home" id="menuBtn" type="button"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h5v-6h3v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Home</span></button></div>
+      <div class="ovbtns"><button class="btn" id="againBtn" type="button">RIGIOCA</button><button class="btn ghost home share" id="shareBtn" type="button"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 13v7h14v-7"/></svg><span>Condividi</span></button><button class="btn ghost home" id="menuBtn" type="button"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h5v-6h3v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Home</span></button></div>
     </div>
     <div class="ovtbl">
       <div class="ovh"><span id="overTblTitle">Classifica</span><button class="ovsf" id="overTaunts" type="button">📣 Sfottò</button></div>
@@ -754,6 +793,17 @@ I18N.en = {
   "Domande, segnalazioni o richieste sulla privacy.": "Questions, reports or privacy requests.", "caratteri Barlow e Big Shoulders (licenza SIL OFL)": "Barlow and Big Shoulders fonts (SIL OFL licence)",
   "Segnala o nascondi": "Report or mute", "Segnala come offensivo": "Report as offensive", "Nascondi i messaggi di questo tifoso": "Mute this fan's messages",
   "Gioco non ufficiale: non è affiliato né approvato da club, leghe o federazioni. I nomi delle squadre servono solo a indicare per chi tifi; le maglie sono disegni generici.": "Unofficial game: not affiliated with or endorsed by any club, league or federation. Team names only say who you support; kits are generic drawings.",
+  "Chiama la curva": "Rally the fans", "Tifosi portati": "Fans brought", "Allenamento": "Training", "ALLENAMENTO": "TRAINING", "ALLENAMENTO · non conta per la classifica": "TRAINING · doesn't count for the table",
+  "⏸ Stadio chiuso": "⏸ Stadium closed", "Si chiude venerdì alle 20:00 · tra {d} g {h} h {m} min {s} s": "Closes Friday at 8pm · in {d}d {h}h {m}m {s}s",
+  "Si riapre lunedì alle 8:00 · tra {d} g {h} h {m} min {s} s": "Reopens Monday at 8am · in {d}d {h}h {m}m {s}s", "Non conta per la classifica · {c}": "Doesn't count for the table · {c}",
+  "Partita finita a stadio chiuso: vale come allenamento": "Game ended after closing time: it counts as training",
+  "{n} tifosi online": "{n} fans online", "Più tifosi giocano {t}, più punti fa in classifica.": "The more fans play {t}, the more points it gets.",
+  "Più siamo, più è bello: porta i tuoi amici in curva.": "The more the merrier: bring your friends to the stand.", "Copia link": "Copy link", "Altro…": "More…",
+  "Messaggio copiato: incollalo dove vuoi": "Message copied: paste it anywhere", "Immagine salvata e testo copiato: incollali dove vuoi": "Image saved and text copied: paste them anywhere",
+  "Hai portato": "You brought", "{n} tifosi": "{n} fans", "primo distintivo con 1 tifoso": "first badge with 1 fan", "Nessun distintivo, per ora": "No badge yet",
+  "Ancora {k} per «{b}» · conta chi arriva dal tuo link e gioca una partita": "{k} more for «{b}» · counts who comes from your link and plays a game",
+  "Hai tutti i distintivi: sei una leggenda della curva!": "You have every badge: a legend of the stand!", "Passaparola": "Word of mouth", "Capo coro": "Chant leader", "Capo ultrà": "Ultras leader",
+  "Anima della curva": "Soul of the stand", "Leggenda": "Legend", "Condividi": "Share", "Riesci a fare meglio?": "Can you do better?", "Servono i tuoi gol": "Your goals are needed",
   "Tutorial": "Tutorial", "Rifai i tre tiri di prova alla prossima partita.": "Replay the three practice shots in your next game.", "Rivedi": "Replay", "Alla prossima partita": "Next game",
   // install
   "Installa dal menu": "Install from the menu", "Apri il menu del browser e scegli <b>Installa app</b>.": "Open the browser menu and choose <b>Install app</b>.",
@@ -780,6 +830,15 @@ const ART = { Atalanta: "l'", Fiorentina: "la", Inter: "l'", Juventus: "la", Laz
 const PREP = { "": { il: "il ", lo: "lo ", la: "la ", "l'": "l'" }, per: { il: "per il ", lo: "per lo ", la: "per la ", "l'": "per l'" }, di: { il: "del ", lo: "dello ", la: "della ", "l'": "dell'" },
                a: { il: "al ", lo: "allo ", la: "alla ", "l'": "all'" }, da: { il: "dal ", lo: "dallo ", la: "dalla ", "l'": "dall'" }, su: { il: "sul ", lo: "sullo ", la: "sulla ", "l'": "sull'" } };
 function sq(name, prep = "", cap = false){ if (LANG !== "it") return name; const t = PREP[prep][ART[name] || "il"] + name; return cap ? t[0].toUpperCase() + t.slice(1) : t; }
+// arriving from a shared link: ?team=<name> opens that team, ?da=<code> remembers who invited you
+const QS = new URLSearchParams(location.search);
+(() => {
+  const t = QS.get("team"), lg = t && Object.keys(LEAGUE_TEAMS).find(l => LEAGUE_TEAMS[l].some(x => x[0] === t));
+  if (lg) { LEAGUE = lg; store.set("pm.league", lg); TEAMS = LEAGUE_TEAMS[lg]; if (!store.get(teamKey(), "")) store.set(teamKey(), t); }
+  const rc = (QS.get("da") || "").toLowerCase();
+  if (/^[a-z0-9]{4,12}$/.test(rc) && !store.get("pm.ref", "") && !((store.get("cucchiaio.stats", {}) || {}).games > 0)) store.set("pm.ref", rc);
+  if (t || rc) try { history.replaceState(null, "", location.pathname + (QS.get("app") ? "?app=1" : "")); } catch (e) {}
+})();
 // a first-time player has no team yet: the home stays neutral until one is chosen
 let teamChosen = LEAGUE === "serie-a" ? (!!store.get("cucchiaio.teamName", "") || store.get("cucchiaio.team", -1) >= 0 || store.get("pennellata.team", -1) >= 0) : TEAMS.some(t => t[0] === store.get(teamKey(), ""));
 const OLD_TEAMS = ["Milan","Inter","Juventus","Napoli","Roma","Lazio","Atalanta","Fiorentina","Bologna","Torino","Genoa","Bari","Palermo","Sampdoria","Udinese","Cagliari"];
@@ -1230,6 +1289,38 @@ async function sb(path, opt = {}){
   if (!r.ok) { const t = await r.text().catch(() => ""); throw new Error(r.status + " " + t); }
   const tx = await r.text(); return tx ? JSON.parse(tx) : null;
 }
+// who is online right now: every open phone says hello once a minute
+async function srvPing(){
+  if (document.visibilityState !== "visible" || !store.get("pm.session", null)) return;
+  try {
+    const team = teamChosen ? TEAMS[teamIdx][0] : null;
+    const r = await sb("rpc/ping", { body: { p_league: LEAGUE, p_team: team } });
+    const el = $("onlineChip"); if (!r || !el) return;
+    el.innerHTML = ""; const i = document.createElement("i"); el.appendChild(i);
+    el.appendChild(document.createTextNode(tr("{n} tifosi online", { n: (+r.online).toLocaleString(LOC()) })));
+    if (team && r.team > 0) { el.appendChild(document.createTextNode(" · ")); const b = document.createElement("b"); b.textContent = tr("{n} {t}", { n: r.team, t: sq(team, "per") }); el.appendChild(b); }
+    el.hidden = false;
+  } catch (e) { if ($("onlineChip")) $("onlineChip").hidden = true; }
+}
+setInterval(srvPing, 60000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") srvPing(); });
+// invites: your code, how many fans you brought, and the invite that brought you
+const BADGES = [[1, "Passaparola", "📣"], [3, "Capo coro", "🎵"], [10, "Capo ultrà", "🥁"], [25, "Anima della curva", "🔥"], [50, "Leggenda", "👑"]];
+const badgeOf = n => BADGES.filter(b => n >= b[0]).pop() || null;
+const nextBadge = n => BADGES.find(b => n < b[0]) || null;
+async function srvRefs(){
+  try { const n = await sb("rpc/my_referrals", { body: {} }); srv.refs = +n || 0; store.set("pm.refs", srv.refs); } catch (e) {}
+  const code = store.get("pm.ref", "");
+  if (code && !store.get("pm.refDone", false) && ((store.get("cucchiaio.stats", {}) || {}).games > 0)) {
+    try { await sb("rpc/claim_referral", { body: { p_code: code } }); store.set("pm.refDone", true); } catch (e) {}
+  }
+  if (!$("profileScreen").hidden) renderProfile();
+}
+async function myRefCode(){
+  let c = store.get("pm.refCode", "");
+  if (!c) { try { await sbAuth(); c = await sb("rpc/my_ref_code", { body: {} }); if (c) store.set("pm.refCode", c); } catch (e) { c = ""; } }
+  return c;
+}
 async function srvLoad(){
   if (srv.loading) return; srv.loading = true;
   try {
@@ -1262,6 +1353,7 @@ async function srvLoad(){
     srv.winners = win; srv.mine = {}; mine.forEach(m => srv.mine[m.team] = m);
     srv.fans = {}; srv.ok = true;
     await srvFlush();
+    srvPing(); srvRefs();
   } catch (e) { console.warn("server", e); }
   srv.loading = false;
   renderRanks(); if (!$("profileScreen").hidden) renderProfile();
@@ -1270,9 +1362,10 @@ async function srvFans(team){
   if (srv.fansAt[team] && Date.now() - srv.fansAt[team] < 20000) return;
   srv.fansAt[team] = Date.now();
   try {
-    const rows = await sb(`team_fans?${srv.legacy ? "" : "league=eq." + LEAGUE + "&"}season=eq.${encodeURIComponent(seasonId())}&team=eq.${encodeURIComponent(team)}&select=player_id,nick,pts&order=pts.desc&limit=200`);
+    const q = `team_fans?${srv.legacy ? "" : "league=eq." + LEAGUE + "&"}season=eq.${encodeURIComponent(seasonId())}&team=eq.${encodeURIComponent(team)}&order=pts.desc&limit=200&select=player_id,nick,pts`;
+    const rows = await sb(q + ",refs").catch(() => sb(q));
     const myNick = cleanNick(store.get("cucchiaio.nick", ""));
-    srv.fans[team] = rows.map(x => ({ me: x.player_id === srv.uid && x.nick === myNick, name: x.nick, pts: +x.pts, lv: 0 }));
+    srv.fans[team] = rows.map(x => ({ me: x.player_id === srv.uid && x.nick === myNick, name: x.nick, pts: +x.pts, lv: 0, refs: +x.refs || 0 }));
   } catch (e) { srv.fansAt[team] = 0; }
   renderRanks();
 }
@@ -1286,8 +1379,9 @@ async function srvFlush(){
       if (srv.legacy) { delete b.p_league; id = await sb("rpc/submit_game", { body: b }); }
       else id = await sb("rpc/submit_game_v2", { body: b });
       if (gid && id) { const m = store.get("pm.gameIds", {}); m[gid] = id; const keys = Object.keys(m); if (keys.length > 30) delete m[keys[0]]; store.set("pm.gameIds", m); }
+      if (id && store.get("pm.ref", "") && !store.get("pm.refDone", false)) { try { await sb("rpc/claim_referral", { body: { p_code: store.get("pm.ref", "") } }); store.set("pm.refDone", true); } catch (e) {} }
     }
-    catch (e) { if (/^4\d\d/.test(e.message) && !/too fast/.test(e.message)) queue.shift(); else break; store.set("pm.queue", queue); continue; }
+    catch (e) { if (/^4\d\d/.test(e.message) && !/too fast/.test(e.message)) queue.shift(); else break; store.set("pm.queue", queue); if (/closed/.test(e.message)) toast(tr("Partita finita a stadio chiuso: vale come allenamento")); continue; }
     queue.shift(); store.set("pm.queue", queue);
   }
 }
@@ -1377,12 +1471,19 @@ function seasonOf(y, m, d){
 }
 function seasonId(){ const r = romeNow(); return seasonOf(r.y, r.m, r.d); }
 function seasonLabel(sid){ return tr("Settimana {n}", { n: +sid.split("-W")[1] }) + " · " + sid.slice(0, 4); }
+// the championship is open from Monday 08:00 to Friday 20:00 (Rome time); outside those hours you can only train
+const OPEN_AT = 8 * 60, CLOSE_AT = 4 * 1440 + 20 * 60;   // minutes from Monday 00:00
+function weekSec(){ const r = romeNow(), wd = (new Date(Date.UTC(r.y, r.m - 1, r.d)).getUTCDay() + 6) % 7; return (wd * 1440 + r.h * 60 + r.mi) * 60 + new Date().getSeconds(); }
+function leagueOpen(){ const s = weekSec(); return s >= OPEN_AT * 60 && s < CLOSE_AT * 60; }
 function seasonLeft(){
-  const r = romeNow(), wd = (new Date(Date.UTC(r.y, r.m - 1, r.d)).getUTCDay() + 6) % 7, sec = new Date().getSeconds();
-  const left = ((7 - wd) * 1440 - (r.h * 60 + r.mi)) * 60 - sec;
+  const s = weekSec(), open = leagueOpen();
+  const left = open ? CLOSE_AT * 60 - s : (s < OPEN_AT * 60 ? OPEN_AT * 60 - s : 7 * 86400 - s + OPEN_AT * 60);
   const d = Math.floor(left / 86400), h = Math.floor(left % 86400 / 3600), m = Math.floor(left % 3600 / 60), s2 = left % 60;
-  return tr("Si azzera tra {d} g {h} h {m} min {s} s", { d, h, m, s: String(s2).padStart(2, "0") });
+  const v = { d, h, m, s: String(s2).padStart(2, "0") };
+  return open ? tr("Si chiude venerdì alle 20:00 · tra {d} g {h} h {m} min {s} s", v) : tr("Si riapre lunedì alle 8:00 · tra {d} g {h} h {m} min {s} s", v);
 }
+let wasOpen = null;
+setInterval(() => { const o = leagueOpen(); if (o !== wasOpen) { const first = wasOpen === null; wasOpen = o; if (!first && !$("startScreen").hidden) renderHome(); } }, 1000);
 // live countdowns tick every second
 setInterval(() => { document.querySelectorAll(".cd").forEach(e => { if (e.offsetParent) e.textContent = seasonLeft(); }); }, 1000);
 
@@ -1543,7 +1644,9 @@ function renderRanks(){
         bk.onclick = () => { box.dataset.tab = "teams"; renderRanks(); }; list.appendChild(bk);
       }
       if (!rows.length) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = tr("Nessuno ha ancora giocato {t} questa settimana.", { t: sq(team, "per") }); list.appendChild(e); }
-      else rows.slice(0, 100).forEach((r, k) => { row(k + 1, { team }, (k === 0 ? "👑 " : "") + r.name, "", r.pts, r.me, r.lv); if (k === 0) { const b = document.createElement("span"); b.className = "mvpTag"; b.textContent = "MVP"; list.lastChild.querySelector(".who").appendChild(b); } });
+      else rows.slice(0, 100).forEach((r, k) => { row(k + 1, { team }, (k === 0 ? "👑 " : "") + r.name, "", r.pts, r.me, r.lv);
+        const bd = badgeOf(r.refs || 0); if (bd) { const s = document.createElement("span"); s.className = "badgeTag"; s.textContent = bd[2]; s.title = tr(bd[1]); list.lastChild.querySelector(".who").appendChild(s); }
+        if (k === 0) { const b = document.createElement("span"); b.className = "mvpTag"; b.textContent = "MVP"; list.lastChild.querySelector(".who").appendChild(b); } });
     }
     const st = box.querySelector(".rstatus"); st.textContent = seasonLabel(sid) + " · "; const cd = document.createElement("span"); cd.className = "cd"; cd.textContent = seasonLeft(); st.appendChild(cd);
   });
@@ -1574,6 +1677,7 @@ function startGame(){
   G = { localId: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), score: 0, lives: C.lives, streak: 0, bestStreak: 0, shots: 0, goals: 0, top: 0, perfect: 0, start: performance.now(), miss: {} };
   $("startScreen").hidden = true; $("overScreen").hidden = true; $("hud").hidden = false; $("info").hidden = false;
   $("coach").hidden = true;
+  G.training = !leagueOpen(); $("trainTag").hidden = !G.training;
   G.practice = false;
   $("guide").hidden = true; guideText = "";
   lastCharge = null; nextShot(); phase = "ready"; updateHud();
@@ -1732,6 +1836,18 @@ function gameOver(){
     ot.hidden = false; sfx.roar(1);
   } else ot.hidden = true;
   const sid = seasonId();
+  lastMatch = { score: G.score, team: t[0] };
+  $("trainTag").hidden = true; $("shareBtn").hidden = !!G.training || G.score <= 0; $("sayBtn").hidden = !!G.training;
+  if (G.training) {
+    countUp($("finalScore"), G.score, "+"); homeTheme();
+    const nk = cleanNick(store.get("cucchiaio.nick", ""));
+    $("overEb").textContent = (nk ? nk + " · " : "") + tr("Allenamento");
+    $("overLine").textContent = tr("Non conta per la classifica · {c}", { c: seasonLeft().split(" · ")[0] });
+    renderOverTable(before, posB, posB);
+    hidePop(); $("hud").hidden = true; $("info").hidden = true; $("overScreen").hidden = false;
+    setTimeout(() => { if (phase === "over" || phase === "after") startDemo(); }, 900);
+    return;
+  }
   const seasons = store.get("cucchiaio.seasons", {}); seasons[sid] = seasons[sid] || {}; seasons[sid][t[0]] = (seasons[sid][t[0]] || 0) + G.score; store.set("cucchiaio.seasons", seasons);
   const sb = store.get("cucchiaio.seasonBest", {}); sb[sid] = Math.max(sb[sid] || 0, G.score); store.set("cucchiaio.seasonBest", sb);
   const who = cleanNick(store.get("cucchiaio.nick", "")) || "Tu";
@@ -1863,6 +1979,13 @@ function renderHome(){
     const pen = document.createElement("span"); pen.className = "pen"; pen.textContent = "✎"; nb.appendChild(pen);
   }
   if ($("hask")) $("hask").hidden = teamChosen;
+  const open = leagueOpen(), pb = $("playBtn");
+  if (pb && !pb.classList.contains("warn")) { pb.textContent = open ? tr("GIOCA") : tr("ALLENAMENTO"); pb.classList.toggle("train", !open); }
+  if (!open && teamChosen) {
+    const e = $("homeTeam"); e.textContent = "";
+    const c = document.createElement("span"); c.className = "closedTag"; c.textContent = tr("⏸ Stadio chiuso"); e.append(c, document.createTextNode(" · "));
+    const cd = document.createElement("span"); cd.className = "cd"; cd.textContent = seasonLeft(); e.appendChild(cd); return;
+  }
   if (!teamChosen) { const e = $("homeTeam"); e.innerHTML = ""; e.append(document.createTextNode(tr("{n} tifoserie di {l} si sfidano ogni settimana · ", { n: TEAMS.length, l: leagueName() }))); const b = document.createElement("b"); b.textContent = tr("la tua manca"); e.appendChild(b); return; }
   const el = $("homeTeam"); if (!el) return;
   const rows = teamRows(), me = TEAMS[teamIdx][0], i = rows.findIndex(r => r.name === me), r = rows[i];
@@ -2136,6 +2259,91 @@ async function deleteMyData(){
   location.reload(); return true;
 }
 
+let lastMatch = null;
+function toast(msg){ const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 3200); }
+const SITE = new URL("./", location.href.split("?")[0]).href;
+const slugOf = n => n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const PLAY_URL = "";   // the Play Store page, once the app is published
+async function teamLink(team){ const c = await myRefCode(); return SITE + (team ? slugOf(team) + "/" : "") + (c ? "?da=" + c : ""); }
+async function copyText(t){ try { await navigator.clipboard.writeText(t); return true; } catch (e) { const a = document.createElement("textarea"); a.value = t; document.body.appendChild(a); a.select(); let ok = false; try { ok = document.execCommand("copy"); } catch (x) {} a.remove(); return ok; } }
+async function shareFile(blob, name, text){
+  const file = new File([blob], name, { type: "image/png" });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], text }); return true; } catch (e) { if (e && e.name === "AbortError") return true; } }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  await copyText(text); toast(tr("Immagine salvata e testo copiato: incollali dove vuoi")); return false;
+}
+// "Chiama la curva": a ready message with your team, your position and your personal link
+async function openInvite(){
+  const team = teamChosen ? TEAMS[teamIdx][0] : null, rows = teamRows(), pos = team ? rows.findIndex(x => x.name === team) + 1 : 0;
+  $("invSub").textContent = team ? tr("Più tifosi giocano {t}, più punti fa in classifica.", { t: sq(team, "per") }) : tr("Più siamo, più è bello: porta i tuoi amici in curva.");
+  $("invMsg").textContent = "…"; $("inviteVeil").hidden = false;
+  const link = await teamLink(team);
+  const msg = team ? (rows.some(x => x.pts > 0) ? tr("⚽ Sto giocando a Per la Maglia {t}: siamo {n}° in classifica questa settimana e servono i tuoi gol! Scegli la tua squadra e fai il cucchiaio al portiere 👉 {u}", { t: sq(team, "per"), n: pos, u: link })
+                          : tr("⚽ Sto giocando a Per la Maglia {t}: servono i tuoi gol! Scegli la tua squadra e fai il cucchiaio al portiere 👉 {u}", { t: sq(team, "per"), u: link }))
+                   : tr("⚽ Gioca con me a Per la Maglia: scegli la tua squadra del cuore e fai il cucchiaio al portiere 👉 {u}", { u: link });
+  $("invMsg").textContent = msg;
+  const enc = encodeURIComponent, onlyText = msg.replace(" 👉 " + link, "");
+  const btns = [
+    ["WhatsApp", "#25d366", () => open("https://wa.me/?text=" + enc(msg))],
+    ["Telegram", "#2aa3df", () => open("https://t.me/share/url?url=" + enc(link) + "&text=" + enc(onlyText))],
+    ["Instagram", "linear-gradient(45deg,#f9a03f,#e1306c,#833ab4)", async () => { const b = await makeStory({ invite: true }); shareFile(b, "per-la-maglia.png", msg); }],
+    ["Facebook", "#1877f2", () => open("https://www.facebook.com/sharer/sharer.php?u=" + enc(link))],
+    ["X", "#111111", () => open("https://twitter.com/intent/tweet?text=" + enc(onlyText) + "&url=" + enc(link))],
+    ["Messaggi", "#34c759", () => { location.href = "sms:?&body=" + enc(msg); }],
+    [tr("Copia link"), "#2b3445", async () => { toast((await copyText(msg)) ? tr("Messaggio copiato: incollalo dove vuoi") : link); }],
+    [tr("Altro…"), "#2b3445", async () => { if (navigator.share) { try { await navigator.share({ text: msg }); } catch (e) {} } else toast((await copyText(msg)) ? tr("Messaggio copiato: incollalo dove vuoi") : link); }]
+  ];
+  const g = $("invGrid"); g.textContent = "";
+  btns.forEach(([n, c, fn]) => { const b = document.createElement("button"); b.type = "button"; b.textContent = n; b.style.background = c; b.onclick = fn; g.appendChild(b); });
+  const n = srv.refs != null ? srv.refs : store.get("pm.refs", 0), bd = badgeOf(n);
+  $("invCount").innerHTML = ""; const s = document.createElement("span");
+  s.append(document.createTextNode(tr("Hai portato") + " ")); const b = document.createElement("b"); b.textContent = tr("{n} tifosi", { n }); s.appendChild(b);
+  s.append(document.createTextNode(bd ? " · " + bd[2] + " " + tr(bd[1]) : " · " + tr("primo distintivo con 1 tifoso"))); $("invCount").appendChild(s);
+}
+$("inviteBtn").onclick = openInvite;
+$("invClose").onclick = () => { $("inviteVeil").hidden = true; };
+$("inviteVeil").onclick = e => { if (e.target.id === "inviteVeil") $("inviteVeil").hidden = true; };
+// the picture to share: points of the match (or an invitation) in the team's colours, sized for stories
+async function makeStory(o = {}){
+  const W = 1080, H = 1920, c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
+  const t = TEAMS[teamIdx], kit = KIT[t[0]] || ["plain", t[1], t[2], "#111111", "#111111"], c1 = t[1], c2 = t[2] === t[1] ? "#ffffff" : t[2];
+  g.fillStyle = c1; g.fillRect(0, 0, W, H); g.globalAlpha = .18; g.fillStyle = c2;
+  for (let x = -H; x < W; x += 120) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x + 60, 0); g.lineTo(x + 60 + H * .5, H); g.lineTo(x + H * .5, H); g.fill(); }
+  g.globalAlpha = 1; const sh = g.createLinearGradient(0, 0, 0, H); sh.addColorStop(0, "rgba(5,10,20,.15)"); sh.addColorStop(1, "rgba(5,10,20,.88)"); g.fillStyle = sh; g.fillRect(0, 0, W, H);
+  const txt = (s, y, size, col, font = '"Big Shoulders Display"', w = 900, stroke) => { g.font = `${w} ${size}px ${font}, sans-serif`; g.textAlign = "center";
+    let sz = size; while (g.measureText(s).width > W - 120 && sz > 20) { sz -= 4; g.font = `${w} ${sz}px ${font}, sans-serif`; }
+    if (stroke) { g.lineJoin = "round"; g.strokeStyle = stroke; g.lineWidth = sz * .12; g.strokeText(s, W / 2, y); } g.fillStyle = col; g.fillText(s, W / 2, y); };
+  const img = new Image(); img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(jerseySVG(kit, 520).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" '));
+  await new Promise(res => { img.onload = res; img.onerror = res; });
+  const nick = cleanNick(store.get("cucchiaio.nick", "")), dark = "#0b1530";
+  txt("PER LA MAGLIA", 150, 64, "#ffc24b", '"Barlow Condensed"', 700);
+  txt((nick ? nick.toUpperCase() + " · " : "") + "N° " + (SET.num || 10), 245, 54, "#ffffff", '"Barlow Condensed"', 700);
+  try { g.drawImage(img, W / 2 - 260, 280, 520, 520); } catch (e) {}
+  g.font = '900 170px "Big Shoulders Display", sans-serif'; g.textAlign = "center"; g.fillStyle = kit[0] === "plain" ? c2 : "#ffffff";
+  g.lineJoin = "round"; g.strokeStyle = "rgba(0,0,0,.35)"; g.lineWidth = 10; const num = String(SET.num || 10); g.strokeText(num, W / 2, 640); g.fillText(num, W / 2, 640);
+  if (o.invite) {
+    txt(tr("{t} TI CHIAMA", { t: sq(t[0], "", true).toUpperCase() }), 1010, 120, "#ffffff", undefined, 900, dark);
+    txt(tr("Servono i tuoi gol"), 1100, 70, "#ffffff", '"Barlow Condensed"', 700);
+  } else {
+    txt("+" + (o.score || 0).toLocaleString(LOC()), 1010, 210, "#ffffff", undefined, 900, dark);
+    txt(tr("punti {t}", { t: sq(t[0], "per") }), 1095, 72, "#ffffff", '"Barlow Condensed"', 700);
+    const rows = teamRows(), pos = rows.findIndex(x => x.name === t[0]) + 1;
+    g.fillStyle = "rgba(5,10,20,.75)"; g.beginPath(); g.roundRect(140, 1160, 800, 130, 65); g.fill();
+    txt(tr("🏆 {n}° in classifica questa settimana", { n: pos }), 1245, 52, "#ffc24b", '"Barlow Condensed"', 700);
+    txt(tr("Riesci a fare meglio?"), 1450, 96, "#ffffff", undefined, 900, dark);
+  }
+  g.fillStyle = "#ffc24b"; g.beginPath(); g.roundRect(160, 1560, 760, 150, 75); g.fill();
+  txt(tr("GIOCA {t}", { t: sq(t[0], "per").toUpperCase() }), 1660, 64, "#1a1205");
+  txt(SITE.replace(/^https?:\/\//, "").replace(/\/$/, ""), 1820, 40, "rgba(255,255,255,.75)", '"Barlow Condensed"', 600);
+  return await new Promise(res => c.toBlob(res, "image/png"));
+}
+$("shareBtn").onclick = async () => {
+  if (!lastMatch) return;
+  const t = lastMatch.team, link = await teamLink(t);
+  const text = tr("Ho appena portato +{p} punti {t} ⚽ Riesci a fare meglio? 👉 {u} #PerLaMaglia", { p: lastMatch.score.toLocaleString(LOC()), t: sq(t, "a"), u: link });
+  shareFile(await makeStory({ score: lastMatch.score }), "per-la-maglia.png", text);
+};
+
 // you play under a nickname: without one the match does not start
 let needNickTimer = null;
 $("playBtn").onclick = () => {
@@ -2254,6 +2462,12 @@ function renderProfile(){
   const cells = [[tst.games, "Partite"], [tst.points.toLocaleString(LOC()), "Punti"], [tst.best.toLocaleString(LOC()), "Record"], [tst.goals, "Gol"], [acc, "Precisione"], [tst.perfect, "Perfetti"], [tst.top, "Sotto la traversa"], [tst.bestStreak, "Serie max"], [st.games, "Partite in totale"]];
   $("profileStats").innerHTML = cells.map(([v, k]) => `<div class="stat"><div class="v">${v}</div><div class="k">${k}</div></div>`).join("");
   $("profileNote").textContent = sharedMode() && online.docs.some(d => d.id === online.uid) ? "Statistiche salvate sul tuo account." : "Statistiche salvate su questo dispositivo.";
+  // fans you brought with "Chiama la curva", and the badge that comes with them
+  const n = srv.refs != null ? srv.refs : store.get("pm.refs", 0), bd = badgeOf(n), nx = nextBadge(n), rb = $("refBox");
+  rb.innerHTML = `<span class="rbig"></span><span class="rbt"><b></b><small></small></span>`;
+  rb.querySelector(".rbig").textContent = (bd ? bd[2] + " " : "") + n;
+  rb.querySelector("b").textContent = bd ? tr(bd[1]) : tr("Nessun distintivo, per ora");
+  rb.querySelector("small").textContent = nx ? tr("Ancora {k} per «{b}» · conta chi arriva dal tuo link e gioca una partita", { k: nx[0] - n, b: tr(nx[1]) }) : tr("Hai tutti i distintivi: sei una leggenda della curva!");
 }
 function renderAnalytics(){
   const log = store.get("cucchiaio.analytics", []), el = $("anaText");

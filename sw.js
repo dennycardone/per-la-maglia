@@ -1,5 +1,5 @@
 // Per la Maglia — service worker: the game works offline after the first visit.
-const CACHE = "perlamaglia-v39";
+const CACHE = "perlamaglia-v42";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png",
   "./fonts/bigshouldersdisplay.woff", "./fonts/barlowcondensed-Medium.woff", "./fonts/barlowcondensed-SemiBold.woff", "./fonts/barlowcondensed-Bold.woff",
   "./fonts/barlow-Regular.woff", "./fonts/barlow-Medium.woff", "./fonts/barlow-SemiBold.woff"];
@@ -17,7 +17,7 @@ self.addEventListener("fetch", e => {
   // the page itself: try the network first so updates arrive, fall back to the cache offline
   if (req.mode === "navigate") {
     // only the game page is stored as the offline copy; privacy and terms pages are cached under their own name
-    const isGame = /\/(index\.html)?$/.test(url.pathname);
+    const root = new URL(self.registration.scope).pathname, isGame = url.pathname === root || url.pathname === root + "index.html";
     e.respondWith(fetch(req, { cache: "no-store" }).then(r => { const copy = r.clone(); caches.open(CACHE).then(c => c.put(isGame ? "./index.html" : req, copy)); return r; })
       .catch(() => isGame ? caches.match("./index.html") : caches.match(req)));
     return;
