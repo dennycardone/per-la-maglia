@@ -25,9 +25,15 @@ img{max-width:100%}
 [hidden]{display:none!important}
 </style>
 <title>Per la Maglia</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+@font-face{font-family:"Big Shoulders Display";src:url(fonts/bigshouldersdisplay.woff) format("woff");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Barlow Condensed";src:url(fonts/barlowcondensed-Medium.woff) format("woff");font-weight:500;font-display:swap}
+@font-face{font-family:"Barlow Condensed";src:url(fonts/barlowcondensed-SemiBold.woff) format("woff");font-weight:600;font-display:swap}
+@font-face{font-family:"Barlow Condensed";src:url(fonts/barlowcondensed-Bold.woff) format("woff");font-weight:700 900;font-display:swap}
+@font-face{font-family:"Barlow";src:url(fonts/barlow-Regular.woff) format("woff");font-weight:400;font-display:swap}
+@font-face{font-family:"Barlow";src:url(fonts/barlow-Medium.woff) format("woff");font-weight:500;font-display:swap}
+@font-face{font-family:"Barlow";src:url(fonts/barlow-SemiBold.woff) format("woff");font-weight:600 900;font-display:swap}
+</style>
 <style>
 /* Layout: landscape side-on stadium; LED scoreboard top-left, lives top-right, power bar in the touch band at the bottom; menus as two-column frosted overlays */
 :root{
@@ -291,6 +297,18 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .hbtn{pointer-events:auto;appearance:none;width:32px;height:28px;border-radius:8px;border:1px solid rgba(238,242,234,.25);background:rgba(5,8,14,.55);color:var(--chalk);font-family:var(--display);font-weight:900;font-size:15px;letter-spacing:.05em;cursor:pointer}
 .hbtn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .panel.single{max-width:420px;display:flex}
+.legalnote{margin:10px 0 4px;font-size:12px;line-height:1.35;color:#8a9890}
+.switch.danger{border-color:rgba(255,95,95,.6);color:#ff8f8f}
+#askVeil{position:fixed;inset:0;z-index:80;background:rgba(3,5,9,.72);display:flex;align-items:center;justify-content:center;padding:16px}
+#askVeil[hidden]{display:none}
+.askbox{width:min(420px,100%);background:#0d1320;border:1.5px solid rgba(255,194,75,.55);border-radius:16px;padding:16px 16px 12px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.askbox p{margin:0 0 12px;font-size:14px;line-height:1.4;color:#e7eef2}
+.askbox .askt{font-family:var(--label);font-weight:700;font-size:17px;color:var(--chalk);margin-bottom:6px}
+.askbox .askb{display:flex;flex-direction:column;gap:7px}
+.askbox button{min-height:42px;border-radius:10px;border:1px solid rgba(238,242,234,.2);background:rgba(238,242,234,.06);color:var(--chalk);font-family:var(--label);font-weight:700;font-size:15px}
+.askbox button.main{background:var(--amber);color:#1a1205;border-color:var(--amber)}
+.askbox button.danger{background:#d23b3b;border-color:#d23b3b;color:#fff}
+.tmsg .tmore{margin-left:6px;border:0;background:none;color:#8a9890;font-size:15px;line-height:1;padding:0 2px;cursor:pointer}
 .setgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:32px}
 .settitle{font-size:clamp(32px,5.5vw,48px)!important}
 .rules.values{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
@@ -537,6 +555,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
   </div>
 </section>
 
+<div id="askVeil" hidden><div class="askbox"><div class="askt" id="askTitle"></div><p id="askText"></p><div class="askb" id="askBtns"></div></div></div>
 <section class="screen" id="settingsScreen" hidden>
   <div class="panel wide setpanel">
     <div class="rhead">
@@ -544,6 +563,9 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
       <button class="btn ghost small" id="settingsBack" type="button">Indietro</button>
     </div>
     <div class="setgrid" id="settingsList"></div>
+    <div class="label">Info e privacy</div>
+    <div class="setgrid" id="legalList"></div>
+    <div class="note legalnote">Gioco non ufficiale: non è affiliato né approvato da club, leghe o federazioni. I nomi delle squadre servono solo a indicare per chi tifi; le maglie sono disegni generici.</div>
     <div class="label">Valore dei tiri</div>
     <div class="rules values"><span>Sotto la traversa <b>×3</b></span><span>Al volo <b>×2</b></span><span>Arco teso fino a <b>×1,5</b></span><span>Rilascio perfetto <b>+100</b></span><span>Faccia a faccia <b>+50</b></span><span>Serie fino a <b>×3</b></span></div>
   </div>
@@ -626,7 +648,7 @@ const TEAMS_B = [
   ["Sampdoria","#1f4fa3","#f2f2f2"],["Südtirol","#c8102e","#f2f2f2"],["Vicenza","#f2f2f2","#c8102e"],["Virtus Entella","#6ec1e4","#f2f2f2"]
 ];
 // Serie C 2026/27: the 20 biggest fan bases of the three groups
-const TEAMS_C = [["Bari","#f2f2f2","#c8102e"],["Casertana","#c8102e","#1c2f6b"],["Catania","#c8102e","#4aa3df"],["Cosenza","#c8102e","#1c2f6b"],["Crotone","#c8102e","#1c2f6b"],["Foggia","#c8102e","#111111"],["Lecco","#1c3f94","#6ec1e4"],["Livorno","#8b1a2e","#f2f2f2"],["Monopoli","#0a7a3b","#f2f2f2"],["Novara","#2a6fcf","#f2f2f2"],["Perugia","#c8102e","#f2f2f2"],["Pescara","#f2f2f2","#4aa3df"],["Potenza","#c8102e","#1c2f6b"],["Pro Vercelli","#f2f2f2","#111111"],["Ravenna","#f6c500","#c8102e"],["Salernitana","#6b1a2a","#f2f2f2"],["Sambenedettese","#c8102e","#1c3f94"],["Spezia","#f2f2f2","#111111"],["Treviso","#f2f2f2","#6ec1e4"],["Union Brescia","#1f4fa3","#f2f2f2"]];
+const TEAMS_C = [["Bari","#f2f2f2","#c8102e"],["Casertana","#c8102e","#1c2f6b"],["Catania","#c8102e","#4aa3df"],["Cosenza","#c8102e","#1c2f6b"],["Crotone","#c8102e","#1c2f6b"],["Foggia","#c8102e","#111111"],["Lecco","#1c3f94","#6ec1e4"],["Livorno","#8b1a2e","#f2f2f2"],["Monopoli","#0a7a3b","#f2f2f2"],["Novara","#2a6fcf","#f2f2f2"],["Perugia","#c8102e","#f2f2f2"],["Pescara","#f2f2f2","#4aa3df"],["Potenza","#c8102e","#1c2f6b"],["Pro Vercelli","#f2f2f2","#111111"],["Ravenna","#f6c500","#c8102e"],["Reggiana","#7a1f2b","#f2f2f2"],["Salernitana","#6b1a2a","#f2f2f2"],["Spezia","#f2f2f2","#111111"],["Treviso","#f2f2f2","#6ec1e4"],["Union Brescia","#1f4fa3","#f2f2f2"]];
 const LEAGUE_TEAMS = { "serie-a": TEAMS_A, "serie-b": TEAMS_B, "serie-c": TEAMS_C };
 let LEAGUE = (() => { try { return JSON.parse(localStorage.getItem("pm.league")) || "serie-a"; } catch (e) { return "serie-a"; } })(); if (!LEAGUE_TEAMS[LEAGUE]) LEAGUE = "serie-a";
 const teamKey = () => LEAGUE === "serie-a" ? "cucchiaio.teamName" : "pm.team." + LEAGUE;
@@ -721,6 +743,19 @@ I18N.en = {
   "Ciao {n}": "Hi {n}", "Benvenuto, tifoso": "Welcome, fan", "↓ Scegli la tua squadra per iniziare ↓": "↓ Pick your team to start ↓",
   "{n} tifoserie di {l} si sfidano ogni settimana · ": "{n} {l} fan bases compete every week · ", "la tua manca": "yours is missing", "Lingua": "Language", "La lingua di tutto il gioco.": "The language of the whole game.",
   "Numero di maglia": "Shirt number", "Il numero del tuo giocatore in campo.": "Your player's number on the pitch.",
+  "Info e privacy": "Info & privacy", "Privacy": "Privacy", "Termini d'uso": "Terms of use", "Leggi": "Read", "Tifosi nascosti": "Muted fans",
+  "Mostra tutti": "Show all", "Nessuno": "None", "Elimina i miei dati": "Delete my data", "Elimina": "Delete", "Contatti": "Contact", "Scrivi": "Write", "Versione": "Version", "Licenze": "Licences",
+  "Quali dati usa il gioco, perché e per quanto tempo.": "What data the game uses, why and for how long.",
+  "Le regole del gioco, della classifica e degli sfottò.": "The rules of the game, the table and the banter.",
+  "Hai nascosto gli sfottò di {n} tifosi.": "You muted the banter of {n} fans.",
+  "Dagli sfottò puoi nascondere un tifoso o segnalare un messaggio (⋯).": "From the banter you can mute a fan or report a message (⋯).",
+  "Cancella soprannome, partite e sfottò dal server e da questo telefono. I punti già portati alla squadra vengono tolti.": "Deletes nickname, games and banter from the server and this phone. The points you brought to your team are removed.",
+  "Eliminare tutti i tuoi dati?": "Delete all your data?", "Sì, elimina tutto": "Yes, delete everything", "Annulla": "Cancel",
+  "Soprannome, partite, punti e sfottò vengono cancellati per sempre, sul server e su questo telefono. Non si può annullare.": "Nickname, games, points and banter are deleted forever, on the server and on this phone. This cannot be undone.",
+  "Non riesco a raggiungere il server: riprova con la connessione attiva. Non è stato cancellato nulla.": "Cannot reach the server: try again when online. Nothing was deleted.",
+  "Domande, segnalazioni o richieste sulla privacy.": "Questions, reports or privacy requests.", "caratteri Barlow e Big Shoulders (licenza SIL OFL)": "Barlow and Big Shoulders fonts (SIL OFL licence)",
+  "Segnala o nascondi": "Report or mute", "Segnala come offensivo": "Report as offensive", "Nascondi i messaggi di questo tifoso": "Mute this fan's messages",
+  "Gioco non ufficiale: non è affiliato né approvato da club, leghe o federazioni. I nomi delle squadre servono solo a indicare per chi tifi; le maglie sono disegni generici.": "Unofficial game: not affiliated with or endorsed by any club, league or federation. Team names only say who you support; kits are generic drawings.",
   "Tutorial": "Tutorial", "Rifai i tre tiri di prova alla prossima partita.": "Replay the three practice shots in your next game.", "Rivedi": "Replay", "Alla prossima partita": "Next game",
   // install
   "Installa dal menu": "Install from the menu", "Apri il menu del browser e scegli <b>Installa app</b>.": "Open the browser menu and choose <b>Install app</b>.",
@@ -743,7 +778,7 @@ let W = 0, H = 0, DPR = 1;
 // Italian articles: "per la Lazio", "dell'Inter", "al Milan"
 const ART = { Atalanta: "l'", Fiorentina: "la", Inter: "l'", Juventus: "la", Lazio: "la", Roma: "la", Udinese: "l'",
   Arezzo: "l'", Ascoli: "l'", Avellino: "l'", Carrarese: "la", Cremonese: "la", Empoli: "l'", "Hellas Verona": "l'", "Juve Stabia": "la", Sampdoria: "la", "Virtus Entella": "la",
-  Casertana: "la", Salernitana: "la", Sambenedettese: "la", "Pro Vercelli": "la", "Union Brescia": "l'", Spezia: "lo" };
+  Casertana: "la", Salernitana: "la", Reggiana: "la", "Pro Vercelli": "la", "Union Brescia": "l'", Spezia: "lo" };
 const PREP = { "": { il: "il ", lo: "lo ", la: "la ", "l'": "l'" }, per: { il: "per il ", lo: "per lo ", la: "per la ", "l'": "per l'" }, di: { il: "del ", lo: "dello ", la: "della ", "l'": "dell'" },
                a: { il: "al ", lo: "allo ", la: "alla ", "l'": "all'" }, da: { il: "dal ", lo: "dallo ", la: "dalla ", "l'": "dall'" }, su: { il: "sul ", lo: "sullo ", la: "sulla ", "l'": "sull'" } };
 function sq(name, prep = "", cap = false){ if (LANG !== "it") return name; const t = PREP[prep][ART[name] || "il"] + name; return cap ? t[0].toUpperCase() + t.slice(1) : t; }
@@ -923,8 +958,10 @@ Object.assign(KIT, {
   Palermo: ["plain","#f4a6c0","#111111","#111111","#111111"], Pisa: ["stripes","#1c3f94","#111111","#111111","#111111"],
   Sampdoria: ["hoop","#1f4fa3","#f2f2f2","#f2f2f2","#1f4fa3"], "Südtirol": ["plain","#c8102e","#f2f2f2","#f2f2f2","#c8102e"],
   Vicenza: ["stripes","#f2f2f2","#c8102e","#f2f2f2","#f2f2f2"], "Virtus Entella": ["plain","#6ec1e4","#f2f2f2","#f2f2f2","#6ec1e4"],
-  "Bari": ["plain","#f2f2f2","#c8102e","#f2f2f2","#f2f2f2"], "Casertana": ["plain","#c8102e","#1c2f6b","#1c2f6b","#c8102e"], "Catania": ["stripes","#c8102e","#4aa3df","#1c2f6b","#1c2f6b"], "Cosenza": ["halves","#c8102e","#1c2f6b","#1c2f6b","#c8102e"], "Crotone": ["stripes","#c8102e","#1c2f6b","#f2f2f2","#c8102e"], "Foggia": ["stripes","#c8102e","#111111","#111111","#111111"], "Lecco": ["stripes","#1c3f94","#6ec1e4","#1c3f94","#1c3f94"], "Livorno": ["plain","#8b1a2e","#f2f2f2","#f2f2f2","#8b1a2e"], "Monopoli": ["plain","#0a7a3b","#f2f2f2","#f2f2f2","#0a7a3b"], "Novara": ["plain","#2a6fcf","#f2f2f2","#f2f2f2","#2a6fcf"], "Perugia": ["plain","#c8102e","#f2f2f2","#f2f2f2","#c8102e"], "Pescara": ["stripes","#f2f2f2","#4aa3df","#f2f2f2","#f2f2f2"], "Potenza": ["hoop","#c8102e","#1c2f6b","#1c2f6b","#c8102e"], "Pro Vercelli": ["plain","#f2f2f2","#111111","#111111","#f2f2f2"], "Ravenna": ["stripes","#f6c500","#c8102e","#c8102e","#c8102e"], "Salernitana": ["plain","#6b1a2a","#f2f2f2","#111111","#6b1a2a"], "Sambenedettese": ["stripes","#c8102e","#1c3f94","#1c3f94","#c8102e"], "Spezia": ["plain","#f2f2f2","#111111","#111111","#111111"], "Treviso": ["hoop","#f2f2f2","#6ec1e4","#f2f2f2","#f2f2f2"], "Union Brescia": ["plain","#1f4fa3","#f2f2f2","#f2f2f2","#1f4fa3"]
+  "Bari": ["plain","#f2f2f2","#c8102e","#f2f2f2","#f2f2f2"], "Casertana": ["plain","#c8102e","#1c2f6b","#1c2f6b","#c8102e"], "Catania": ["stripes","#c8102e","#4aa3df","#1c2f6b","#1c2f6b"], "Cosenza": ["halves","#c8102e","#1c2f6b","#1c2f6b","#c8102e"], "Crotone": ["stripes","#c8102e","#1c2f6b","#f2f2f2","#c8102e"], "Foggia": ["stripes","#c8102e","#111111","#111111","#111111"], "Lecco": ["stripes","#1c3f94","#6ec1e4","#1c3f94","#1c3f94"], "Livorno": ["plain","#8b1a2e","#f2f2f2","#f2f2f2","#8b1a2e"], "Monopoli": ["plain","#0a7a3b","#f2f2f2","#f2f2f2","#0a7a3b"], "Novara": ["plain","#2a6fcf","#f2f2f2","#f2f2f2","#2a6fcf"], "Perugia": ["plain","#c8102e","#f2f2f2","#f2f2f2","#c8102e"], "Pescara": ["stripes","#f2f2f2","#4aa3df","#f2f2f2","#f2f2f2"], "Potenza": ["hoop","#c8102e","#1c2f6b","#1c2f6b","#c8102e"], "Pro Vercelli": ["plain","#f2f2f2","#111111","#111111","#f2f2f2"], "Ravenna": ["stripes","#f6c500","#c8102e","#c8102e","#c8102e"], "Salernitana": ["plain","#6b1a2a","#f2f2f2","#111111","#6b1a2a"], "Reggiana": ["plain","#7a1f2b","#f2f2f2","#f2f2f2","#7a1f2b"], "Spezia": ["plain","#f2f2f2","#111111","#111111","#111111"], "Treviso": ["hoop","#f2f2f2","#6ec1e4","#f2f2f2","#f2f2f2"], "Union Brescia": ["plain","#1f4fa3","#f2f2f2","#f2f2f2","#1f4fa3"]
 });
+const APP_VERSION = "1.0.0";
+const CONTACT = "";   // the contact e-mail shown in Options and in the privacy page (to be filled in)
 const KEEPER_KIT = ["plain","#ff8a1f","#14161a","#14161a","#ff8a1f"];
 function teamKit(){ const n = TEAMS[teamIdx][0]; return KIT[n] || ["plain", TEAMS[teamIdx][1], TEAMS[teamIdx][2], "#111111", "#111111"]; }
 
@@ -1998,7 +2035,7 @@ let tauntFrom = "startScreen";
 async function loadTaunts(){
   if (srv.ok && !srv.legacy && Date.now() - (srv.tauntsAt || 0) > 15000) {
     srv.tauntsAt = Date.now();
-    try { srv.taunts = await sb(`taunts?league=eq.${LEAGUE}&season=eq.${encodeURIComponent(seasonId())}&select=nick,team,body,created_at,player_id&order=created_at.desc&limit=80`); }
+    try { srv.taunts = await sb(`taunts?league=eq.${LEAGUE}&season=eq.${encodeURIComponent(seasonId())}&select=id,nick,team,body,created_at,player_id&order=created_at.desc&limit=80`); }
     catch (e) { srv.tauntsAt = 0; }
   }
   renderTaunts();
@@ -2010,7 +2047,9 @@ function renderTaunts(){
 }
 function fillTaunts(box){
   const local = store.get("cucchiaio.taunts", []).filter(x => x.league === LEAGUE && x.season === seasonId()).map(x => ({ nick: x.nick, team: x.team, body: x.body, at: x.at, me: true }));
-  const list = srv.ok && srv.taunts ? srv.taunts.map(x => ({ nick: x.nick, team: x.team, body: x.body, at: Date.parse(x.created_at), me: x.player_id === srv.uid })) : local;
+  const blocked = store.get("pm.blocked", []), reported = store.get("pm.reported", []);
+  const list = srv.ok && srv.taunts ? srv.taunts.filter(x => !blocked.includes(x.player_id) && !reported.includes(x.id))
+    .map(x => ({ id: x.id, pid: x.player_id, nick: x.nick, team: x.team, body: x.body, at: Date.parse(x.created_at), me: x.player_id === srv.uid })) : local;
   box.textContent = "";
   if (!list.length) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = tr("Ancora nessuno sfottò questa settimana. Il primo puoi scriverlo tu, alla fine di una partita."); box.appendChild(e); return; }
   const ago = at => { const m = Math.max(1, Math.round((Date.now() - at) / 60000)); return m < 60 ? tr("{n} min fa", { n: m }) : m < 1440 ? tr("{n} h fa", { n: Math.round(m / 60) }) : tr("{n} g fa", { n: Math.round(m / 1440) }); };
@@ -2021,8 +2060,44 @@ function fillTaunts(box){
     r.querySelector("i").outerHTML = teamIcon(x.team, 20);
     r.querySelector("b").textContent = x.nick; r.querySelector(".tt").textContent = x.team; r.querySelector(".ta").textContent = ago(x.at);
     r.querySelector(".tx").textContent = x.body;
+    if (!x.me && x.id) { const m = document.createElement("button"); m.type = "button"; m.className = "tmore"; m.textContent = "⋯"; m.setAttribute("aria-label", tr("Segnala o nascondi")); m.onclick = () => tauntMenu(x); r.querySelector(".th").appendChild(m); }
     box.appendChild(r);
   });
+}
+
+// a small in-game dialog (no browser pop-ups): title, text and a list of buttons
+function ask(title, text, buttons){
+  $("askTitle").textContent = title; $("askText").textContent = text; const box = $("askBtns"); box.textContent = "";
+  buttons.concat([[tr("Annulla"), "", null]]).forEach(([label, cls, fn]) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = cls; b.textContent = label;
+    b.onclick = async () => { if (!fn) { $("askVeil").hidden = true; return; } b.disabled = true; const keep = await fn(); if (!keep) $("askVeil").hidden = true; else b.disabled = false; };
+    box.appendChild(b);
+  });
+  $("askVeil").hidden = false;
+}
+// every message can be reported (three reports hide it for everyone) and every fan can be muted
+function tauntMenu(x){
+  ask(x.nick + " · " + x.team, "“" + x.body + "”", [
+    [tr("Segnala come offensivo"), "danger", async () => {
+      const rep = store.get("pm.reported", []); rep.push(x.id); store.set("pm.reported", rep.slice(-300));
+      try { await sb("rpc/report_taunt", { body: { p_taunt_id: x.id } }); } catch (e) {}
+      renderTaunts(); return false;
+    }],
+    [tr("Nascondi i messaggi di questo tifoso"), "", async () => {
+      const bl = store.get("pm.blocked", []); if (!bl.includes(x.pid)) bl.push(x.pid); store.set("pm.blocked", bl);
+      renderTaunts(); return false;
+    }]
+  ]);
+}
+// delete everything: server (account, games, banter) and this phone
+async function deleteMyData(){
+  const hasAccount = !!store.get("pm.session", null);
+  if (hasAccount) {
+    try { await sbAuth(); await sb("rpc/delete_my_data", { body: {} }); }
+    catch (e) { $("askText").textContent = tr("Non riesco a raggiungere il server: riprova con la connessione attiva. Non è stato cancellato nulla."); return true; }
+  }
+  try { Object.keys(localStorage).filter(k => /^(pm\.|cucchiaio\.|pennellata\.)/.test(k)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
+  location.reload(); return true;
 }
 
 // you play under a nickname: without one the match does not start
@@ -2081,6 +2156,25 @@ function renderSettings(){
   minus.onclick = () => { SET.num = num <= 1 ? 99 : num - 1; saveSet(); renderSettings(); };
   plus.onclick = () => { SET.num = num >= 99 ? 1 : num + 1; saveSet(); renderSettings(); };
   st.append(minus, val, plus); nr.appendChild(st);
+  // info & privacy
+  const lb = $("legalList"); lb.textContent = "";
+  const lrow = (title, desc, label, fn, cls) => {
+    const row = document.createElement("div"); row.className = "setrow"; const t = document.createElement("div"); const b = document.createElement("b"); b.textContent = tr(title);
+    const sp = document.createElement("span"); sp.textContent = desc; t.append(b, sp);
+    const btn = document.createElement("button"); btn.type = "button"; btn.className = "switch" + (cls ? " " + cls : ""); btn.textContent = tr(label); btn.onclick = fn;
+    row.append(t, btn); lb.appendChild(row);
+  };
+  const page = p => () => window.open(p + (LANG === "it" ? "" : "#en"), "_blank", "noopener");
+  lrow("Privacy", tr("Quali dati usa il gioco, perché e per quanto tempo."), "Leggi", page("privacy.html"));
+  lrow("Termini d'uso", tr("Le regole del gioco, della classifica e degli sfottò."), "Leggi", page("termini.html"));
+  const nb = store.get("pm.blocked", []).length;
+  lrow("Tifosi nascosti", nb ? tr("Hai nascosto gli sfottò di {n} tifosi.", { n: nb }) : tr("Dagli sfottò puoi nascondere un tifoso o segnalare un messaggio (⋯)."), nb ? "Mostra tutti" : "Nessuno",
+    () => { if (!nb) return; store.set("pm.blocked", []); renderSettings(); renderTaunts(); });
+  lrow("Elimina i miei dati", tr("Cancella soprannome, partite e sfottò dal server e da questo telefono. I punti già portati alla squadra vengono tolti."), "Elimina",
+    () => ask(tr("Eliminare tutti i tuoi dati?"), tr("Soprannome, partite, punti e sfottò vengono cancellati per sempre, sul server e su questo telefono. Non si può annullare."),
+      [[tr("Sì, elimina tutto"), "danger", deleteMyData]]), "danger");
+  if (CONTACT) lrow("Contatti", tr("Domande, segnalazioni o richieste sulla privacy."), "Scrivi", () => { location.href = "mailto:" + CONTACT + "?subject=Per%20la%20Maglia"; });
+  lrow("Versione", APP_VERSION + " · " + tr("caratteri Barlow e Big Shoulders (licenza SIL OFL)"), "Licenze", page("fonts/OFL-Barlow.txt"));
 }
 document.body.classList.toggle("cb", SET.cb);
 function openSettings(from){ settingsFrom = from; $(from).hidden = true; $("settingsScreen").hidden = false; renderSettings(); }

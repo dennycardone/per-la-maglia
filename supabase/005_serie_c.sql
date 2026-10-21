@@ -9,7 +9,7 @@ language sql immutable as $$
     when 'serie-b' then array['Arezzo','Ascoli','Avellino','Benevento','Carrarese','Catanzaro','Cesena','Cremonese','Empoli','Hellas Verona',
                               'Juve Stabia','Mantova','Modena','Padova','Palermo','Pisa','Sampdoria','Südtirol','Vicenza','Virtus Entella']
     when 'serie-c' then array['Bari','Casertana','Catania','Cosenza','Crotone','Foggia','Lecco','Livorno','Monopoli','Novara',
-                              'Perugia','Pescara','Potenza','Pro Vercelli','Ravenna','Salernitana','Sambenedettese','Spezia','Treviso','Union Brescia']
+                              'Perugia','Pescara','Potenza','Pro Vercelli','Ravenna','Reggiana','Salernitana','Spezia','Treviso','Union Brescia']
     else array[]::text[] end
 $$;
 

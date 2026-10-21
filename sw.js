@@ -1,6 +1,8 @@
 // Per la Maglia — service worker: the game works offline after the first visit.
-const CACHE = "perlamaglia-v33";
-const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
+const CACHE = "perlamaglia-v34";
+const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png",
+  "./fonts/bigshouldersdisplay.woff", "./fonts/barlowcondensed-Medium.woff", "./fonts/barlowcondensed-SemiBold.woff", "./fonts/barlowcondensed-Bold.woff",
+  "./fonts/barlow-Regular.woff", "./fonts/barlow-Medium.woff", "./fonts/barlow-SemiBold.woff"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
@@ -14,12 +16,14 @@ self.addEventListener("fetch", e => {
   const url = new URL(req.url);
   // the page itself: try the network first so updates arrive, fall back to the cache offline
   if (req.mode === "navigate") {
-    e.respondWith(fetch(req, { cache: "no-store" }).then(r => { const copy = r.clone(); caches.open(CACHE).then(c => c.put("./index.html", copy)); return r; })
-      .catch(() => caches.match("./index.html")));
+    // only the game page is stored as the offline copy; privacy and terms pages are cached under their own name
+    const isGame = /\/(index\.html)?$/.test(url.pathname);
+    e.respondWith(fetch(req, { cache: "no-store" }).then(r => { const copy = r.clone(); caches.open(CACHE).then(c => c.put(isGame ? "./index.html" : req, copy)); return r; })
+      .catch(() => isGame ? caches.match("./index.html") : caches.match(req)));
     return;
   }
-  // own files and Google Fonts: cache first, refresh in the background
-  if (url.origin === location.origin || url.hostname.endsWith("fonts.googleapis.com") || url.hostname.endsWith("fonts.gstatic.com")) {
+  // own files: cache first, refresh in the background
+  if (url.origin === location.origin) {
     e.respondWith(caches.match(req).then(hit => {
       const net = fetch(req).then(r => { if (r.ok || r.type === "opaque") { const copy = r.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return r; }).catch(() => hit);
       return hit || net;
