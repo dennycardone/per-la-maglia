@@ -610,13 +610,25 @@ const C = {
 };
 
 // Serie A 2026/27, in alphabetical order
-const TEAMS = [
+const TEAMS_A = [
   ["Atalanta","#1f63b5","#0d0d0d"],["Bologna","#b0202b","#1c2f5c"],["Cagliari","#b3202b","#16305f"],["Como","#1c4f9c","#f2f2f2"],
   ["Fiorentina","#6a2c91","#f2f2f2"],["Frosinone","#f6c500","#1b3d8f"],["Genoa","#b3122b","#14234a"],["Inter","#1462b4","#0b0b0b"],
   ["Juventus","#f2f2f2","#151515"],["Lazio","#8fd2f2","#f2f2f2"],["Lecce","#f6c500","#d71920"],["Milan","#d4202c","#111111"],
   ["Monza","#d4111f","#f2f2f2"],["Napoli","#1aa3e0","#f2f2f2"],["Parma","#f2f2f2","#111111"],["Roma","#9c1c32","#f4b223"],
   ["Sassuolo","#00a04f","#111111"],["Torino","#8b1d1a","#f2f2f2"],["Udinese","#f2f2f2","#111111"],["Venezia","#111111","#f28c28"]
 ];
+// Serie B 2026/27, in alphabetical order (colours from the kits below)
+const TEAMS_B = [
+  ["Arezzo","#8b1a2e","#f2f2f2"],["Ascoli","#f2f2f2","#111111"],["Avellino","#0a7a3b","#f2f2f2"],["Benevento","#f6c500","#d71920"],
+  ["Carrarese","#f6c500","#1b3d8f"],["Catanzaro","#f6c500","#c8102e"],["Cesena","#f2f2f2","#111111"],["Cremonese","#9a9a9a","#c8102e"],
+  ["Empoli","#1d4fa0","#f2f2f2"],["Hellas Verona","#1c2f6b","#f6c500"],["Juve Stabia","#f6c500","#1c2f6b"],["Mantova","#f2f2f2","#c8102e"],
+  ["Modena","#f9d71c","#1b3d8f"],["Padova","#f2f2f2","#c8102e"],["Palermo","#f4a6c0","#111111"],["Pisa","#1c3f94","#111111"],
+  ["Sampdoria","#1f4fa3","#f2f2f2"],["Südtirol","#c8102e","#f2f2f2"],["Vicenza","#f2f2f2","#c8102e"],["Virtus Entella","#6ec1e4","#f2f2f2"]
+];
+const LEAGUE_TEAMS = { "serie-a": TEAMS_A, "serie-b": TEAMS_B };
+let LEAGUE = (() => { try { return JSON.parse(localStorage.getItem("pm.league")) || "serie-a"; } catch (e) { return "serie-a"; } })(); if (!LEAGUE_TEAMS[LEAGUE]) LEAGUE = "serie-a";
+const teamKey = () => LEAGUE === "serie-a" ? "cucchiaio.teamName" : "pm.team." + LEAGUE;
+let TEAMS = LEAGUE_TEAMS[LEAGUE];
 const store = {
   get(k, d){ try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } },
   set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
@@ -705,7 +717,7 @@ I18N.en = {
   "Italia": "Italy", "Inghilterra": "England", "Spagna": "Spain", "Germania": "Germany", "Francia": "France", "Scegli il campionato": "Choose the league",
   "Opzioni": "Options", "Installa": "Install", "Attendi…": "Wait…", "Sfottò": "Banter", "📣 Sfottò": "📣 Banter", " è {n}° in classifica questa settimana": " is #{n} in the table this week", "GIOCA": "PLAY", "Prima scegli la squadra": "Pick your team first", "presto": "soon",
   "Ciao {n}": "Hi {n}", "Benvenuto, tifoso": "Welcome, fan", "↓ Scegli la tua squadra per iniziare ↓": "↓ Pick your team to start ↓",
-  "20 tifoserie di Serie A si sfidano ogni settimana · ": "20 Serie A fan bases compete every week · ", "la tua manca": "yours is missing", "Lingua": "Language", "La lingua di tutto il gioco.": "The language of the whole game.",
+  "{n} tifoserie di {l} si sfidano ogni settimana · ": "{n} {l} fan bases compete every week · ", "la tua manca": "yours is missing", "Lingua": "Language", "La lingua di tutto il gioco.": "The language of the whole game.",
   "Numero di maglia": "Shirt number", "Il numero del tuo giocatore in campo.": "Your player's number on the pitch.",
   "Tutorial": "Tutorial", "Rifai i tre tiri di prova alla prossima partita.": "Replay the three practice shots in your next game.", "Rivedi": "Replay", "Alla prossima partita": "Next game",
   // install
@@ -727,16 +739,18 @@ const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 const cv = $("cv"), ctx = cv.getContext("2d");
 let W = 0, H = 0, DPR = 1;
 // Italian articles: "per la Lazio", "dell'Inter", "al Milan"
-const ART = { Atalanta: "l'", Fiorentina: "la", Inter: "l'", Juventus: "la", Lazio: "la", Roma: "la", Udinese: "l'" };
+const ART = { Atalanta: "l'", Fiorentina: "la", Inter: "l'", Juventus: "la", Lazio: "la", Roma: "la", Udinese: "l'",
+  Arezzo: "l'", Ascoli: "l'", Avellino: "l'", Carrarese: "la", Cremonese: "la", Empoli: "l'", "Hellas Verona": "l'", "Juve Stabia": "la", Sampdoria: "la", "Virtus Entella": "la" };
 const PREP = { "": { il: "il ", la: "la ", "l'": "l'" }, per: { il: "per il ", la: "per la ", "l'": "per l'" }, di: { il: "del ", la: "della ", "l'": "dell'" },
                a: { il: "al ", la: "alla ", "l'": "all'" }, da: { il: "dal ", la: "dalla ", "l'": "dall'" }, su: { il: "sul ", la: "sulla ", "l'": "sull'" } };
 function sq(name, prep = "", cap = false){ if (LANG !== "it") return name; const t = PREP[prep][ART[name] || "il"] + name; return cap ? t[0].toUpperCase() + t.slice(1) : t; }
 // a first-time player has no team yet: the home stays neutral until one is chosen
-let teamChosen = !!store.get("cucchiaio.teamName", "") || store.get("cucchiaio.team", -1) >= 0 || store.get("pennellata.team", -1) >= 0;
+let teamChosen = LEAGUE === "serie-a" ? (!!store.get("cucchiaio.teamName", "") || store.get("cucchiaio.team", -1) >= 0 || store.get("pennellata.team", -1) >= 0) : TEAMS.some(t => t[0] === store.get(teamKey(), ""));
 const OLD_TEAMS = ["Milan","Inter","Juventus","Napoli","Roma","Lazio","Atalanta","Fiorentina","Bologna","Torino","Genoa","Bari","Palermo","Sampdoria","Udinese","Cagliari"];
 let teamIdx = (() => {
-  const byName = TEAMS.findIndex(t => t[0] === store.get("cucchiaio.teamName", ""));
+  const byName = TEAMS.findIndex(t => t[0] === store.get(teamKey(), ""));
   if (byName >= 0) return byName;
+  if (LEAGUE !== "serie-a") return 0;
   const old = OLD_TEAMS[store.get("cucchiaio.team", store.get("pennellata.team", -1))];
   const i = TEAMS.findIndex(t => t[0] === old);
   return i >= 0 ? i : TEAMS.findIndex(t => t[0] === "Milan");
@@ -895,6 +909,18 @@ const KIT = {
   Sassuolo: ["stripes","#00a04f","#111111","#111111","#00a04f"], Venezia: ["plain","#111111","#f28c28","#111111","#111111"],
   Udinese: ["stripes","#f2f2f2","#111111","#111111","#111111"], Cagliari: ["halves","#b3202b","#16305f","#16305f","#16305f"]
 };
+Object.assign(KIT, {
+  Arezzo: ["plain","#8b1a2e","#f2f2f2","#8b1a2e","#8b1a2e"], Ascoli: ["stripes","#f2f2f2","#111111","#111111","#111111"],
+  Avellino: ["plain","#0a7a3b","#f2f2f2","#0a7a3b","#0a7a3b"], Benevento: ["stripes","#f6c500","#d71920","#d71920","#d71920"],
+  Carrarese: ["stripes","#f6c500","#1b3d8f","#1b3d8f","#1b3d8f"], Catanzaro: ["halves","#f6c500","#c8102e","#c8102e","#c8102e"],
+  Cesena: ["plain","#f2f2f2","#111111","#111111","#f2f2f2"], Cremonese: ["stripes","#9a9a9a","#c8102e","#f2f2f2","#9a9a9a"],
+  Empoli: ["plain","#1d4fa0","#f2f2f2","#f2f2f2","#1d4fa0"], "Hellas Verona": ["plain","#1c2f6b","#f6c500","#1c2f6b","#1c2f6b"],
+  "Juve Stabia": ["plain","#f6c500","#1c2f6b","#1c2f6b","#f6c500"], Mantova: ["hoop","#f2f2f2","#c8102e","#f2f2f2","#f2f2f2"],
+  Modena: ["plain","#f9d71c","#1b3d8f","#1b3d8f","#1b3d8f"], Padova: ["plain","#f2f2f2","#c8102e","#f2f2f2","#c8102e"],
+  Palermo: ["plain","#f4a6c0","#111111","#111111","#111111"], Pisa: ["stripes","#1c3f94","#111111","#111111","#111111"],
+  Sampdoria: ["hoop","#1f4fa3","#f2f2f2","#f2f2f2","#1f4fa3"], "Südtirol": ["plain","#c8102e","#f2f2f2","#f2f2f2","#c8102e"],
+  Vicenza: ["stripes","#f2f2f2","#c8102e","#f2f2f2","#f2f2f2"], "Virtus Entella": ["plain","#6ec1e4","#f2f2f2","#f2f2f2","#6ec1e4"]
+});
 const KEEPER_KIT = ["plain","#ff8a1f","#14161a","#14161a","#ff8a1f"];
 function teamKit(){ const n = TEAMS[teamIdx][0]; return KIT[n] || ["plain", TEAMS[teamIdx][1], TEAMS[teamIdx][2], "#111111", "#111111"]; }
 
@@ -1109,7 +1135,6 @@ const sharedMode = () => online.db && online.ready;
 // ---------- Shared leaderboard on the server (Supabase). If it cannot be reached, the phone's own data is used. ----------
 const SB = { url: "https://dhjnawjtqqkrcymycway.supabase.co",
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoam5hd2p0cXFrcmN5bXljd2F5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0Nzc1MDIsImV4cCI6MjEwODA1MzUwMn0.i28bdNPelalL73rx1KmJnJfi3e9aYBAMVhjpYepvisQ" };
-const LEAGUE = "serie-a";   // more leagues later: every game and every table carries its league
 const srv = { legacy: false, mvp: {}, hist: {}, histAt: {}, ok: false, uid: null, sid: null, week: {}, records: {}, winners: [], fans: {}, fansAt: {}, mine: {}, loading: false };
 async function sbAuth(){
   let ses = store.get("pm.session", null);
@@ -1220,7 +1245,7 @@ function renderHistory(){
   const num = n => n.toLocaleString(LANG === "it" ? "it-IT" : "en-GB");
   const color = team => (TEAMS.find(t => t[0] === team) || ["", "#888"])[1];
   if (!histWeek) {
-    $("histTitle").textContent = tr("Albo d'oro") + " · Serie A";
+    $("histTitle").textContent = tr("Albo d'oro") + " · " + leagueName();
     $("histHint").textContent = tr("Tutte le settimane giocate. Tocca una settimana per la classifica completa.");
     const weeks = weekList();
     if (!weeks.length) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = tr("Ancora nessuna settimana conclusa: il primo campione arriva lunedì."); list.appendChild(e); return; }
@@ -1237,7 +1262,7 @@ function renderHistory(){
     });
     return;
   }
-  $("histTitle").textContent = seasonLabel(histWeek) + " · Serie A";
+  $("histTitle").textContent = seasonLabel(histWeek) + " · " + leagueName();
   $("histHint").textContent = tr("Classifica finale della settimana");
   const rows = weekTable(histWeek);
   if (rows === null) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = tr("Carico la settimana…"); list.appendChild(e); return; }
@@ -1336,7 +1361,7 @@ function weekList(){
 function weekTable(sid){
   if (srv.ok) { if (!srv.hist[sid]) { srvHistory(sid); return null; } return srv.hist[sid]; }
   const { totals } = seasonTotals(sid), mv = teamMvps(sid), rc = (store.get("cucchiaio.teamBest", {})[sid]) || {};
-  return Object.entries(totals).filter(([, p]) => p > 0).sort((a, b) => b[1] - a[1]).map(([team, pts]) => ({ team, pts, mvp: mv[team] || null, rec: rc[team] || null }));
+  return Object.entries(totals).filter(([t, p]) => p > 0 && TEAMS.some(x => x[0] === t)).sort((a, b) => b[1] - a[1]).map(([team, pts]) => ({ team, pts, mvp: mv[team] || null, rec: rc[team] || null }));
 }
 function honours(){
   if (srv.ok) return srv.winners.filter(w => w.pts > 0).map(w => ({ sid: w.season, team: w.team, pts: +w.pts }));
@@ -1472,8 +1497,8 @@ function startGame(){
   G = { localId: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), score: 0, lives: C.lives, streak: 0, bestStreak: 0, shots: 0, goals: 0, top: 0, perfect: 0, start: performance.now(), miss: {} };
   $("startScreen").hidden = true; $("overScreen").hidden = true; $("hud").hidden = false; $("info").hidden = false;
   $("coach").hidden = true;
-  G.practice = !store.get("cucchiaio.tutorialDone", false);
-  $("guide").hidden = !G.practice; guideText = "";
+  G.practice = false;
+  $("guide").hidden = true; guideText = "";
   lastCharge = null; nextShot(); phase = "ready"; updateHud();
   later(() => { if (phase === "ready") phase = "hold"; }, 800);
 }
@@ -1761,7 +1786,7 @@ function renderHome(){
     const pen = document.createElement("span"); pen.className = "pen"; pen.textContent = "✎"; nb.appendChild(pen);
   }
   if ($("hask")) $("hask").hidden = teamChosen;
-  if (!teamChosen) { const e = $("homeTeam"); e.innerHTML = ""; e.append(document.createTextNode(tr("20 tifoserie di Serie A si sfidano ogni settimana · "))); const b = document.createElement("b"); b.textContent = tr("la tua manca"); e.appendChild(b); return; }
+  if (!teamChosen) { const e = $("homeTeam"); e.innerHTML = ""; e.append(document.createTextNode(tr("{n} tifoserie di {l} si sfidano ogni settimana · ", { n: TEAMS.length, l: leagueName() }))); const b = document.createElement("b"); b.textContent = tr("la tua manca"); e.appendChild(b); return; }
   const el = $("homeTeam"); if (!el) return;
   const rows = teamRows(), me = TEAMS[teamIdx][0], i = rows.findIndex(r => r.name === me), r = rows[i];
   el.textContent = "";
@@ -1773,7 +1798,7 @@ function renderHome(){
 }
 // competitions by nation, each with its divisions (a new one only needs "open": true and its teams)
 const NATIONS = [
-  { nat: "Italia", flag: "f-it", divs: [["serie-a", "Serie A", true], ["serie-b", "Serie B", false], ["serie-c", "Serie C", false]] },
+  { nat: "Italia", flag: "f-it", divs: [["serie-a", "Serie A", true], ["serie-b", "Serie B", true], ["serie-c", "Serie C", false]] },
   { nat: "Inghilterra", flag: "f-en", divs: [["premier", "Premier League", false], ["championship", "Championship", false]] },
   { nat: "Spagna", flag: "f-es", divs: [["laliga", "LaLiga", false], ["segunda", "Segunda", false]] },
   { nat: "Germania", flag: "f-de", divs: [["bundesliga", "Bundesliga", false], ["bundesliga2", "2. Bundesliga", false]] },
@@ -1791,11 +1816,20 @@ function renderLeagues(){
       const b = document.createElement("button"); b.type = "button"; b.className = "dv"; b.disabled = !open;
       b.setAttribute("aria-pressed", id === LEAGUE ? "true" : "false");
       b.textContent = name + (open ? "" : " · " + tr("presto"));
-      b.onclick = () => closeComp();
+      b.onclick = () => { closeComp(); if (open && id !== LEAGUE) setLeague(id); };
       row.querySelector(".divs").appendChild(b);
     });
     box.appendChild(row);
   });
+}
+// switching league: its own teams, its own chosen team, its own tables
+function setLeague(id){
+  if (!LEAGUE_TEAMS[id]) return;
+  LEAGUE = id; store.set("pm.league", id); TEAMS = LEAGUE_TEAMS[id];
+  const name = store.get(teamKey(), ""), i = TEAMS.findIndex(t => t[0] === name);
+  teamChosen = i >= 0; teamIdx = i >= 0 ? i : 0;
+  Object.assign(srv, { week: {}, records: {}, mvp: {}, winners: [], mine: {}, fans: {}, fansAt: {}, hist: {}, histAt: {}, sid: null, ok: false, taunts: null, tauntsAt: 0 });
+  renderLeagues(); renderTeams(); buildCrowd(); renderHome(); renderRanks(); srvLoad();
 }
 function openComp(){ renderLeagues(); $("compVeil").hidden = false; $("compSheet").hidden = false; }
 function closeComp(){ $("compVeil").hidden = true; $("compSheet").hidden = true; }
@@ -1825,7 +1859,7 @@ function renderTeams(){
     b.type = "button"; b.className = "bj"; b.id = "team-" + i;
     b.setAttribute("aria-pressed", teamChosen && i === teamIdx ? "true" : "false");
     b.innerHTML = jerseySVG(KIT[t[0]] || ["plain", t[1], t[2]], 40) + `<span>${t[0]}</span>`;
-    b.onclick = () => { teamIdx = i; teamChosen = true; store.set("cucchiaio.teamName", TEAMS[i][0]); renderTeams(); buildCrowd(); renderHome(); if (srv.ok) srvProfile(); };
+    b.onclick = () => { teamIdx = i; teamChosen = true; store.set(teamKey(), TEAMS[i][0]); renderTeams(); buildCrowd(); renderHome(); if (srv.ok) srvProfile(); };
     box.appendChild(b);
   });
   homeTheme(); renderLeagues();
@@ -2043,12 +2077,6 @@ function renderSettings(){
   minus.onclick = () => { SET.num = num <= 1 ? 99 : num - 1; saveSet(); renderSettings(); };
   plus.onclick = () => { SET.num = num >= 99 ? 1 : num + 1; saveSet(); renderSettings(); };
   st.append(minus, val, plus); nr.appendChild(st);
-  // tutorial again
-  const tu = mk("Tutorial", "Rifai i tre tiri di prova alla prossima partita."), tb = document.createElement("button");
-  const again = !store.get("cucchiaio.tutorialDone", false);
-  tb.type = "button"; tb.className = "switch"; tb.textContent = again ? tr("Alla prossima partita") : tr("Rivedi"); tb.setAttribute("aria-pressed", again ? "true" : "false");
-  tb.onclick = () => { store.set("cucchiaio.tutorialDone", false); renderSettings(); };
-  tu.appendChild(tb);
 }
 document.body.classList.toggle("cb", SET.cb);
 function openSettings(from){ settingsFrom = from; $(from).hidden = true; $("settingsScreen").hidden = false; renderSettings(); }
