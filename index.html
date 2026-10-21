@@ -812,7 +812,7 @@ I18N.en = {
   "⏸ Stadio chiuso": "⏸ Stadium closed", "Si chiude venerdì alle 20:00 · tra {d} g {h} h {m} min {s} s": "Closes Friday at 8pm · in {d}d {h}h {m}m {s}s",
   "Si riapre lunedì alle 8:00 · tra {d} g {h} h {m} min {s} s": "Reopens Monday at 8am · in {d}d {h}h {m}m {s}s", "Non conta per la classifica · {c}": "Doesn't count for the table · {c}",
   "Partita finita a stadio chiuso: vale come allenamento": "Game ended after closing time: it counts as training",
-  "{n} tifosi online": "{n} fans online", "Più tifosi giocano {t}, più punti fa in classifica.": "The more fans play {t}, the more points it gets.",
+  "{n} tifosi online": "{n} fans online", "1 tifoso online": "1 fan online", "Più tifosi giocano {t}, più punti fa in classifica.": "The more fans play {t}, the more points it gets.",
   "Più siamo, più è bello: porta i tuoi amici in curva.": "The more the merrier: bring your friends to the stand.", "Copia link": "Copy link", "Altro…": "More…",
   "Messaggio copiato: incollalo dove vuoi": "Message copied: paste it anywhere", "Immagine salvata e testo copiato: incollali dove vuoi": "Image saved and text copied: paste them anywhere",
   "Hai portato": "You brought", "{n} tifosi": "{n} fans", "primo distintivo con 1 tifoso": "first badge with 1 fan", "Nessun distintivo, per ora": "No badge yet",
@@ -1312,7 +1312,7 @@ async function srvPing(){
     const r = await sb("rpc/ping", { body: { p_league: LEAGUE, p_team: team } });
     const el = $("onlineChip"); if (!r || !el) return;
     el.innerHTML = ""; const i = document.createElement("i"); el.appendChild(i);
-    el.appendChild(document.createTextNode(tr("{n} tifosi online", { n: (+r.online).toLocaleString(LOC()) })));
+    el.appendChild(document.createTextNode((+r.online === 1 ? tr("1 tifoso online") : tr("{n} tifosi online", { n: (+r.online).toLocaleString(LOC()) }))));
     if (team && r.team > 0) { el.appendChild(document.createTextNode(" · ")); const b = document.createElement("b"); b.textContent = tr("{n} {t}", { n: r.team, t: sq(team, "per") }); el.appendChild(b); }
     el.hidden = false;
   } catch (e) { if ($("onlineChip")) $("onlineChip").hidden = true; }
