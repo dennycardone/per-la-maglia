@@ -231,6 +231,17 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .orow .up{color:#7fe0a0;font-size:12px;margin-left:5px}
 @media (orientation:portrait){.ovwrap{grid-template-columns:1fr;align-content:center}}
 .tlist{display:grid;grid-template-columns:1fr;gap:4px;align-content:start;max-height:calc(100vh - 110px);overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain}
+.trow{display:grid;grid-template-columns:24px minmax(70px,.8fr) minmax(0,2.6fr) minmax(64px,.8fr) 56px 64px 22px;gap:10px;align-items:center;padding:6px 10px;border-radius:8px;background:rgba(238,242,234,.05);border:1px solid rgba(238,242,234,.08);font-family:var(--label);font-size:14px;white-space:nowrap}
+.trow > *{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.trow b{color:var(--chalk);font-weight:700}
+.trow .tx{font-family:var(--body);font-size:13.5px;color:#e7eef2}
+.trow .tt{color:var(--mute);font-size:13px}
+.trow .tp{text-align:right;font-variant-numeric:tabular-nums;color:var(--amber);font-weight:700}
+.trow .ta{text-align:right;color:#8a9890;font-size:12px}
+.trow .tm{text-align:right}
+.trow.me{border-color:rgba(255,194,75,.45);background:rgba(255,194,75,.08)}
+.trow.thd{background:none;border-color:transparent;padding-block:0 2px;font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.trow.thd span:nth-child(5),.trow.thd span:nth-child(6){text-align:right}
 .tmsg{display:grid;grid-template-columns:20px 1fr;gap:8px;align-items:start;padding:5px 9px;border-radius:10px;background:rgba(238,242,234,.05);border:1px solid rgba(238,242,234,.08)}
 .tmsg.me{border-color:rgba(255,194,75,.45);background:rgba(255,194,75,.08)}
 .tmsg i{width:10px;height:10px;border-radius:50%;margin-top:4px;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
@@ -412,7 +423,10 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 .rlist.full.teams{display:grid;grid-template-columns:1fr 1fr;column-gap:18px;row-gap:2px}
 .rlist.full.fans{display:grid;grid-template-columns:1fr 1fr;column-gap:18px;row-gap:2px;align-content:start}
 .rlist.full .rrow{gap:6px;grid-template-columns:22px 18px minmax(88px,1fr) 58px 58px minmax(56px,.9fr);padding:4px 8px;font-size:15px}
-.rlist.full.fans .rrow{grid-template-columns:24px 18px minmax(0,1fr) auto}
+.rlist.full.fans .rrow{grid-template-columns:28px minmax(0,1fr) auto}
+.rlist.full.fans .rrow .mjw{display:none}
+.rhd.fhd{grid-template-columns:28px minmax(0,1fr) auto}
+.rhd.fhd span:nth-child(3){text-align:right}
 .rlist.full.fans .rempty{grid-column:1 / -1}
 .rhd{display:grid;gap:6px;grid-template-columns:22px 18px minmax(88px,1fr) 58px 58px minmax(56px,.9fr);padding:0 8px 2px;font-family:var(--label);font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
 .rhd span:nth-child(4),.rhd span:nth-child(5),.rlist.full .pts{text-align:right}
@@ -813,7 +827,7 @@ I18N.en = {
   "⏸ Stadio chiuso": "⏸ Stadium closed", "Si chiude venerdì alle 20:00 · tra {d} g {h} h {m} min {s} s": "Closes Friday at 8pm · in {d}d {h}h {m}m {s}s",
   "Si riapre lunedì alle 8:00 · tra {d} g {h} h {m} min {s} s": "Reopens Monday at 8am · in {d}d {h}h {m}m {s}s", "Non conta per la classifica · {c}": "Doesn't count for the table · {c}",
   "Partita finita a stadio chiuso: vale come allenamento": "Game ended after closing time: it counts as training",
-  "{n} tifosi online": "{n} fans online", "1 tifoso online": "1 fan online", "Più tifosi giocano {t}, più punti fa in classifica.": "The more fans play {t}, the more points it gets.",
+  "{n} tifosi online": "{n} fans online", "Nome": "Name", "Totale": "Total", "Sfottò": "Banter", "Squadra": "Team", "Punti": "Points", "Quando": "When", "1 tifoso online": "1 fan online", "Più tifosi giocano {t}, più punti fa in classifica.": "The more fans play {t}, the more points it gets.",
   "Più siamo, più è bello: porta i tuoi amici in curva.": "The more the merrier: bring your friends to the stand.", "Copia link": "Copy link", "Altro…": "More…",
   "Messaggio copiato: incollalo dove vuoi": "Message copied: paste it anywhere", "Immagine salvata e testo copiato: incollali dove vuoi": "Image saved and text copied: paste them anywhere",
   "Hai portato": "You brought", "{n} tifosi": "{n} fans", "primo distintivo con 1 tifoso": "first badge with 1 fan", "Nessun distintivo, per ora": "No badge yet",
@@ -1660,7 +1674,13 @@ function renderRanks(){
         bk.onclick = () => { box.dataset.tab = "teams"; renderRanks(); }; list.appendChild(bk);
       }
       if (!rows.length) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = tr("Nessuno ha ancora giocato {t} questa settimana.", { t: sq(team, "per") }); list.appendChild(e); }
-      else rows.slice(0, 100).forEach((r, k) => { row(k + 1, { team }, (k === 0 ? "👑 " : "") + r.name, "", r.pts, r.me, r.lv);
+      if (full && rows.length) {
+        const hd = document.createElement("div"); hd.className = "rhd fhd"; hd.innerHTML = `<span>#</span><span>${tr("Nome")}</span><span>${tr("Totale")}</span>`;
+        const hd2 = hd.cloneNode(true); hd.style.gridArea = "1 / 1"; hd2.style.gridArea = "1 / 2";
+        list.appendChild(hd); if (rows.length > 10) list.appendChild(hd2);
+      }
+      if (rows.length) rows.slice(0, 100).forEach((r, k) => { row(k + 1, { team }, (k === 0 ? "👑 " : "") + r.name, "", r.pts, r.me, r.lv);
+        if (full) { const blk = Math.floor(k / 20), w = k % 20; list.lastChild.style.gridArea = `${2 + blk * 10 + (w % 10)} / ${w < 10 ? 1 : 2}`; }
         const bd = badgeOf(r.refs || 0); if (bd) { const s = document.createElement("span"); s.className = "badgeTag"; s.textContent = bd[2]; s.title = tr(bd[1]); list.lastChild.querySelector(".who").appendChild(s); }
         if (k === 0) { const b = document.createElement("span"); b.className = "mvpTag"; b.textContent = "MVP"; list.lastChild.querySelector(".who").appendChild(b); } });
     }
@@ -2198,7 +2218,7 @@ async function sendSay(){
   }
   if (!ok) {   // no server: the line stays on this phone
     const list = store.get("cucchiaio.taunts", []);
-    list.unshift({ league: LEAGUE, season: seasonId(), team: t, nick, body: SAY.text, at: Date.now(), me: true });
+    list.unshift({ league: LEAGUE, season: seasonId(), team: t, nick, body: SAY.text, at: Date.now(), me: true, score: lastMatch ? lastMatch.score : null });
     store.set("cucchiaio.taunts", list.slice(0, 100));
   }
   SAY.sending = false; SAY.sent = true; srv.tauntsAt = 0; renderSay();
@@ -2210,7 +2230,8 @@ let tauntFrom = "startScreen";
 async function loadTaunts(){
   if (srv.ok && !srv.legacy && Date.now() - (srv.tauntsAt || 0) > 15000) {
     srv.tauntsAt = Date.now();
-    try { srv.taunts = await sb(`taunts?league=eq.${LEAGUE}&season=eq.${encodeURIComponent(seasonId())}&select=id,nick,team,body,created_at,player_id&order=created_at.desc&limit=80`); }
+    const q = `taunts?league=eq.${LEAGUE}&season=eq.${encodeURIComponent(seasonId())}&order=created_at.desc&limit=80&select=id,nick,team,body,created_at,player_id`;
+    try { srv.taunts = await sb(q + ",games(score)").catch(() => sb(q)); }
     catch (e) { srv.tauntsAt = 0; }
   }
   renderTaunts();
@@ -2221,13 +2242,29 @@ function renderTaunts(){
   if (!$("overFeed").hidden) fillTaunts($("overFeed"));
 }
 function fillTaunts(box){
-  const local = store.get("cucchiaio.taunts", []).filter(x => x.league === LEAGUE && x.season === seasonId()).map(x => ({ nick: x.nick, team: x.team, body: x.body, at: x.at, me: true }));
+  const local = store.get("cucchiaio.taunts", []).filter(x => x.league === LEAGUE && x.season === seasonId()).map(x => ({ nick: x.nick, team: x.team, body: x.body, at: x.at, me: true, score: x.score == null ? null : x.score }));
   const blocked = store.get("pm.blocked", []), reported = store.get("pm.reported", []);
   const list = srv.ok && srv.taunts ? srv.taunts.filter(x => !blocked.includes(x.player_id) && !reported.includes(x.id))
-    .map(x => ({ id: x.id, pid: x.player_id, nick: x.nick, team: x.team, body: x.body, at: Date.parse(x.created_at), me: x.player_id === srv.uid })) : local;
+    .map(x => ({ id: x.id, pid: x.player_id, nick: x.nick, team: x.team, body: x.body, at: Date.parse(x.created_at), me: x.player_id === srv.uid, score: x.games ? x.games.score : null })) : local;
   box.textContent = "";
   if (!list.length) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = tr("Ancora nessuno sfottò questa settimana. Il primo puoi scriverlo tu, alla fine di una partita."); box.appendChild(e); return; }
   const ago = at => { const m = Math.max(1, Math.round((Date.now() - at) / 60000)); return m < 60 ? tr("{n} min fa", { n: m }) : m < 1440 ? tr("{n} h fa", { n: Math.round(m / 60) }) : tr("{n} g fa", { n: Math.round(m / 1440) }); };
+  // the banter wall is a table: one line per message (shirt, name, banter, team, points, when)
+  if (box.id === "tauntList") {
+    const hd = document.createElement("div"); hd.className = "trow thd";
+    hd.innerHTML = `<span></span><span>${tr("Nome")}</span><span>${tr("Sfottò")}</span><span>${tr("Squadra")}</span><span>${tr("Punti")}</span><span>${tr("Quando")}</span><span></span>`;
+    box.appendChild(hd);
+    list.forEach(x => {
+      const r = document.createElement("div"); r.className = "trow" + (x.me ? " me" : "");
+      r.innerHTML = teamIcon(x.team, 22) + "<b></b><span class=tx></span><span class=tt></span><span class=tp></span><span class=ta></span><span class=tm></span>";
+      r.querySelector("b").textContent = x.nick; r.querySelector(".tx").textContent = x.body; r.querySelector(".tx").title = x.body;
+      r.querySelector(".tt").textContent = x.team; r.querySelector(".tp").textContent = x.score == null ? "–" : (+x.score).toLocaleString(LOC());
+      r.querySelector(".ta").textContent = ago(x.at);
+      if (!x.me && x.id) { const m = document.createElement("button"); m.type = "button"; m.className = "tmore"; m.textContent = "⋯"; m.setAttribute("aria-label", tr("Segnala o nascondi")); m.onclick = () => tauntMenu(x); r.querySelector(".tm").appendChild(m); }
+      box.appendChild(r);
+    });
+    return;
+  }
   list.forEach(x => {
     const r = document.createElement("div"); r.className = "tmsg" + (x.me ? " me" : "");
     const col = (TEAMS.find(t => t[0] === x.team) || ["", "#888"])[1];
@@ -2789,12 +2826,6 @@ function drawGoalFront(v){
   ctx.strokeStyle = "#ffffff"; ctx.lineWidth = Math.max(1, w * 0.35);
   ctx.beginPath(); ctx.moveTo(a.x - w * 0.18, a.y); ctx.lineTo(top.x - w * 0.18, top.y); ctx.stroke();
   ctx.lineCap = "butt"; ctx.lineJoin = "miter";
-  if (!demo && (phase === "hold" || phase === "ready")) {
-    const p = S_(v, d, C.goalH), q = S_(v, d, C.topY);
-    ctx.fillStyle = "rgba(255,194,75,.18)"; ctx.fillRect(p.x - 0.5 * v.sc, p.y, 0.5 * v.sc, q.y - p.y);
-    ctx.fillStyle = "rgba(255,194,75,.95)"; ctx.font = `700 ${Math.max(12, Math.round(0.4 * v.sc))}px "Barlow Condensed",sans-serif`;
-    ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillText("×3", p.x - 0.6 * v.sc, (p.y + q.y) / 2);
-  }
 }
 
 // a few team flags waving in the stands (faster when the crowd celebrates; they lean with the wind)
