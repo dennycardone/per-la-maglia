@@ -448,7 +448,7 @@ body{position:fixed;inset:0;touch-action:none}
 .screen{overflow:hidden;touch-action:none;overscroll-behavior:none}
 .screen.tall{overflow-y:auto;touch-action:pan-y}
 .rlist{touch-action:pan-y;overscroll-behavior:contain}
-.panel.wide{width:min(100%,1100px)!important;max-width:1100px;display:flex;flex-direction:column;gap:8px;align-self:start;align-items:stretch}
+.panel.wide{width:min(100%,calc(100vw - 32px),1100px)!important;min-width:0;max-width:1100px;display:flex;flex-direction:column;gap:8px;align-self:start;align-items:stretch}
 .rhead{display:flex;align-items:flex-end;gap:14px}
 .rhead .rh1{flex:1;min-width:0}
 .rhead h1{font-size:clamp(30px,5vw,44px)}
@@ -456,10 +456,11 @@ body{position:fixed;inset:0;touch-action:none}
 .rhead .btn{width:auto;padding:9px 16px}
 button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;width:100%}
 .rlist.full{max-height:none;overflow:visible}
-.rlist.full.teams{display:grid;grid-template-columns:1fr 1fr;column-gap:18px;row-gap:2px}
-.rlist.full.fans{display:grid;grid-template-columns:1fr 1fr;column-gap:18px;row-gap:2px;align-content:start}
-.rlist.full .rrow{gap:6px;grid-template-columns:22px 18px minmax(88px,1fr) 58px 58px minmax(56px,.9fr);padding:4px 8px;font-size:15px}
+.rlist.full.teams{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:18px;row-gap:2px}
+.rlist.full.fans{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:18px;row-gap:2px;align-content:start}
+.rlist.full .rrow{min-width:0;overflow:hidden;gap:6px;grid-template-columns:22px 18px minmax(88px,1fr) 58px 58px minmax(56px,.9fr);padding:4px 8px;font-size:15px}
 .rlist.full.fans .rrow{grid-template-columns:28px minmax(0,1fr) auto}
+@media (max-width:720px){.rlist.full .rrow,.rhd{grid-template-columns:18px 16px minmax(54px,1fr) 50px 44px minmax(36px,.7fr);gap:4px;font-size:13.5px;padding-inline:4px}.rlist.full.teams{column-gap:10px}.rlist.full.fans .rrow,.rhd.fhd{grid-template-columns:26px minmax(0,1fr) auto}}
 .rlist.full.fans .rrow .mjw{display:none}
 .rhd.fhd{grid-template-columns:28px minmax(0,1fr) auto}
 .rhd.fhd span:nth-child(3){text-align:right}
@@ -853,7 +854,7 @@ I18N.en = {
   "Si riapre lunedì alle 8:00 · tra {d} g {h} h {m} min {s} s": "Reopens Monday at 8am · in {d}d {h}h {m}m {s}s", "Non conta per la classifica · {c}": "Doesn't count for the table · {c}",
   "Partita finita a stadio chiuso: vale come allenamento": "Game ended after closing time: it counts as training",
   "{n} tifosi online": "{n} fans online", "Nome": "Name", "Totale": "Total", "Sfottò": "Banter", "Squadra": "Team", "Punti": "Points", "Quando": "When", "1 tifoso online": "1 fan online", "Più tifosi giocano {t}, più punti fa in classifica.": "The more fans play {t}, the more points it gets.",
-  "Più siamo, più è bello: porta i tuoi amici in curva.": "The more the merrier: bring your friends to the stand.", "Copia link": "Copy link", "Altro…": "More…",
+  "Più siamo, più è bello: porta i tuoi amici in curva.": "The more the merrier: bring your friends to the stand.", "Copia link": "Copy link", "▾ cambia": "▾ change", "Chiudi": "Close", "Messaggi": "Messages", "GIOCA {t}": "PLAY {t}", "Ho appena portato +{p} punti {t} ⚽ Riesci a fare meglio? 👉 {u} #PerLaMaglia": "I just brought +{p} points {t} ⚽ Can you do better? 👉 {u} #PerLaMaglia", "punti {t}": "points {t}", "{t} TI CHIAMA": "{t} NEEDS YOU", "⚽ Gioca con me a Per la Maglia: scegli la tua squadra del cuore e fai il cucchiaio al portiere 👉 {u}": "⚽ Play Per la Maglia with me: pick your team and chip the keeper 👉 {u}", "⚽ Sto giocando a Per la Maglia {t}: servono i tuoi gol! Scegli la tua squadra e fai il cucchiaio al portiere 👉 {u}": "⚽ I'm playing Per la Maglia {t}: we need your goals! Pick your team and chip the keeper 👉 {u}", "⚽ Sto giocando a Per la Maglia {t}: siamo {n}° in classifica questa settimana e servono i tuoi gol! Scegli la tua squadra e fai il cucchiaio al portiere 👉 {u}": "⚽ I'm playing Per la Maglia {t}: we're #{n} in the table this week and we need your goals! Pick your team and chip the keeper 👉 {u}", "🏆 {n}° in classifica questa settimana": "🏆 #{n} in the table this week", "Altro…": "More…",
   "Messaggio copiato: incollalo dove vuoi": "Message copied: paste it anywhere", "Immagine salvata e testo copiato: incollali dove vuoi": "Image saved and text copied: paste them anywhere",
   "Hai portato": "You brought", "{n} tifosi": "{n} fans", "primo distintivo con 1 tifoso": "first badge with 1 fan", "Nessun distintivo, per ora": "No badge yet",
   "Ancora {k} per «{b}» · conta chi arriva dal tuo link e gioca una partita": "{k} more for «{b}» · counts who comes from your link and plays a game",
@@ -2367,7 +2368,7 @@ async function openInvite(){
     ["Instagram", "linear-gradient(45deg,#f9a03f,#e1306c,#833ab4)", async () => { const b = await makeStory({ invite: true }); shareFile(b, "per-la-maglia.png", msg); }],
     ["Facebook", "#1877f2", () => open("https://www.facebook.com/sharer/sharer.php?u=" + enc(link))],
     ["X", "#111111", () => open("https://twitter.com/intent/tweet?text=" + enc(onlyText) + "&url=" + enc(link))],
-    ["Messaggi", "#34c759", () => { location.href = "sms:?&body=" + enc(msg); }],
+    [tr("Messaggi"), "#34c759", () => { location.href = "sms:?&body=" + enc(msg); }],
     [tr("Copia link"), "#2b3445", async () => { toast((await copyText(msg)) ? tr("Messaggio copiato: incollalo dove vuoi") : link); }],
     [tr("Altro…"), "#2b3445", async () => { if (navigator.share) { try { await navigator.share({ text: msg }); } catch (e) {} } else toast((await copyText(msg)) ? tr("Messaggio copiato: incollalo dove vuoi") : link); }]
   ];

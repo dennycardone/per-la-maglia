@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /trasloco.html
+Sitemap: https://perlamaglia.com/sitemap.xml

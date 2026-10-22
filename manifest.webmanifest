@@ -35,5 +35,9 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "categories": [
+    "games",
+    "sports"
   ]
 }
