@@ -90,8 +90,9 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--chalk);overfl
 .lives .ll{font-family:var(--label);font-weight:700;font-size:12px;letter-spacing:.14em;color:var(--amber);margin-right:2px}
 .life{position:relative;width:26px;height:26px;transition:opacity .3s,transform .3s}
 .life svg{display:block;width:100%;height:100%}
-.life.lost{opacity:.35;transform:scale(.8)}
-.life.lost::after{content:"";position:absolute;inset:-2px;background:linear-gradient(45deg,transparent 44%,#ff5a4e 44% 56%,transparent 56%),linear-gradient(-45deg,transparent 44%,#ff5a4e 44% 56%,transparent 56%)}
+.life.lost{opacity:1;transform:none}
+.life.lost svg{display:none}
+.life.lost::before{content:"";position:absolute;inset:1px;border-radius:50%;border:2px dashed rgba(238,242,234,.38)}
 .life.gone{animation:lifeLost .6s}
 @keyframes lifeLost{0%{transform:scale(1.4)}100%{transform:scale(.8)}}
 .clock{font-family:var(--label);font-weight:600;font-size:13px;letter-spacing:.06em;color:var(--mute);font-variant-numeric:tabular-nums}
@@ -353,6 +354,39 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .invfoot button{border:1px solid rgba(238,242,234,.25);background:none;border-radius:8px;padding:6px 14px;color:#e7eef2;font-family:var(--label);font-weight:700;font-size:14px}
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);z-index:95;padding:9px 16px;border-radius:12px;background:#0d1320;border:1px solid rgba(255,194,75,.6);color:#eef2ea;font-family:var(--label);font-weight:700;font-size:14px;max-width:90vw;text-align:center}
 .toast[hidden]{display:none}
+#profileScreen{padding:0}
+.pf{position:absolute;inset:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:28px;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 14px) max(20px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 14px) max(20px,env(safe-area-inset-left,0px))}
+.pcard{height:min(356px,calc(100vh - 34px));aspect-ratio:230/356;border-radius:16px;padding:6px;background:linear-gradient(160deg,var(--c1),#ffffff 48%,var(--c1));box-shadow:0 14px 40px rgba(0,0,0,.6)}
+.pcard .pin{position:relative;height:100%;border-radius:11px;overflow:hidden;background:linear-gradient(180deg,color-mix(in srgb,var(--c1) 30%,#0b1626),#0b1626)}
+.pcard .pin:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 18px,transparent 18px 36px)}
+.pcard .pnum{position:absolute;left:10px;top:4px;font-family:var(--display);font-weight:800;font-size:clamp(34px,13vh,48px);color:var(--amber);line-height:1;z-index:1}
+.pcard .pjs{position:absolute;right:10px;top:10px;z-index:1}
+.pcard canvas{position:absolute;left:0;right:0;top:8%;width:100%;height:73%}
+.pcard .pband{position:absolute;left:0;right:0;bottom:0;padding:7px 12px 9px;background:linear-gradient(90deg,var(--band),color-mix(in srgb,var(--band) 75%,#000));color:var(--ink)}
+.pcard .pband b{display:block;font-family:var(--display);font-weight:800;font-size:clamp(20px,7.5vh,27px);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcard .pband small{font-family:var(--label);font-weight:700;font-size:11.5px;letter-spacing:.12em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.pside{align-self:start;margin-top:42px;min-width:0}
+.ptabs{display:flex;gap:4px;border-bottom:1px solid rgba(238,242,234,.12);margin-bottom:18px}
+.ptabs button{appearance:none;background:none;border:0;border-bottom:3px solid transparent;padding:8px 14px;font-family:var(--label);font-weight:700;font-size:16px;color:var(--mute);cursor:pointer}
+.ptabs button[aria-pressed="true"]{color:var(--amber);border-bottom-color:var(--amber)}
+.ptiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ptile{border-radius:12px;background:rgba(238,242,234,.05);border:1px solid rgba(238,242,234,.09);padding:8px 12px}
+.ptile span{display:block;font-family:var(--label);font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.ptile b{display:block;font-family:var(--display);font-weight:800;font-size:28px;line-height:1.05;font-variant-numeric:tabular-nums}
+.pshirt{display:flex;gap:28px;align-items:flex-end;flex-wrap:wrap}
+.plab{font-family:var(--label);font-weight:700;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);margin-bottom:6px}
+.pname{appearance:none;background:none;border:0;padding:0;color:var(--chalk);font-family:var(--display);font-weight:800;font-size:34px;line-height:1;cursor:pointer}
+.pname i{font-style:normal;font-size:16px;opacity:.6}
+.pstep{display:flex;align-items:center;gap:10px}
+.pstep button{width:40px;height:40px;border-radius:12px;border:1.5px solid rgba(255,194,75,.6);background:rgba(255,194,75,.08);color:var(--amber);font-size:24px;font-weight:700;line-height:1;cursor:pointer}
+.pstep b{min-width:64px;text-align:center;font-family:var(--display);font-weight:800;font-size:44px;color:var(--amber);line-height:1}
+.pnote{margin:12px 0 0;color:var(--mute);font-size:13px}
+.pbadges{display:flex;gap:8px;flex-wrap:wrap}
+.pbadge{padding:6px 10px;border-radius:10px;border:1px solid rgba(238,242,234,.1);opacity:.45;font-family:var(--label);font-weight:700;font-size:14px}
+.pbadge.got{opacity:1;border-color:rgba(238,242,234,.35)}
+.pbadge small{color:var(--mute);font-size:13px}
+.pback{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:max(16px,env(safe-area-inset-right,0px))}
+@media (orientation:portrait){.pf{grid-template-columns:1fr;align-content:start;overflow-y:auto}.pcard{height:300px;justify-self:center}.pside{margin-top:0}}
 .refbox{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:rgba(255,194,75,.08);border:1px solid rgba(255,194,75,.35);margin:2px 0 12px}
 .refbox .rbig{white-space:nowrap;font-family:var(--display);font-weight:900;font-size:40px;color:var(--amber);line-height:1}
 .refbox .rbt b{display:block;font-family:var(--label);font-size:17px;color:var(--chalk)}
@@ -634,30 +668,19 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
     <div class="setgrid" id="settingsList"></div>
     <div class="label">Info e privacy</div>
     <div class="setgrid" id="legalList"></div>
+    <div id="anaBox" hidden><div class="label">Dati di bilanciamento</div><div class="ana" id="anaText"></div><button class="btn ghost small" id="anaCopy" type="button">Copia i dati</button></div>
     <div class="note legalnote">Gioco non ufficiale: non è affiliato né approvato da club, leghe o federazioni. I nomi delle squadre servono solo a indicare per chi tifi; le maglie sono disegni generici.</div>
   </div>
 </section>
 
 <section class="screen" id="profileScreen" hidden>
-  <div class="panel">
-    <div class="col">
-      <div class="eyebrow">Il tuo profilo</div>
-      <h1 id="lvTitle">Pulcino</h1>
-      <div class="lvline"><span id="lvNum">Livello 1</span><span id="lvNext"></span></div>
-      <div class="lvbar"><i id="lvFill"></i></div>
-      <p class="lede" id="lvText"></p>
-      <div class="label">Tifosi portati</div>
-      <div class="refbox" id="refBox"></div>
-      <button class="btn ghost" id="profileBack" type="button">Indietro</button>
+  <div class="pf">
+    <div class="pcard" id="pCard"></div>
+    <div class="pside">
+      <div class="ptabs" id="pTabs"><button type="button" data-pt="stats">Statistiche</button><button type="button" data-pt="shirt">Maglia</button><button type="button" data-pt="fans">Tifosi portati</button></div>
+      <div class="ppane" id="pPane"></div>
     </div>
-    <div class="col">
-      <div class="label" id="profileLabel">Statistiche</div>
-      <div class="stats" id="profileStats"></div>
-      <div class="note" id="profileNote"></div>
-      <div class="label">Dati di bilanciamento</div>
-      <div class="ana" id="anaText"></div>
-      <button class="btn ghost small" id="anaCopy" type="button">Copia i dati</button>
-    </div>
+    <button class="btn ghost small pback" id="profileBack" type="button">Indietro</button>
   </div>
 </section>
 
@@ -825,7 +848,7 @@ I18N.en = {
   "Domande, segnalazioni o richieste sulla privacy.": "Questions, reports or privacy requests.", "caratteri Barlow e Big Shoulders (licenza SIL OFL)": "Barlow and Big Shoulders fonts (SIL OFL licence)",
   "Segnala o nascondi": "Report or mute", "Segnala come offensivo": "Report as offensive", "Nascondi i messaggi di questo tifoso": "Mute this fan's messages",
   "Gioco non ufficiale: non è affiliato né approvato da club, leghe o federazioni. I nomi delle squadre servono solo a indicare per chi tifi; le maglie sono disegni generici.": "Unofficial game: not affiliated with or endorsed by any club, league or federation. Team names only say who you support; kits are generic drawings.",
-  "Chiama la curva": "Rally the fans", "Tifosi portati": "Fans brought", "Allenamento": "Training", "ALLENAMENTO": "TRAINING", "ALLENAMENTO · non conta per la classifica": "TRAINING · doesn't count for the table",
+  "Chiama la curva": "Rally the fans", "Tifosi portati": "Fans brought", "Maglia": "Shirt", "Nome sulla maglia": "Name on the shirt", "Numero": "Number", "Il numero compare sulla maglia in campo e sulla tua figurina.": "Your number appears on your shirt on the pitch and on your card.", "Statistiche": "Stats", "Serie max": "Best streak", "Partite": "Games", "Gol": "Goals", "Record": "Best", "Tifoso": "Fan", "Allenamento": "Training", "ALLENAMENTO": "TRAINING", "ALLENAMENTO · non conta per la classifica": "TRAINING · doesn't count for the table",
   "⏸ Stadio chiuso": "⏸ Stadium closed", "Si chiude venerdì alle 20:00 · tra {d} g {h} h {m} min {s} s": "Closes Friday at 8pm · in {d}d {h}h {m}m {s}s",
   "Si riapre lunedì alle 8:00 · tra {d} g {h} h {m} min {s} s": "Reopens Monday at 8am · in {d}d {h}h {m}m {s}s", "Non conta per la classifica · {c}": "Doesn't count for the table · {c}",
   "Partita finita a stadio chiuso: vale come allenamento": "Game ended after closing time: it counts as training",
@@ -1971,7 +1994,7 @@ function updateHud(){
   const hot = G.streak >= 5;
   $("multBox").classList.toggle("hot", hot); $("fire").hidden = !hot;
   const lv = $("lives"), was = +(lv.dataset.n || C.lives); lv.innerHTML = '<span class="ll">' + tr("PALLONI") + '</span>';
-  const ball = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#fff" stroke="#111" stroke-width="1.2"/><path d="M12 7.2l3.6 2.6-1.4 4.2H9.8L8.4 9.8z" fill="#111"/><path d="M12 7.2V3.2M15.6 9.8l3.9-1.3M14.2 14l2.4 3.3M9.8 14l-2.4 3.3M8.4 9.8L4.5 8.5" stroke="#111" stroke-width="1.1"/></svg>';
+  const ball = '<svg viewBox="0 0 40 40"><defs><radialGradient id="lbG" cx="36%" cy="30%" r="78%"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#eef1f3"/><stop offset="1" stop-color="#8f99a3"/></radialGradient><clipPath id="lbC"><circle cx="20" cy="20" r="18"/></clipPath></defs><circle cx="20" cy="21.5" r="18" fill="rgba(0,0,0,.35)"/><circle cx="20" cy="20" r="18" fill="url(#lbG)"/><g clip-path="url(#lbC)" fill="#1d232a"><polygon points="20.00,13.80 25.90,18.08 23.64,25.02 16.36,25.02 14.10,18.08"/><polygon points="23.53,-0.35 25.71,6.35 20.00,10.50 14.29,6.35 16.47,-0.35"/><polygon points="40.45,17.06 34.74,21.21 29.04,17.06 31.21,10.36 38.27,10.36"/><polygon points="29.11,38.54 23.40,34.39 25.58,27.69 32.64,27.69 34.82,34.39"/><polygon points="5.18,34.39 7.36,27.69 14.42,27.69 16.60,34.39 10.89,38.54"/><polygon points="1.73,10.36 8.79,10.36 10.96,17.06 5.26,21.21 -0.45,17.06"/></g><g clip-path="url(#lbC)" stroke="#1d232a" stroke-width="1.1" stroke-linecap="round"><line x1="20.00" y1="13.80" x2="20.00" y2="9.50"/><line x1="25.90" y1="18.08" x2="29.99" y2="16.76"/><line x1="23.64" y1="25.02" x2="26.17" y2="28.49"/><line x1="16.36" y1="25.02" x2="13.83" y2="28.49"/><line x1="14.10" y1="18.08" x2="10.01" y2="16.76"/></g><ellipse cx="13.5" cy="11.5" rx="5.5" ry="3.2" fill="rgba(255,255,255,.75)" transform="rotate(-30 13.5 11.5)"/><circle cx="20" cy="20" r="18" fill="none" stroke="rgba(0,0,0,.45)" stroke-width="1"/></svg>';
   for (let i = 0; i < C.lives; i++) { const d = document.createElement("div"); d.className = "life" + (i >= G.lives ? " lost" : "") + (i === G.lives && G.lives < was ? " gone" : ""); d.innerHTML = ball; lv.appendChild(d); }
   lv.dataset.n = G.lives;
 }
@@ -2157,7 +2180,7 @@ function kbdPress(k){
     if (!(ch === " " && (!KB.val || KB.val.endsWith(" ")))) KB.val += ch;
     if (/[a-zA-Z]/.test(ch) && KB.up && KB.val.length === 1) KB.up = false;   // capital first letter, then lower case
   }
-  if (KB.mode === "nick") { $("nickInput").value = KB.val; if (!badText(KB.val)) store.set("cucchiaio.nick", cleanNick(KB.val)); }
+  if (KB.mode === "nick") { $("nickInput").value = KB.val; if (!badText(KB.val)) store.set("cucchiaio.nick", cleanNick(KB.val)); if (!$("profileScreen").hidden) renderProfile(); }
   kbdRender();
 }
 function kbdOpen(why, mode = "nick"){ if (!$("kbd").hidden) return;
@@ -2448,13 +2471,6 @@ function renderSettings(){
   const lr = mk("Lingua", "La lingua di tutto il gioco."), seg = document.createElement("div"); seg.className = "seg";
   [["it", "Italiano"], ["en", "English"]].forEach(([k, lab]) => { const b = document.createElement("button"); b.type = "button"; b.className = "segb"; b.textContent = lab; b.setAttribute("aria-pressed", LANG === k ? "true" : "false"); b.onclick = () => setLang(k); seg.appendChild(b); });
   lr.appendChild(seg);
-  // shirt number
-  const nr = mk("Numero di maglia", "Il numero del tuo giocatore in campo."), st = document.createElement("div"); st.className = "seg";
-  const num = SET.num || 10, minus = document.createElement("button"), val = document.createElement("span"), plus = document.createElement("button");
-  minus.type = plus.type = "button"; minus.className = plus.className = "segb"; minus.textContent = "−"; plus.textContent = "+"; val.className = "segv"; val.textContent = num;
-  minus.onclick = () => { SET.num = num <= 1 ? 99 : num - 1; saveSet(); renderSettings(); };
-  plus.onclick = () => { SET.num = num >= 99 ? 1 : num + 1; saveSet(); renderSettings(); };
-  st.append(minus, val, plus); nr.appendChild(st);
   // info & privacy
   const lb = $("legalList"); lb.textContent = "";
   const lrow = (title, desc, label, fn, cls) => {
@@ -2476,7 +2492,7 @@ function renderSettings(){
   lrow("Versione", APP_VERSION + " · " + tr("caratteri Barlow e Big Shoulders (licenza SIL OFL)"), "Licenze", page("fonts/OFL-Barlow.txt"));
 }
 document.body.classList.toggle("cb", SET.cb);
-function openSettings(from){ settingsFrom = from; $(from).hidden = true; $("settingsScreen").hidden = false; renderSettings(); }
+function openSettings(from){ settingsFrom = from; $(from).hidden = true; $("settingsScreen").hidden = false; renderSettings(); if (/[?&]debug\b/.test(location.search)) { $("anaBox").hidden = false; renderAnalytics(); } }
 $("settingsBtn").onclick = () => openSettings("startScreen");
 $("pauseSettings").onclick = () => openSettings("pauseScreen");
 $("settingsBack").onclick = () => { $("settingsScreen").hidden = true; $(settingsFrom).hidden = false; };
@@ -2497,33 +2513,65 @@ $("tauntBack").onclick = () => { $("tauntScreen").hidden = true; $(tauntFrom).hi
 $("compVeil").onclick = closeComp;
 $("histHomeBtn").onclick = () => openHistory("startScreen");
 $("rankBtn").onclick = () => { srvLoad(); document.querySelector("#rankScreen [data-rank]").dataset.tab = "teams"; $("startScreen").hidden = true; $("rankScreen").hidden = false; renderRanks(); };
-function renderProfile(){
-  const st = Object.assign({}, EMPTY_STATS, myStats()), L = levelOf(st.points);
-  $("lvTitle").textContent = tr(L.name); $("lvNum").textContent = tr("Livello {n}", { n: L.lv });
-  $("lvNext").textContent = tr("{a} / {b} punti", { a: st.points.toLocaleString(LOC()), b: L.next.toLocaleString(LOC()) });
-  $("lvFill").style.width = Math.round(Math.min(1, Math.max(0, L.frac)) * 100) + "%";
-  $("lvText").textContent = st.games ? tr("Mancano {p} punti al livello {n}. Il livello compare accanto al tuo nome nella classifica Tifosi.", { p: (L.next - st.points).toLocaleString(LOC()), n: L.lv + 1 }) : tr("Gioca la prima partita: ogni punto che segni fa crescere il tuo livello di tifoso.");
-  // the numbers are those played for the team you have chosen; the level counts every match
-  const team = TEAMS[teamIdx][0], doc = sharedMode() && online.docs.find(d => d.id === online.uid);
-  let tst = Object.assign({}, EMPTY_STATS, (doc && doc.teamStats && doc.teamStats[team]) || store.get("cucchiaio.teamStats", {})[team] || {});
-  if (srv.ok) {
-    const m = srv.mine[team];
-    tst = m ? { games: m.games, points: +m.points, best: m.best, shots: m.shots, goals: m.goals, perfect: m.perfect, top: m.top, bestStreak: m.best_streak } : Object.assign({}, EMPTY_STATS);
-    const all = Object.values(srv.mine);
-    st.games = Math.max(st.games, all.reduce((a, x) => a + x.games, 0));
-  }
-  $("profileLabel").textContent = tr("Statistiche con {t}", { t: sq(team) });
-  const acc = tst.shots ? Math.round(tst.goals / tst.shots * 100) + "%" : "–";
-  const cells = [[tst.games, "Partite"], [tst.points.toLocaleString(LOC()), "Punti"], [tst.best.toLocaleString(LOC()), "Record"], [tst.goals, "Gol"], [acc, "Precisione"], [tst.perfect, "Perfetti"], [tst.top, "Sotto la traversa"], [tst.bestStreak, "Serie max"], [st.games, "Partite in totale"]];
-  $("profileStats").innerHTML = cells.map(([v, k]) => `<div class="stat"><div class="v">${v}</div><div class="k">${k}</div></div>`).join("");
-  $("profileNote").textContent = sharedMode() && online.docs.some(d => d.id === online.uid) ? "Statistiche salvate sul tuo account." : "Statistiche salvate su questo dispositivo.";
-  // fans you brought with "Chiama la curva", and the badge that comes with them
-  const n = srv.refs != null ? srv.refs : store.get("pm.refs", 0), bd = badgeOf(n), nx = nextBadge(n), rb = $("refBox");
-  rb.innerHTML = `<span class="rbig"></span><span class="rbt"><b></b><small></small></span>`;
-  rb.querySelector(".rbig").textContent = (bd ? bd[2] + " " : "") + n;
-  rb.querySelector("b").textContent = bd ? tr(bd[1]) : tr("Nessun distintivo, per ora");
-  rb.querySelector("small").textContent = nx ? tr("Ancora {k} per «{b}» · conta chi arriva dal tuo link e gioca una partita", { k: nx[0] - n, b: tr(nx[1]) }) : tr("Hai tutti i distintivi: sei una leggenda della curva!");
+let profTab = "stats";
+// the player drawn on the card: painted on the game canvas for an instant and copied over
+function drawFigure(target, kit, num){
+  const W = target.width, H = target.height; if (!W || !H || W > cv.width || H > cv.height) return;
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
+  person({ sc: H / 2.25, ox: W / 2, gy: H * 0.95 }, 0, 0, kit, { dir: 1, t: 0.3, num: String(num) });
+  ctx.restore();
+  const g = target.getContext("2d"); g.clearRect(0, 0, W, H); g.drawImage(cv, 0, 0, W, H, 0, 0, W, H);
 }
+function careerStats(){
+  const st = Object.assign({}, EMPTY_STATS, myStats());
+  if (srv.ok && Object.keys(srv.mine).length) {
+    const all = Object.values(srv.mine);
+    return { games: Math.max(st.games, all.reduce((a, x) => a + x.games, 0)), points: all.reduce((a, x) => a + (+x.points || 0), 0),
+      best: Math.max(0, ...all.map(x => +x.best || 0)), goals: all.reduce((a, x) => a + (+x.goals || 0), 0), bestStreak: Math.max(0, ...all.map(x => +x.best_streak || 0)) };
+  }
+  return st;
+}
+function renderProfile(){
+  const t = TEAMS[teamIdx], kit = teamKit(), num = SET.num || 10, nick = cleanNick(store.get("cucchiaio.nick", "")) || tr("Tifoso");
+  const c1 = t[1], c2 = t[2] === t[1] ? "#ffffff" : t[2], band = lum(c1) > 0.75 ? c2 : c1, ink = contrast(band, "#05080e") >= 4.5 ? "#05080e" : "#ffffff";
+  const card = $("pCard"), dpr = Math.min(2, window.devicePixelRatio || 1);
+  card.style.setProperty("--c1", c1); card.style.setProperty("--c2", c2); card.style.setProperty("--band", band); card.style.setProperty("--ink", ink);
+  card.innerHTML = `<div class="pin"><div class="pnum"></div><div class="pjs">${jerseySVG(kit, 30)}</div><canvas></canvas><div class="pband"><b></b><small></small></div></div>`;
+  card.querySelector(".pnum").textContent = num;
+  card.querySelector("b").textContent = nick.toUpperCase();
+  card.querySelector("small").textContent = (t[0] + " · " + leagueName() + " · " + new Date().getFullYear()).toUpperCase();
+  const cnv = card.querySelector("canvas"), r = cnv.getBoundingClientRect();
+  cnv.width = Math.round(r.width * dpr); cnv.height = Math.round(r.height * dpr); drawFigure(cnv, kit, num);
+  document.querySelectorAll("#pTabs button").forEach(b => { b.textContent = tr({ stats: "Statistiche", shirt: "Maglia", fans: "Tifosi portati" }[b.dataset.pt]); b.setAttribute("aria-pressed", b.dataset.pt === profTab ? "true" : "false"); });
+  const pane = $("pPane"); pane.textContent = "";
+  if (profTab === "stats") {
+    const s = careerStats();
+    const cells = [[s.games, "Partite"], [(+s.points || 0).toLocaleString(LOC()), "Punti"], [(+s.best || 0).toLocaleString(LOC()), "Record"], [s.goals, "Gol"], [s.bestStreak, "Serie max"]];
+    const g = document.createElement("div"); g.className = "ptiles";
+    cells.forEach(([v, k]) => { const d = document.createElement("div"); d.className = "ptile"; const sp = document.createElement("span"); sp.textContent = tr(k); const b = document.createElement("b"); b.textContent = v; d.append(sp, b); g.appendChild(d); });
+    pane.appendChild(g);
+  } else if (profTab === "shirt") {
+    pane.innerHTML = `<div class="pshirt"><div><div class="plab"></div><button type="button" class="pname"><span></span> <i>✎</i></button></div><div><div class="plab"></div><div class="pstep"><button type="button" class="pm">−</button><b></b><button type="button" class="pp">+</button></div></div></div><p class="pnote"></p>`;
+    const labs = pane.querySelectorAll(".plab"); labs[0].textContent = tr("Nome sulla maglia"); labs[1].textContent = tr("Numero");
+    pane.querySelector(".pname span").textContent = nick; pane.querySelector(".pstep b").textContent = num;
+    pane.querySelector(".pnote").textContent = tr("Il numero compare sulla maglia in campo e sulla tua figurina.");
+    pane.querySelector(".pname").onclick = () => kbdOpen(false);
+    const setNum = n => { SET.num = n; saveSet(); renderProfile(); renderHome(); };
+    pane.querySelector(".pm").onclick = () => setNum(num <= 1 ? 99 : num - 1);
+    pane.querySelector(".pp").onclick = () => setNum(num >= 99 ? 1 : num + 1);
+  } else {
+    const n = srv.refs != null ? srv.refs : store.get("pm.refs", 0), bd = badgeOf(n), nx = nextBadge(n);
+    const rb = document.createElement("div"); rb.className = "refbox";
+    rb.innerHTML = `<span class="rbig"></span><span class="rbt"><b></b><small></small></span>`;
+    rb.querySelector(".rbig").textContent = (bd ? bd[2] + " " : "") + n;
+    rb.querySelector("b").textContent = bd ? tr(bd[1]) : tr("Nessun distintivo, per ora");
+    rb.querySelector("small").textContent = nx ? tr("Ancora {k} per «{b}» · conta chi arriva dal tuo link e gioca una partita", { k: nx[0] - n, b: tr(nx[1]) }) : tr("Hai tutti i distintivi: sei una leggenda della curva!");
+    const chips = document.createElement("div"); chips.className = "pbadges";
+    BADGES.forEach(([k, name, e]) => { const c = document.createElement("span"); c.className = "pbadge" + (n >= k ? " got" : ""); c.textContent = e + " " + tr(name) + " "; const sm = document.createElement("small"); sm.textContent = k; c.appendChild(sm); chips.appendChild(c); });
+    pane.append(rb, chips);
+  }
+}
+document.querySelectorAll("#pTabs button").forEach(b => b.onclick = () => { profTab = b.dataset.pt; renderProfile(); });
 function renderAnalytics(){
   const log = store.get("cucchiaio.analytics", []), el = $("anaText");
   if (!log.length) { el.textContent = "Ancora nessuna partita registrata. Dopo qualche partita qui trovi durata media ed errori più frequenti."; return; }
@@ -2544,7 +2592,7 @@ $("anaCopy").onclick = async () => {
   catch (e) { $("anaCopy").textContent = "Copia non riuscita"; }
   setTimeout(() => { $("anaCopy").textContent = "Copia i dati"; }, 1800);
 };
-$("profileBtn").onclick = () => { $("startScreen").hidden = true; $("profileScreen").hidden = false; renderProfile(); renderAnalytics(); };
+$("profileBtn").onclick = () => { $("startScreen").hidden = true; $("profileScreen").hidden = false; renderProfile(); };
 $("profileBack").onclick = () => { $("profileScreen").hidden = true; $("startScreen").hidden = false; };
 document.querySelectorAll(".histBtn").forEach(b => b.onclick = () => openHistory(b.closest(".screen").id));
 $("histBack").onclick = () => { if (histWeek) { histWeek = null; renderHistory(); return; } $("histScreen").hidden = true; $(histFrom).hidden = false; renderRanks(); };
