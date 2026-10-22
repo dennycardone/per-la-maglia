@@ -50,7 +50,7 @@ revoke all on function public.merge_players(uuid, uuid) from public, anon, authe
 -- with p as (
 --   select pl.id, u.created_at, (select count(*) from games g where g.player_id = pl.id) as n
 --     from players pl join auth.users u on u.id = pl.id
---    where pl.nick ilike 'Denny' or exists (select 1 from games g where g.player_id = pl.id and g.nick ilike 'Denny'))
+--    where pl.nick ilike 'NomeGiocatore' or exists (select 1 from games g where g.player_id = pl.id and g.nick ilike 'NomeGiocatore'))
 -- select (select count(*) from p) as profili,
 --        'select public.merge_players(''' || (select id from p order by n desc, created_at limit 1) || ''', '''
 --          || (select id from p order by created_at desc limit 1) || ''');' as comando;
