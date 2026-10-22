@@ -230,8 +230,9 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .orow.me{background:rgba(255,194,75,.15);color:var(--amber)}
 .orow .up{color:#7fe0a0;font-size:12px;margin-left:5px}
 @media (orientation:portrait){.ovwrap{grid-template-columns:1fr;align-content:center}}
+#tauntList{gap:0}
 .tlist{display:grid;grid-template-columns:1fr;gap:4px;align-content:start;max-height:calc(100vh - 110px);overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain}
-.trow{display:grid;grid-template-columns:24px minmax(70px,.8fr) minmax(0,2.6fr) minmax(64px,.8fr) 56px 64px 22px;gap:10px;align-items:center;padding:6px 10px;border-radius:8px;background:rgba(238,242,234,.05);border:1px solid rgba(238,242,234,.08);font-family:var(--label);font-size:14px;white-space:nowrap}
+.trow{display:grid;grid-template-columns:24px minmax(70px,.8fr) minmax(0,2.6fr) minmax(64px,.8fr) 56px 64px 22px;gap:10px;align-items:center;padding:5px 4px;border-bottom:1px solid rgba(238,242,234,.07);font-family:var(--label);font-size:14px;white-space:nowrap}
 .trow > *{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .trow b{color:var(--chalk);font-weight:700}
 .trow .tx{font-family:var(--body);font-size:13.5px;color:#e7eef2}
@@ -239,8 +240,9 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .trow .tp{text-align:right;font-variant-numeric:tabular-nums;color:var(--amber);font-weight:700}
 .trow .ta{text-align:right;color:#8a9890;font-size:12px}
 .trow .tm{text-align:right}
-.trow.me{border-color:rgba(255,194,75,.45);background:rgba(255,194,75,.08)}
-.trow.thd{background:none;border-color:transparent;padding-block:0 2px;font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.trow .tmore{background:none!important;border:0!important;box-shadow:none!important;color:#8a9890!important;padding:0 2px!important;min-height:0!important;height:auto!important;font-size:18px!important}
+.trow.me b,.trow.me .tx{color:var(--amber)}
+.trow.thd{border-bottom-color:rgba(238,242,234,.18);padding-block:0 2px;font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
 .trow.thd span:nth-child(5),.trow.thd span:nth-child(6){text-align:right}
 .tmsg{display:grid;grid-template-columns:20px 1fr;gap:8px;align-items:start;padding:5px 9px;border-radius:10px;background:rgba(238,242,234,.05);border:1px solid rgba(238,242,234,.08)}
 .tmsg.me{border-color:rgba(255,194,75,.45);background:rgba(255,194,75,.08)}
@@ -670,7 +672,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
       <div class="oveb" id="overEb"></div>
       <div class="ovbig" id="finalScore">0</div>
       <div class="ovline" id="overLine"></div>
-      <button class="say" id="sayBtn" type="button"><span class="ic">📣</span><span class="in"><span id="sayText">Scrivi il tuo sfottò…</span><small id="sayHint">Una frase per partita · max 80 caratteri</small></span><span class="go" id="sayGo">INVIA</span></button>
+      <button class="say" id="sayBtn" type="button"><span class="ic">📣</span><span class="in"><span id="sayText">Scrivi il tuo sfottò…</span><small id="sayHint">Una frase per partita · max 50 caratteri</small></span><span class="go" id="sayGo">INVIA</span></button>
       <div class="ovbtns"><button class="btn" id="againBtn" type="button">RIGIOCA</button><button class="btn ghost home share" id="shareBtn" type="button"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 13v7h14v-7"/></svg><span>Condividi</span></button><button class="btn ghost home" id="menuBtn" type="button"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h5v-6h3v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Home</span></button></div>
     </div>
     <div class="ovtbl">
@@ -802,7 +804,7 @@ I18N.en = {
   "Colori per daltonici": "Colour-blind colours", "Errori in blu invece che in rosso e contorni più marcati sulla tua squadra.": "Misses in blue instead of red and stronger outlines on your team.",
   "Sì": "On", "No": "Off", "Valore dei tiri": "Shot values", "Scrivi almeno due lettere": "Write at least two letters", "Si azzera tra {d} g {h} h {m} min {s} s": "Resets in {d}d {h}h {m}m {s}s", "Classifica": "Table", "📊 Classifica": "📊 Table", "Il tuo sfottò": "Your banter", "Questa frase non si può scrivere: niente parolacce": "You can't write that: no bad words",
   "Soprannome non ammesso: niente parolacce": "Nickname not allowed: no bad words", "Scrivi il tuo sfottò…": "Write your banter…", "Inviato alla curva": "Sent to the stand",
-  "Una frase per partita · max 80 caratteri": "One line per game · max 80 characters", "INVIA": "SEND", "RIGIOCA": "PLAY AGAIN", "Fine partita": "Full time",
+  "Una frase per partita · max 50 caratteri": "One line per game · max 50 characters", "INVIA": "SEND", "RIGIOCA": "PLAY AGAIN", "Fine partita": "Full time",
   "Ancora nessuno sfottò questa settimana. Il primo puoi scriverlo tu, alla fine di una partita.": "No banter yet this week. You can write the first one at the end of a game.",
   "{n} min fa": "{n} min ago", "{n} h fa": "{n} h ago", "{n} g fa": "{n} d ago", "Una frase per partita, scritta a fine partita. Niente parolacce.": "One line per game, written at full time. No bad words.", "{t}": "for {t}", "ora {n}° ⬆": "now #{n} ⬆", "{n}° in classifica": "#{n} in the table",
   "Italia": "Italy", "Inghilterra": "England", "Spagna": "Spain", "Germania": "Germany", "Francia": "France", "Scegli il campionato": "Choose the league",
@@ -2159,7 +2161,7 @@ function kbdPress(k){
   kbdRender();
 }
 function kbdOpen(why, mode = "nick"){ if (!$("kbd").hidden) return;
-  KB.mode = mode; KB.max = mode === "taunt" ? 80 : 12;
+  KB.mode = mode; KB.max = mode === "taunt" ? 50 : 12;
   const lab = document.querySelector("#kbd .kbd-label");
   lab.textContent = mode === "taunt" ? tr("Il tuo sfottò") : why ? tr("Per giocare scegli prima il tuo soprannome") : tr("Il tuo soprannome"); lab.classList.toggle("warn", !!why);
   KB.armAt = performance.now() + 350; KB.down = null;
@@ -2188,14 +2190,14 @@ $("nickInput").addEventListener("focus", e => { e.target.blur(); kbdOpen(false);
 document.addEventListener("pointerdown", e => { if (!$("kbd").hidden && !e.target.closest("#kbd") && e.target.id !== "nickInput" && !e.target.closest("#nickBtn") && !e.target.closest("#sayBtn")) kbdClose(false); }, true);
 
 // ---------- Banter: one line per match, written right after it ----------
-const cleanTaunt = v => String(v || "").replace(/[<>"`\\]/g, "").replace(/\s+/g, " ").trim().slice(0, 80);
+const cleanTaunt = v => String(v || "").replace(/[<>"`\\]/g, "").replace(/\s+/g, " ").trim().slice(0, 50);
 const SAY = { text: "", sent: false, sending: false, gid: null };
 function resetSay(){ SAY.text = ""; SAY.sent = false; SAY.sending = false; SAY.gid = G && G.localId; renderSay(); }
 function renderSay(){
   const b = $("sayBtn"); if (!b) return;
   b.classList.toggle("sent", SAY.sent); b.classList.toggle("empty", !SAY.text);
   $("sayText").textContent = SAY.sent ? "“" + SAY.text + "”" : SAY.text || tr("Scrivi il tuo sfottò…");
-  $("sayHint").textContent = SAY.sent ? tr("Inviato alla curva") : tr("Una frase per partita · max 80 caratteri");
+  $("sayHint").textContent = SAY.sent ? tr("Inviato alla curva") : tr("Una frase per partita · max 50 caratteri");
   $("sayGo").textContent = SAY.sent ? "✓" : SAY.sending ? "…" : "✎"; $("sayGo").classList.toggle("pen", !SAY.sent && !SAY.sending);
 }
 async function sendSay(){
