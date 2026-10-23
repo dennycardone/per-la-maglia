@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.perlamaglia.app",
+        "sha256_cert_fingerprints": ["5B:0B:FB:A6:03:91:2F:E1:A2:55:F1:84:DB:87:08:3B:3C:15:63:3A:B4:AB:47:8A:A4:70:DB:BB:7C:57:73:5B"]
+      }
+    }]
