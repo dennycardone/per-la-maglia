@@ -112,6 +112,23 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--chalk);overfl
 @keyframes turn{0%,20%{transform:rotate(0)}55%,80%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
 #rotate p{margin:0;font-family:var(--display);font-weight:900;font-size:30px;line-height:1}
 #rotate small{display:block;margin-top:8px;font-family:var(--label);font-size:15px;letter-spacing:.06em;color:var(--mute)}
+/* how to play: shown once, then from the "?" next to GIOCA */
+.howVeil{position:fixed;inset:0;z-index:150;display:grid;place-items:center;padding:calc(env(safe-area-inset-top,0px) + 12px) max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 12px) max(16px,env(safe-area-inset-left,0px));background:rgba(5,8,14,.8);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.howCard{width:min(540px,100%);max-height:100%;overflow-y:auto;padding:18px 22px;border-radius:14px;background:#0b111c;border:1.5px solid rgba(255,194,75,.65);box-shadow:0 18px 50px rgba(0,0,0,.7)}
+.howCard h2{margin:0 0 12px;font-family:var(--display);font-weight:900;font-size:30px;line-height:1;letter-spacing:.02em;color:var(--amber);text-transform:uppercase}
+.howList{list-style:none;margin:0 0 16px;padding:0;display:grid;gap:10px}
+.howList li{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:8px;font-family:var(--label);font-weight:600;font-size:18px;line-height:1.2;color:var(--chalk)}
+.howList li span:first-child{font-size:22px;text-align:center}
+.howCard .btn{width:100%;padding:11px 14px;font-size:24px}
+.howTip{width:min(400px,100%);text-align:center}
+.howTip h2{font-size:26px;margin-bottom:8px}
+.howTip p{margin:0 0 16px;font-family:var(--label);font-weight:600;font-size:18px;line-height:1.3;color:var(--chalk)}
+.qm{display:inline-grid;place-items:center;width:30px;height:30px;margin:0 3px;vertical-align:middle;border-radius:50%;border:2px solid var(--amber);color:var(--amber);font-family:var(--display);font-weight:900;font-size:18px;line-height:1}
+.playRow{position:relative;display:flex;justify-content:center}
+.hhelp{position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);appearance:none;width:44px;height:44px;border-radius:50%;padding:0;background:rgba(5,8,14,.78);border:2px solid var(--amber);color:var(--amber);font-family:var(--display);font-weight:900;font-size:24px;line-height:1;cursor:pointer}
+.hhelp.ping{animation:hping .9s ease-in-out 3}
+@keyframes hping{50%{box-shadow:0 0 0 10px rgba(255,194,75,.35);transform:translateY(-50%) scale(1.12)}}
+@media (max-height:420px){.howCard{padding:12px 18px}.howCard h2{font-size:24px;margin-bottom:8px}.howList{gap:6px;margin-bottom:10px}.howList li{font-size:16px}.howCard .btn{font-size:20px;padding:8px 12px}}
 .screen{position:fixed;inset:0;display:grid;place-items:center;overflow-y:auto;background:rgba(5,8,14,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
   padding-block:calc(env(safe-area-inset-top,0px) + 20px) calc(env(safe-area-inset-bottom,0px) + 20px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .panel{width:100%;max-width:440px;display:flex;flex-direction:column;gap:18px}
@@ -565,6 +582,24 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 
 <div id="rotate" hidden><div><div class="phone"></div><p>Gira il telefono</p><small>Per la Maglia si gioca in orizzontale</small></div></div>
 
+<div class="howVeil" id="howVeil" hidden>
+  <div class="howCard" id="howCard" role="dialog" aria-modal="true" aria-labelledby="howTitle">
+    <h2 id="howTitle">Come si gioca</h2>
+    <ul class="howList">
+      <li><span aria-hidden="true">⚽</span><span>Tieni premuto, trascina per la parabola, rilascia per tirare</span></li>
+      <li><span aria-hidden="true">🧤</span><span>Scavalca il portiere col cucchiaio</span></li>
+      <li><span aria-hidden="true">🔥</span><span>Gol di fila = punti moltiplicati · 3 errori e si chiude</span></li>
+      <li><span aria-hidden="true">🏆</span><span>I tuoi punti si sommano a quelli dei tifosi della tua squadra: ogni settimana vince la tifoseria migliore</span></li>
+    </ul>
+    <button class="btn" id="howOk" type="button">In campo!</button>
+  </div>
+  <div class="howCard howTip" id="howTip" role="dialog" aria-modal="true" aria-labelledby="howTipTitle" hidden>
+    <h2 id="howTipTitle">Vuoi rileggerlo?</h2>
+    <p>Tocca <span class="qm" aria-hidden="true">?</span> nella home quando vuoi</p>
+    <button class="btn" id="howTipOk" type="button">Ho capito</button>
+  </div>
+</div>
+
 <section class="screen home" id="startScreen">
   <div class="hbg" aria-hidden="true">
     <div class="coreo"></div><div class="coreoWord" id="coreoWord">PER LA MAGLIA</div>
@@ -589,7 +624,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
     <button class="hwho" id="nickBtn" type="button"></button>
     <input id="nickInput" class="nick" maxlength="12" autocomplete="off" spellcheck="false" readonly inputmode="none" tabindex="-1" aria-hidden="true">
     <div class="htitle" id="htitle">Per la Maglia</div>
-    <button class="btn hplay" id="playBtn" type="button">GIOCA</button>
+    <div class="playRow"><button class="btn hplay" id="playBtn" type="button">GIOCA</button><button class="hhelp" id="helpBtn" type="button" aria-label="Come si gioca">?</button></div>
     <div class="homeTeam" id="homeTeam"></div>
   </div>
   <div class="hask" id="hask" hidden>↓ Scegli la tua squadra per iniziare ↓</div>
@@ -860,6 +895,10 @@ I18N.en = {
   "Ancora {k} per «{b}» · conta chi arriva dal tuo link e gioca una partita": "{k} more for «{b}» · counts who comes from your link and plays a game",
   "Hai tutti i distintivi: sei una leggenda della curva!": "You have every badge: a legend of the stand!", "Passaparola": "Word of mouth", "Capo coro": "Chant leader", "Capo ultrà": "Ultras leader",
   "Anima della curva": "Soul of the stand", "Leggenda": "Legend", "Condividi": "Share", "Riesci a fare meglio?": "Can you do better?", "Servono i tuoi gol": "Your goals are needed",
+  "Come si gioca": "How to play", "Tieni premuto, trascina per la parabola, rilascia per tirare": "Hold, drag for the arc, release to shoot",
+  "Scavalca il portiere col cucchiaio": "Chip the goalkeeper", "Gol di fila = punti moltiplicati · 3 errori e si chiude": "Goals in a row = multiplied points · 3 misses and it's over",
+  "I tuoi punti si sommano a quelli dei tifosi della tua squadra: ogni settimana vince la tifoseria migliore": "Your points add up with your team's fans: every week the best fan base wins",
+  "In campo!": "Let's play!", "Vuoi rileggerlo?": "Want to read it again?", "Tocca": "Tap", "nella home quando vuoi": "on the home screen whenever you like", "Ho capito": "Got it",
   "Tutorial": "Tutorial", "Rifai i tre tiri di prova alla prossima partita.": "Replay the three practice shots in your next game.", "Rivedi": "Replay", "Alla prossima partita": "Next game",
   // install
   "Installa dal menu": "Install from the menu", "Apri il menu del browser e scegli <b>Installa app</b>.": "Open the browser menu and choose <b>Install app</b>.",
@@ -3310,6 +3349,29 @@ function setLang(l){
 }
 document.documentElement.lang = LANG;
 trNode(document.body);
+
+// how to play: once on the first visit, then from the "?" on the home screen
+const HOW_KEY = "pm.howSeen";
+let howFirst = false;
+function openHow(first){
+  howFirst = first; $("howCard").hidden = false; $("howTip").hidden = true; $("howVeil").hidden = false;
+  try { $("howOk").focus({ preventScroll: true }); } catch (e) {}
+}
+function closeHow(){ $("howVeil").hidden = true; store.set(HOW_KEY, true); }
+function maybeHow(){
+  if (store.get(HOW_KEY, false) || !$("howVeil").hidden) return;
+  if ($("startScreen").hidden || !$("rotate").hidden || !$("kbd").hidden || !$("compSheet").hidden) return;
+  openHow(true);
+}
+$("helpBtn").onclick = () => { $("helpBtn").classList.remove("ping"); openHow(false); };
+$("howOk").onclick = () => {
+  if (!howFirst) return closeHow();
+  store.set(HOW_KEY, true); $("howCard").hidden = true; $("howTip").hidden = false;
+  try { $("howTipOk").focus({ preventScroll: true }); } catch (e) {}
+};
+$("howTipOk").onclick = () => { closeHow(); const b = $("helpBtn"); b.classList.remove("ping"); void b.offsetWidth; b.classList.add("ping"); };
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("howVeil").hidden) ($("howTip").hidden ? $("howOk") : $("howTipOk")).click(); });
+if (!store.get(HOW_KEY, false)) { const howT = setInterval(() => { if (store.get(HOW_KEY, false)) return clearInterval(howT); maybeHow(); }, 700); }
 
 renderTeams();
 startOnline();
