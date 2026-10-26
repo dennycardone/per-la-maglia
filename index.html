@@ -815,7 +815,7 @@ I18N.en = {
   " è {n}° questa settimana · −{g} {t}": " is #{n} this week · −{g} behind {t}",
   "Si azzera tra {d} g {h} h": "Resets in {d}d {h}h", "Si azzera tra {h} h {m} min": "Resets in {h}h {m}m",
   "Settimana {n}": "Week {n}",
-  "{t} campione della settimana {n}": "{t} won week {n}", "MVP: {m} con {p} punti": "MVP: {m} with {p} points", "MVP {m}": "MVP {m}", "Tocca per l'albo d'oro": "Tap for the hall of fame",
+  "{t} campione della settimana {n}": "{t} won week {n}", "{t} è campione della settimana {n}": "{t} won week {n}", "MVP: {m} con {p} punti": "MVP: {m} with {p} points", "MVP {m}": "MVP {m}", "Tocca per l'albo d'oro": "Tap for the hall of fame",
   // keyboard
   "Per giocare scegli prima il tuo soprannome": "Choose your nickname to play", "spazio": "space", "Fatto": "Done",
   // match
@@ -2087,7 +2087,7 @@ function renderChamp(){
     cl.hidden = !w;
     if (w) {
       cl.innerHTML = `<span class="cs">${jerseySVG(KIT[w.team] || (t => t ? ["plain", t[1], t[2]] : ["plain", "#888", "#fff"])(TEAMS.find(x => x[0] === w.team)), 24, true)}</span><span><b></b><span class="mv"></span></span>`;
-      cl.querySelector("b").textContent = tr("{t} campione della settimana {n}", { t: sq(w.team, "", true), n: +prev.split("-W")[1] });
+      cl.querySelector("b").textContent = tr("{t} è campione della settimana {n}", { t: sq(w.team, "", true), n: +prev.split("-W")[1] });
       cl.querySelector(".mv").textContent = w.mvp ? " · " + tr("MVP {m}", { m: w.mvp.name }) : "";
       cl.onclick = () => openHistory("startScreen");
     }
