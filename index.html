@@ -2056,8 +2056,9 @@ const fmt = ms => { const s = Math.floor(ms/1000); return String(Math.floor(s/60
 let jid = 0;
 // last week's champion wears the tricolour shield on the chest
 function scudoSVG(id){
-  const sh = "M8.1 5.3H12.3V7.9Q12.3 10 10.2 11Q8.1 10 8.1 7.9Z";
-  return `<defs><clipPath id="${id}s"><path d="${sh}"/></clipPath></defs><g clip-path="url(#${id}s)"><rect x="8" y="5" width="1.5" height="7" fill="#169b45"/><rect x="9.5" y="5" width="1.4" height="7" fill="#fff"/><rect x="10.9" y="5" width="1.5" height="7" fill="#d72a36"/></g><path d="${sh}" fill="none" stroke="#c9a23a" stroke-width=".55"/>`;
+  // small shield centred on the chest, just under the collar, like on a real champion's shirt
+  const sh = "M10.65 5.25H13.35V7.15Q13.35 8.55 12 9.25Q10.65 8.55 10.65 7.15Z";
+  return `<defs><clipPath id="${id}s"><path d="${sh}"/></clipPath></defs><path d="${sh}" fill="rgba(0,0,0,.35)" transform="translate(.18 .22)"/><g clip-path="url(#${id}s)"><rect x="10.6" y="5" width=".95" height="4.5" fill="#169b45"/><rect x="11.55" y="5" width=".9" height="4.5" fill="#fff"/><rect x="12.45" y="5" width=".95" height="4.5" fill="#d72a36"/></g><path d="${sh}" fill="none" stroke="#d8b24a" stroke-width=".32"/>`;
 }
 function jerseySVG(k, size = 22, scudo = false){
   const id = "jc" + (jid++), path = "M7 3L10 2Q12 4.2 14 2L17 3L21.5 7L18.5 10.2L17 9V21.5H7V9L5.5 10.2L2.5 7Z";
