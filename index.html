@@ -336,12 +336,13 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .hcenter>*{flex:none}
 .htitle{font-size:clamp(34px,min(10vw,16.5vh),78px)}
 .hwho{font-size:clamp(11px,3.5vh,14px)}
-#playBtn.hplay{height:clamp(40px,13vh,60px);font-size:clamp(24px,8.6vh,34px)}
+#playBtn.hplay{height:clamp(40px,13vh,60px);font-size:clamp(24px,8.6vh,34px);display:flex;align-items:center;justify-content:center;padding:.06em 0 0;line-height:1}
+#startScreen .homeTeam{margin-top:clamp(6px,2.4vh,12px)}
 #playBtn.hplay.off{font-size:clamp(17px,5.6vh,22px)}
 .hhelp{width:clamp(34px,11vh,44px);height:clamp(34px,11vh,44px);font-size:clamp(19px,6vh,24px)}
 .hask{left:96px;right:96px}
 @media (orientation:landscape) and (max-height:380px){
-  .bench{padding-top:4px}
+  .bench{padding-top:9px}
   .bj{width:64px;padding:4px 0 3px}
   .bj svg{width:30px;height:30px}
   .bj span{font-size:11px}
@@ -900,7 +901,7 @@ I18N.en = {
   "Italia": "Italy", "Inghilterra": "England", "Spagna": "Spain", "Germania": "Germany", "Francia": "France", "Scegli il campionato": "Choose the league",
   "Opzioni": "Options", "Installa": "Install", "Attendi…": "Wait…", "Sfottò": "Banter", "📣 Sfottò": "📣 Banter", " è al {n}° posto in classifica questa settimana": " is #{n} in the table this week", "GIOCA": "PLAY", "Prima scegli la squadra": "Pick your team first", "presto": "soon",
   "Ciao {n}": "Hi {n}", "Benvenuto, tifoso": "Welcome, fan", "↓ Scegli la tua squadra per iniziare ↓": "↓ Pick your team to start ↓",
-  "{n} tifoserie di {l} si sfidano ogni settimana · ": "{n} {l} fan bases compete every week · ", "la tua manca": "yours is missing", "Lingua": "Language", "La lingua di tutto il gioco.": "The language of the whole game.",
+  "{n} tifoserie di {l} si sfidano ogni settimana · ": "{n} {l} fan bases compete every week · ", "scegli la tua": "pick yours", "Lingua": "Language", "La lingua di tutto il gioco.": "The language of the whole game.",
   "Numero di maglia": "Shirt number", "Il numero del tuo giocatore in campo.": "Your player's number on the pitch.",
   "Info e privacy": "Info & privacy", "Privacy": "Privacy", "Termini d'uso": "Terms of use", "Leggi": "Read", "Tifosi nascosti": "Muted fans",
   "Mostra tutti": "Show all", "Nessuno": "None", "Elimina i miei dati": "Delete my data", "Elimina": "Delete", "Contatti": "Contact", "Scrivi": "Write", "Versione": "Version", "Licenze": "Licences",
@@ -2144,7 +2145,7 @@ function renderHome(){
     const c = document.createElement("span"); c.className = "closedTag"; c.textContent = tr("⏸ Stadio chiuso"); e.append(c, document.createTextNode(" · "));
     const cd = document.createElement("span"); cd.className = "cd"; cd.textContent = seasonLeft(); e.appendChild(cd); return;
   }
-  if (!teamChosen) { const e = $("homeTeam"); e.innerHTML = ""; e.append(document.createTextNode(tr("{n} tifoserie di {l} si sfidano ogni settimana · ", { n: TEAMS.length, l: leagueName() }))); const b = document.createElement("b"); b.textContent = tr("la tua manca"); e.appendChild(b); return; }
+  if (!teamChosen) { const e = $("homeTeam"); e.innerHTML = ""; e.append(document.createTextNode(tr("{n} tifoserie di {l} si sfidano ogni settimana · ", { n: TEAMS.length, l: leagueName() }))); const b = document.createElement("b"); b.textContent = tr("scegli la tua"); e.appendChild(b); return; }
   const el = $("homeTeam"); if (!el) return;
   const rows = teamRows(), me = TEAMS[teamIdx][0], i = rows.findIndex(r => r.name === me), r = rows[i];
   el.textContent = "";
