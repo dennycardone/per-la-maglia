@@ -318,6 +318,10 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 #playBtn.hplay.off{background:rgba(5,8,14,.75);border:2px dashed rgba(255,194,75,.7);color:var(--amber);box-shadow:none;font-size:22px;width:min(340px,80vw)}
 #startScreen .homeTeam{padding:5px 12px;border-radius:999px;background:rgba(5,8,14,.72);border:0;font-size:13px;text-align:center;max-width:92vw}
 #startScreen .homeTeam small{display:inline;margin-left:6px}
+#startScreen .champLine{appearance:none;display:inline-flex;align-items:center;gap:8px;max-width:92vw;padding:4px 14px 4px 6px;border-radius:999px;background:rgba(5,8,14,.86);border:1.5px solid rgba(255,194,75,.75);color:var(--chalk);font-family:var(--label);font-weight:600;font-size:13px;line-height:1.2;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#startScreen .champLine .cs{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:rgba(255,194,75,.16)}
+#startScreen .champLine b{color:var(--amber)}
+#startScreen .champLine .mv{color:#cfd8d1}
 .hask{position:absolute;left:0;right:0;bottom:96px;text-align:center;font-family:var(--label);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);text-shadow:0 2px 8px #000;z-index:1;animation:pulse2 1.4s ease-in-out infinite}
 @keyframes pulse2{50%{opacity:.5}}
 .bench{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);display:flex;gap:6px;overflow-x:auto;padding:8px max(16px,env(safe-area-inset-left,0px)) 4px;scrollbar-width:none;touch-action:pan-x;z-index:2;-webkit-mask:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
@@ -626,6 +630,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
     <div class="htitle" id="htitle">Per la Maglia</div>
     <div class="playRow"><button class="btn hplay" id="playBtn" type="button">GIOCA</button><button class="hhelp" id="helpBtn" type="button" aria-label="Come si gioca">?</button></div>
     <div class="homeTeam" id="homeTeam"></div>
+    <button class="champLine" id="champLine" type="button" hidden></button>
   </div>
   <div class="hask" id="hask" hidden>↓ Scegli la tua squadra per iniziare ↓</div>
   <div class="bench" id="teams"></div>
@@ -810,7 +815,7 @@ I18N.en = {
   " è {n}° questa settimana · −{g} {t}": " is #{n} this week · −{g} behind {t}",
   "Si azzera tra {d} g {h} h": "Resets in {d}d {h}h", "Si azzera tra {h} h {m} min": "Resets in {h}h {m}m",
   "Settimana {n}": "Week {n}",
-  "{t} campione della settimana {n}": "{t} won week {n}", "MVP: {m} con {p} punti": "MVP: {m} with {p} points", "Tocca per l'albo d'oro": "Tap for the hall of fame",
+  "{t} campione della settimana {n}": "{t} won week {n}", "MVP: {m} con {p} punti": "MVP: {m} with {p} points", "MVP {m}": "MVP {m}", "Tocca per l'albo d'oro": "Tap for the hall of fame",
   // keyboard
   "Per giocare scegli prima il tuo soprannome": "Choose your nickname to play", "spazio": "space", "Fatto": "Done",
   // match
@@ -2049,19 +2054,44 @@ function hidePop(){ $("pop").classList.remove("on"); }
 const fmt = ms => { const s = Math.floor(ms/1000); return String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0"); };
 
 let jid = 0;
-function jerseySVG(k, size = 22){
+// last week's champion wears the tricolour shield on the chest
+function scudoSVG(id){
+  const sh = "M8.1 5.3H12.3V7.9Q12.3 10 10.2 11Q8.1 10 8.1 7.9Z";
+  return `<defs><clipPath id="${id}s"><path d="${sh}"/></clipPath></defs><g clip-path="url(#${id}s)"><rect x="8" y="5" width="1.5" height="7" fill="#169b45"/><rect x="9.5" y="5" width="1.4" height="7" fill="#fff"/><rect x="10.9" y="5" width="1.5" height="7" fill="#d72a36"/></g><path d="${sh}" fill="none" stroke="#c9a23a" stroke-width=".55"/>`;
+}
+function jerseySVG(k, size = 22, scudo = false){
   const id = "jc" + (jid++), path = "M7 3L10 2Q12 4.2 14 2L17 3L21.5 7L18.5 10.2L17 9V21.5H7V9L5.5 10.2L2.5 7Z";
   let pat = "";
   if (k[0] === "stripes") pat = [8.6, 12, 15.4].map(x => `<rect x="${x}" y="0" width="1.9" height="24" fill="${k[2]}"/>`).join("");
   else if (k[0] === "halves") pat = `<rect x="12" y="0" width="12" height="24" fill="${k[2]}"/>`;
   else if (k[0] === "hoop") pat = `<rect x="0" y="10" width="24" height="2.8" fill="${k[2]}"/>`;
   else pat = `<path d="M10 2Q12 4.2 14 2" stroke="${k[2]}" stroke-width="1.6" fill="none"/>`;
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="${id}"><path d="${path}"/></clipPath></defs><path d="${path}" fill="${k[1]}"/><g clip-path="url(#${id})">${pat}</g><path d="${path}" fill="none" stroke="rgba(0,0,0,.5)" stroke-width=".9"/></svg>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="${id}"><path d="${path}"/></clipPath></defs><path d="${path}" fill="${k[1]}"/><g clip-path="url(#${id})">${pat}</g><path d="${path}" fill="none" stroke="rgba(0,0,0,.5)" stroke-width=".9"/>${scudo ? scudoSVG(id) : ""}</svg>`;
+}
+// the shirt of last week's champion gets the shield in the team bench
+let champTeam = null;
+function champMark(team){
+  if (team === champTeam) return; champTeam = team; markBench();
+}
+function markBench(){
+  TEAMS.forEach((t, i) => { const b = $("team-" + i), sv = b && b.querySelector("svg"); if (sv) sv.outerHTML = jerseySVG(KIT[t[0]] || ["plain", t[1], t[2]], 40, t[0] === champTeam); });
 }
 function renderChamp(){
   const c = $("champ"); if (!c) return;
   const prev = (() => { const d = new Date(Date.now() - 7 * 864e5); const r = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome", year: "numeric", month: "2-digit", day: "2-digit" }).format(d).split("-").map(Number); return seasonOf(r[0], r[1], r[2]); })();
   const w = weekList().find(x => x.sid === prev);
+  champMark(w ? w.team : null);
+  const cl = $("champLine");
+  if (cl) {
+    cl.hidden = !w;
+    if (w) {
+      cl.innerHTML = `<span class="cs">${jerseySVG(KIT[w.team] || (t => t ? ["plain", t[1], t[2]] : ["plain", "#888", "#fff"])(TEAMS.find(x => x[0] === w.team)), 24, true)}</span><span><b></b><span class="mv"></span></span>`;
+      cl.querySelector("b").textContent = tr("{t} campione della settimana {n}", { t: sq(w.team, "", true), n: +prev.split("-W")[1] });
+      cl.querySelector(".mv").textContent = w.mvp ? " · " + tr("MVP {m}", { m: w.mvp.name }) : "";
+      cl.onclick = () => openHistory("startScreen");
+    }
+    c.hidden = true; return;
+  }
   if (!w) { c.hidden = true; return; }
   c.innerHTML = `<span class="cup">🏆</span><span><b></b><small></small></span>`;
   c.querySelector("b").textContent = tr("{t} campione della settimana {n}", { t: sq(w.team, "", true), n: +prev.split("-W")[1] });
@@ -2163,6 +2193,7 @@ function renderTeams(){
     b.onclick = () => { teamIdx = i; teamChosen = true; store.set(teamKey(), TEAMS[i][0]); renderTeams(); buildCrowd(); renderHome(); if (srv.ok) srvProfile(); };
     box.appendChild(b);
   });
+  if (champTeam) markBench();
   homeTheme(); renderLeagues();
   const sel = $("team-" + teamIdx); if (teamChosen && sel) requestAnimationFrame(() => { try { sel.scrollIntoView({ inline: "center", block: "nearest" }); } catch (e) {} });
   $("playBtn").textContent = teamChosen ? tr("GIOCA") : tr("Prima scegli la squadra"); $("playBtn").classList.toggle("off", !teamChosen);
