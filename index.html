@@ -355,7 +355,6 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
   #startScreen .champLine{padding:2px 12px 2px 4px}
   #startScreen .champLine .cs{width:22px;height:22px}
   #startScreen .champLine .cs svg{width:20px;height:20px}
-  .setpanel .setrow span{display:none}   /* very short screens: settings show only the names, so the text stays readable */
 }
 .trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .trio .btn{font-size:17px;padding:11px 6px}
@@ -453,6 +452,24 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .askbox button.danger{background:#d23b3b;border-color:#d23b3b;color:#fff}
 .tmsg .tmore{margin-left:6px;border:0;background:none;color:#8a9890;font-size:15px;line-height:1;padding:0 2px;cursor:pointer}
 .setgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:32px}
+.setgrid[hidden],.legalnote[hidden]{display:none}
+.sethead{align-items:center;flex-wrap:wrap;row-gap:8px}
+.sethead .settitle{flex:1 1 auto;min-width:0;margin:0}
+.settabs{flex:0 1 330px}
+.settabs .tab{font-size:15px;padding:9px 10px;letter-spacing:.08em;white-space:nowrap}
+.setpanel .setrow{padding:11px 0}
+.setpanel .setrow b{font-size:19px}
+.setpanel .setrow span{font-size:14.5px;line-height:1.3;color:#b3c0b8;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.setpanel .switch{font-size:15px;min-width:96px;padding:10px 14px}
+.setpanel .segb{font-size:16px;padding:9px 13px}
+.setpanel .legalnote{font-size:13px}
+@media (orientation:landscape) and (max-height:430px){
+  .sethead .settitle{font-size:30px!important}
+  .setpanel .setrow{padding:8px 0}
+  .setpanel .setgrid{column-gap:24px}
+  .setpanel .switch{min-width:84px;padding:9px 12px}
+}
+@media (max-width:560px){.sethead .settitle{flex-basis:100%}.settabs{order:3;flex:1 1 100%}}
 .settitle{font-size:clamp(32px,5.5vw,48px)!important}
 .rules.values{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .rules.values span{padding:8px 10px;border-radius:8px;background:rgba(238,242,234,.05);border:1px solid rgba(238,242,234,.12)}
@@ -729,15 +746,15 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 <div id="askVeil" hidden><div class="askbox"><div class="askt" id="askTitle"></div><p id="askText"></p><div class="askb" id="askBtns"></div></div></div>
 <section class="screen" id="settingsScreen" hidden>
   <div class="panel wide setpanel">
-    <div class="rhead">
-      <div class="rh1"><h1 class="settitle">Impostazioni</h1><div class="note">Le scelte restano salvate su questo dispositivo.</div></div>
+    <div class="rhead sethead">
+      <h1 class="settitle">Impostazioni</h1>
+      <div class="tabs settabs"><button class="tab" id="setTabGame" type="button" aria-pressed="true">Gioco</button><button class="tab" id="setTabInfo" type="button" aria-pressed="false">Info e privacy</button></div>
       <button class="btn ghost small" id="settingsBack" type="button">Indietro</button>
     </div>
     <div class="setgrid" id="settingsList"></div>
-    <div class="label">Info e privacy</div>
-    <div class="setgrid" id="legalList"></div>
+    <div class="setgrid" id="legalList" hidden></div>
     <div id="anaBox" hidden><div class="label">Dati di bilanciamento</div><div class="ana" id="anaText"></div><button class="btn ghost small" id="anaCopy" type="button">Copia i dati</button></div>
-    <div class="note legalnote">Gioco non ufficiale: non è affiliato né approvato da club, leghe o federazioni. I nomi delle squadre servono solo a indicare per chi tifi; le maglie sono disegni generici.</div>
+    <div class="note legalnote" id="legalNote" hidden>Gioco non ufficiale: non è affiliato né approvato da club, leghe o federazioni. I nomi delle squadre servono solo a indicare per chi tifi; le maglie sono disegni generici.</div>
   </div>
 </section>
 
@@ -890,9 +907,9 @@ I18N.en = {
   // settings
   "Il tuo stadio": "Your stadium", "Le scelte restano salvate su questo dispositivo.": "Your choices are saved on this device.",
   "Audio": "Sound", "Calcio, rete, pubblico e cori.": "Kicks, net, crowd and chants.", "Vibrazione": "Vibration",
-  "Piccoli colpi al tiro e al gol.": "Small taps on shots and goals.", "Non disponibile su questo telefono (per esempio su iPhone).": "Not available on this phone (for example on iPhone).",
-  "Grafica leggera": "Light graphics", "Meno effetti e risoluzione ridotta, per telefoni meno potenti.": "Fewer effects and lower resolution, for less powerful phones.",
-  "Colori per daltonici": "Colour-blind colours", "Errori in blu invece che in rosso e contorni più marcati sulla tua squadra.": "Misses in blue instead of red and stronger outlines on your team.",
+  "Piccoli colpi al tiro e al gol.": "Small taps on shots and goals.", "Non disponibile su questo telefono.": "Not available on this phone.",
+  "Grafica leggera": "Light graphics", "Meno effetti, per telefoni meno potenti.": "Fewer effects, for less powerful phones.",
+  "Colori per daltonici": "Colour-blind colours", "Errori in blu invece che in rosso, contorni più marcati.": "Misses in blue instead of red, stronger outlines.",
   "Sì": "On", "No": "Off", "Valore dei tiri": "Shot values", "Scrivi almeno due lettere": "Write at least two letters", "Si azzera tra {d} g {h} h {m} min {s} s": "Resets in {d}d {h}h {m}m {s}s", "Classifica": "Table", "📊 Classifica": "📊 Table", "Il tuo sfottò": "Your banter", "Questa frase non si può scrivere: niente parolacce": "You can't write that: no bad words",
   "Soprannome non ammesso: niente parolacce": "Nickname not allowed: no bad words", "Scrivi il tuo sfottò…": "Write your banter…", "Inviato alla curva": "Sent to the stand",
   "Una frase per partita · max 50 caratteri": "One line per game · max 50 characters", "INVIA": "SEND", "RIGIOCA": "PLAY AGAIN", "Fine partita": "Full time",
@@ -903,17 +920,17 @@ I18N.en = {
   "Ciao {n}": "Hi {n}", "Benvenuto, tifoso": "Welcome, fan", "↓ Scegli la tua squadra per iniziare ↓": "↓ Pick your team to start ↓",
   "{n} tifoserie di {l} si sfidano ogni settimana · ": "{n} {l} fan bases compete every week · ", "scegli la tua": "pick yours", "Lingua": "Language", "La lingua di tutto il gioco.": "The language of the whole game.",
   "Numero di maglia": "Shirt number", "Il numero del tuo giocatore in campo.": "Your player's number on the pitch.",
-  "Info e privacy": "Info & privacy", "Privacy": "Privacy", "Termini d'uso": "Terms of use", "Leggi": "Read", "Tifosi nascosti": "Muted fans",
+  "Info e privacy": "Info & privacy", "Gioco": "Game", "Privacy": "Privacy", "Termini d'uso": "Terms of use", "Leggi": "Read", "Tifosi nascosti": "Muted fans",
   "Mostra tutti": "Show all", "Nessuno": "None", "Elimina i miei dati": "Delete my data", "Elimina": "Delete", "Contatti": "Contact", "Scrivi": "Write", "Versione": "Version", "Licenze": "Licences",
   "Quali dati usa il gioco, perché e per quanto tempo.": "What data the game uses, why and for how long.",
   "Le regole del gioco, della classifica e degli sfottò.": "The rules of the game, the table and the banter.",
   "Hai nascosto gli sfottò di {n} tifosi.": "You muted the banter of {n} fans.",
-  "Dagli sfottò puoi nascondere un tifoso o segnalare un messaggio (⋯).": "From the banter you can mute a fan or report a message (⋯).",
-  "Cancella soprannome, partite e sfottò dal server e da questo telefono. I punti già portati alla squadra vengono tolti.": "Deletes nickname, games and banter from the server and this phone. The points you brought to your team are removed.",
+  "Dagli sfottò puoi nascondere un tifoso (⋯).": "From the banter you can mute a fan (⋯).",
+  "Cancella per sempre tutti i tuoi dati.": "Deletes all your data, for good.",
   "Eliminare tutti i tuoi dati?": "Delete all your data?", "Sì, elimina tutto": "Yes, delete everything", "Annulla": "Cancel",
   "Soprannome, partite, punti e sfottò vengono cancellati per sempre, sul server e su questo telefono. Non si può annullare.": "Nickname, games, points and banter are deleted forever, on the server and on this phone. This cannot be undone.",
   "Non riesco a raggiungere il server: riprova con la connessione attiva. Non è stato cancellato nulla.": "Cannot reach the server: try again when online. Nothing was deleted.",
-  "Domande, segnalazioni o richieste sulla privacy.": "Questions, reports or privacy requests.", "caratteri Barlow e Big Shoulders (licenza SIL OFL)": "Barlow and Big Shoulders fonts (SIL OFL licence)",
+  "Domande, segnalazioni o richieste sulla privacy.": "Questions, reports or privacy requests.", "caratteri Barlow e Big Shoulders": "Barlow and Big Shoulders fonts",
   "Segnala o nascondi": "Report or mute", "Segnala come offensivo": "Report as offensive", "Nascondi i messaggi di questo tifoso": "Mute this fan's messages",
   "Gioco non ufficiale: non è affiliato né approvato da club, leghe o federazioni. I nomi delle squadre servono solo a indicare per chi tifi; le maglie sono disegni generici.": "Unofficial game: not affiliated with or endorsed by any club, league or federation. Team names only say who you support; kits are generic drawings.",
   "Chiama la curva": "Rally the fans", "Tifosi portati": "Fans brought", "Maglia": "Shirt", "Nome sulla maglia": "Name on the shirt", "Numero": "Number", "Il numero compare sulla maglia in campo e sulla tua figurina.": "Your number appears on your shirt on the pitch and on your card.", "Statistiche": "Stats", "Serie max": "Best streak", "Partite": "Games", "Gol": "Goals", "Record": "Best", "Tifoso": "Fan", "Allenamento": "Training", "ALLENAMENTO": "TRAINING", "ALLENAMENTO · non conta per la classifica": "TRAINING · doesn't count for the table",
@@ -2547,9 +2564,9 @@ function renderSettings(){
   const canVibrate = typeof navigator.vibrate === "function";
   const items = [
     ["audio", "Audio", "Calcio, rete, pubblico e cori.", sfx.on, null],
-    ["vibra", "Vibrazione", canVibrate ? "Piccoli colpi al tiro e al gol." : "Non disponibile su questo telefono (per esempio su iPhone).", SET.vibra && canVibrate, !canVibrate],
-    ["quality", "Grafica leggera", "Meno effetti e risoluzione ridotta, per telefoni meno potenti.", SET.quality === "leggera", null],
-    ["cb", "Colori per daltonici", "Errori in blu invece che in rosso e contorni più marcati sulla tua squadra.", SET.cb, null]
+    ["vibra", "Vibrazione", canVibrate ? "Piccoli colpi al tiro e al gol." : "Non disponibile su questo telefono.", SET.vibra && canVibrate, !canVibrate],
+    ["quality", "Grafica leggera", "Meno effetti, per telefoni meno potenti.", SET.quality === "leggera", null],
+    ["cb", "Colori per daltonici", "Errori in blu invece che in rosso, contorni più marcati.", SET.cb, null]
   ];
   for (const [key, title, desc, on, disabled] of items) {
     const row = document.createElement("div"); row.className = "setrow";
@@ -2582,16 +2599,20 @@ function renderSettings(){
   lrow("Privacy", tr("Quali dati usa il gioco, perché e per quanto tempo."), "Leggi", page("privacy.html"));
   lrow("Termini d'uso", tr("Le regole del gioco, della classifica e degli sfottò."), "Leggi", page("termini.html"));
   const nb = store.get("pm.blocked", []).length;
-  lrow("Tifosi nascosti", nb ? tr("Hai nascosto gli sfottò di {n} tifosi.", { n: nb }) : tr("Dagli sfottò puoi nascondere un tifoso o segnalare un messaggio (⋯)."), nb ? "Mostra tutti" : "Nessuno",
+  lrow("Tifosi nascosti", nb ? tr("Hai nascosto gli sfottò di {n} tifosi.", { n: nb }) : tr("Dagli sfottò puoi nascondere un tifoso (⋯)."), nb ? "Mostra tutti" : "Nessuno",
     () => { if (!nb) return; store.set("pm.blocked", []); renderSettings(); renderTaunts(); });
-  lrow("Elimina i miei dati", tr("Cancella soprannome, partite e sfottò dal server e da questo telefono. I punti già portati alla squadra vengono tolti."), "Elimina",
+  lrow("Elimina i miei dati", tr("Cancella per sempre tutti i tuoi dati."), "Elimina",
     () => ask(tr("Eliminare tutti i tuoi dati?"), tr("Soprannome, partite, punti e sfottò vengono cancellati per sempre, sul server e su questo telefono. Non si può annullare."),
       [[tr("Sì, elimina tutto"), "danger", deleteMyData]]), "danger");
   if (CONTACT) lrow("Contatti", tr("Domande, segnalazioni o richieste sulla privacy."), "Scrivi", () => { location.href = "mailto:" + CONTACT + "?subject=Per%20la%20Maglia"; });
-  lrow("Versione", APP_VERSION + " · " + tr("caratteri Barlow e Big Shoulders (licenza SIL OFL)"), "Licenze", page("fonts/OFL-Barlow.txt"));
+  lrow("Versione", APP_VERSION + " · " + tr("caratteri Barlow e Big Shoulders"), "Licenze", page("fonts/OFL-Barlow.txt"));
 }
+function showSetTab(t){ const g = t === "game";
+  $("setTabGame").setAttribute("aria-pressed", g ? "true" : "false"); $("setTabInfo").setAttribute("aria-pressed", g ? "false" : "true");
+  $("settingsList").hidden = !g; $("legalList").hidden = g; $("legalNote").hidden = g; }
+$("setTabGame").onclick = () => showSetTab("game"); $("setTabInfo").onclick = () => showSetTab("info");
 document.body.classList.toggle("cb", SET.cb);
-function openSettings(from){ settingsFrom = from; $(from).hidden = true; $("settingsScreen").hidden = false; renderSettings(); if (/[?&]debug\b/.test(location.search)) { $("anaBox").hidden = false; renderAnalytics(); } }
+function openSettings(from){ showSetTab("game"); settingsFrom = from; $(from).hidden = true; $("settingsScreen").hidden = false; renderSettings(); if (/[?&]debug\b/.test(location.search)) { $("anaBox").hidden = false; renderAnalytics(); } }
 $("settingsBtn").onclick = () => openSettings("startScreen");
 $("pauseSettings").onclick = () => openSettings("pauseScreen");
 $("settingsBack").onclick = () => { $("settingsScreen").hidden = true; $(settingsFrom).hidden = false; };
