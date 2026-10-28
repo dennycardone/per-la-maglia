@@ -511,6 +511,12 @@ html,body{overscroll-behavior:none}
 .wxnote.gold b{color:var(--amber)}
 body{position:fixed;inset:0;touch-action:none}
 .screen{overflow:hidden;touch-action:none;overscroll-behavior:none}
+/* pages (table, banter, hall of fame, profile, options, install): night-stadium background instead of the match behind */
+.screen.page{-webkit-backdrop-filter:none;backdrop-filter:none;background:
+  radial-gradient(ellipse 60% 90% at 0% -10%,rgba(255,244,214,.16),transparent 60%),
+  radial-gradient(ellipse 60% 90% at 100% -10%,rgba(255,244,214,.16),transparent 60%),
+  radial-gradient(circle at 50% 118%,transparent 0 118px,rgba(238,242,234,.10) 119px 121px,transparent 122px),
+  linear-gradient(180deg,#081120 0%,#0a1a17 70%,#0c2219 100%)}
 .screen.tall{overflow-y:auto;touch-action:pan-y}
 .rlist{touch-action:pan-y;overscroll-behavior:contain}
 .panel.wide{width:min(100%,calc(100vw - 32px),1100px)!important;min-width:0;max-width:1100px;display:flex;flex-direction:column;gap:8px;align-self:start;align-items:stretch}
@@ -685,7 +691,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
   <div class="kbd-keys" id="kbdKeys"></div>
 </div>
 
-<section class="screen" id="rankScreen" hidden>
+<section class="screen page" id="rankScreen" hidden>
   <div class="panel wide" data-rank data-full data-tab="teams">
     <div class="rhead">
       <div class="rh1"><div class="eyebrow"><span class="rtitle">Classifica squadre</span> · <span class="seasonName"></span></div><div class="note rhint">Tocca una squadra per vedere i suoi tifosi</div></div>
@@ -697,7 +703,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
   </div>
 </section>
 
-<section class="screen" id="tauntScreen" hidden>
+<section class="screen page" id="tauntScreen" hidden>
   <div class="panel wide">
     <div class="rhead">
       <div class="rh1"><div class="eyebrow"><span id="tauntTitle">Sfottò</span></div></div>
@@ -707,7 +713,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
   </div>
 </section>
 
-<section class="screen" id="histScreen" hidden>
+<section class="screen page" id="histScreen" hidden>
   <div class="panel wide">
     <div class="rhead">
       <div class="rh1"><div class="eyebrow"><span id="histTitle">Albo d'oro · Serie A</span></div><div class="note rhint" id="histHint">Tutte le settimane giocate. Tocca una settimana per la classifica completa.</div></div>
@@ -730,7 +736,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
   </div>
 </section>
 
-<section class="screen" id="installScreen" hidden>
+<section class="screen page" id="installScreen" hidden>
   <div class="panel">
     <div class="eyebrow">Installa l'app</div>
     <h1 id="installTitle" style="font-size:clamp(40px,9vw,64px)">Per la Maglia sul telefono</h1>
@@ -744,7 +750,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 <div id="inviteVeil" hidden><div class="invbox"><div class="invt">Chiama la curva</div><div class="invs" id="invSub"></div><div class="invmsg" id="invMsg"></div><div class="invgrid" id="invGrid"></div><div class="invfoot"><span id="invCount"></span><button type="button" id="invClose">Chiudi</button></div></div></div>
 <div class="toast" id="toast" hidden></div>
 <div id="askVeil" hidden><div class="askbox"><div class="askt" id="askTitle"></div><p id="askText"></p><div class="askb" id="askBtns"></div></div></div>
-<section class="screen" id="settingsScreen" hidden>
+<section class="screen page" id="settingsScreen" hidden>
   <div class="panel wide setpanel">
     <div class="rhead sethead">
       <h1 class="settitle">Impostazioni</h1>
@@ -758,7 +764,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
   </div>
 </section>
 
-<section class="screen" id="profileScreen" hidden>
+<section class="screen page" id="profileScreen" hidden>
   <div class="pf">
     <div class="pcard" id="pCard"></div>
     <div class="pside">
@@ -3335,6 +3341,8 @@ function frame(now){
   const inMatch = G && (phase === "ready" || phase === "hold" || phase === "flight" || phase === "after");
   const paused = inMatch && (H > W || userPaused);
   $("rotate").hidden = !(H > W);   // the whole game is played in landscape, home included
+  // a page covers the whole screen: the demo match behind it stops, to save battery
+  if (demo && document.querySelector(".screen.page:not([hidden])")) { requestAnimationFrame(frame); return; }
   if (paused) { acc = 0; fingerDown = false; pending = false; }
   if (setup && !paused && (phase === "hold" || phase === "flight" || phase === "after")) {
     const scale = slowLeft > 0 ? C.slowScale : 1;
