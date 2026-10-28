@@ -2727,6 +2727,8 @@ $("menuBtn").onclick = () => { $("overScreen").hidden = true; renderTeams(); $("
 const sfx = (() => {
   let ac = null, noise = null, on = store.get("cucchiaio.sound", true);
   let tag = null, amb = null;
+  // sounds only during a real match: never in the home, the menus, the demo match behind them or the final screen
+  const live = () => { try { return !!G && !demo && phase !== "menu" && phase !== "over" && !isPaused(); } catch (e) { return false; } };
   function init(){
     if (!on) return;
     // iPhone: play through the media channel so the silent switch does not mute the game
@@ -2750,7 +2752,7 @@ const sfx = (() => {
   }
   function env(g, t, a, peak, dec){ g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec); }
   function hiss(dur, type, freq, q, peak, attack){
-    if (!ac) return null;
+    if (!ac || !live()) return null;
     const t = ac.currentTime, src = ac.createBufferSource(); src.buffer = noise;
     const f = ac.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
     const g = ac.createGain(); env(g, t, attack, peak, dur);
@@ -2758,7 +2760,7 @@ const sfx = (() => {
     return { f, t };
   }
   function tone(type, f0, f1, dur, peak){
-    if (!ac) return;
+    if (!ac || !live()) return;
     const t = ac.currentTime, o = ac.createOscillator(); o.type = type;
     o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
     const g = ac.createGain(); env(g, t, 0.005, peak, dur); o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + 0.05);
@@ -2770,7 +2772,7 @@ const sfx = (() => {
     // continuous murmur of the crowd; it swells with the streak
     ambience(level){
       if (!ac) return;
-      if (level <= 0) { if (amb) { const a = amb; amb = null; try { a.g.gain.setTargetAtTime(0.0001, ac.currentTime, 0.4); setTimeout(() => { try { a.src.stop(); } catch (e) {} }, 1500); } catch (e) {} } return; }
+      if (level <= 0 || !live()) { if (amb) { const a = amb; amb = null; try { a.g.gain.setTargetAtTime(0.0001, ac.currentTime, 0.4); setTimeout(() => { try { a.src.stop(); } catch (e) {} }, 1500); } catch (e) {} } return; }
       if (!amb) {
         const src = ac.createBufferSource(); src.buffer = noise; src.loop = true;
         const f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 520; f.Q.value = 0.6;
@@ -2790,7 +2792,7 @@ const sfx = (() => {
     catch(){ hiss(0.08, "bandpass", 600, 1, 0.4, 0.003); },
     whoosh(){ hiss(0.35, "bandpass", 1500, 1.5, 0.1, 0.05); },
     chant(level){
-      if (!ac) return;
+      if (!ac || !live()) return;
       const n = Math.min(9, 3 + level), vol = Math.min(0.5, 0.18 + level * 0.04), t0 = ac.currentTime + 0.5;
       for (let i = 0; i < n; i++) {
         const t = t0 + i * 0.32 + (i % 3 === 2 ? 0.16 : 0);
