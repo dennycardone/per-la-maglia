@@ -1876,11 +1876,12 @@ function quitGame(){
   startDemo(); renderTeams(); renderRanks(); $("startScreen").hidden = false;
 }
 
-// ---------- Home demo: a bot plays behind the menu ----------
+// ---------- Rest state between matches: nothing plays behind the menus ----------
 let demo = false, demoPlan = null;
 function startDemo(){
-  demo = true; G = null; clearTimeout(nextTimer); wparts = []; sparts = [];
-  pickTheme(); nextDemoShot();
+  demo = true; G = null; clearTimeout(nextTimer); wparts = []; sparts = []; trail = [];
+  pickTheme();
+  try { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height); } catch (e) {}
 }
 function nextDemoShot(){
   if (!demo) return;
@@ -3341,8 +3342,8 @@ function frame(now){
   const inMatch = G && (phase === "ready" || phase === "hold" || phase === "flight" || phase === "after");
   const paused = inMatch && (H > W || userPaused);
   $("rotate").hidden = !(H > W);   // the whole game is played in landscape, home included
-  // a page covers the whole screen: the demo match behind it stops, to save battery
-  if (demo && document.querySelector(".screen.page:not([hidden])")) { requestAnimationFrame(frame); return; }
+  // between matches nothing is simulated or drawn: only the next situation is prepared
+  if (demo) { pump(12); crowdTick(dt); requestAnimationFrame(frame); return; }
   if (paused) { acc = 0; fingerDown = false; pending = false; }
   if (setup && !paused && (phase === "hold" || phase === "flight" || phase === "after")) {
     const scale = slowLeft > 0 ? C.slowScale : 1;
