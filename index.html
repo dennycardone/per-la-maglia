@@ -576,6 +576,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 .rhead .histBtn{width:auto;padding:9px 14px}
 .champ{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:linear-gradient(90deg,rgba(255,194,75,.22),rgba(255,194,75,.05));border:1px solid rgba(255,194,75,.5);color:var(--chalk);font-family:var(--label);font-weight:600;font-size:15px;line-height:1.25;cursor:pointer;text-align:left;appearance:none;width:100%}
 .champ b{color:var(--amber)}
+.rrow .who .scb{display:inline-block;vertical-align:-2px;margin-left:7px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))}
 .champ small{display:block;color:#cfd8d1;font-size:13px;font-weight:500}
 .champ .cup{font-size:24px}
 .seg{display:flex;gap:4px;align-items:center}
@@ -1482,7 +1483,7 @@ async function srvLoad(){
       [week, rec, win, mine, mvp] = await Promise.all([
         sb(`team_week?${L}season=eq.${q}&select=team,pts,fans`),
         sb(`team_record?${L}season=eq.${q}&select=team,pts,nick`),
-        sb(`season_winners?${L}season=lt.${q}&select=season,team,pts,fans,mvp_nick,mvp_pts&order=season.desc&limit=200`),
+        sb(`season_winners?${L}season=lt.${encodeURIComponent(honoursCut())}&select=season,team,pts,fans,mvp_nick,mvp_pts&order=season.desc&limit=200`),
         sb(`player_team_stats?${L}player_id=eq.${srv.uid}&select=*`),
         sb(`team_mvp?${L}season=eq.${q}&select=team,nick,pts`)
       ]);
@@ -1493,7 +1494,7 @@ async function srvLoad(){
       [week, rec, win, mine] = await Promise.all([
         sb(`team_week?season=eq.${q}&select=team,pts,fans`),
         sb(`team_record?season=eq.${q}&select=team,pts,nick`),
-        sb(`season_winners?season=lt.${q}&select=season,team,pts&order=season.desc&limit=200`),
+        sb(`season_winners?season=lt.${encodeURIComponent(honoursCut())}&select=season,team,pts&order=season.desc&limit=200`),
         sb(`player_team_stats?player_id=eq.${srv.uid}&select=*`)
       ]);
     }
@@ -1620,15 +1621,21 @@ function seasonOf(y, m, d){
   const wk = 1 + Math.round(((dt - jan4) / 864e5 - 3 + (jan4.getUTCDay() + 6) % 7) / 7);
   return yy + "-W" + String(wk).padStart(2, "0");
 }
-// the week shown in the game: from Saturday 08:00 the finished week goes into the honours and the table starts again
-// (the championship itself still runs from Monday 08:00 to Friday 20:00)
-function shownDay(back = 0){
-  const r = romeNow(), wd = (new Date(Date.UTC(r.y, r.m - 1, r.d)).getUTCDay() + 6) % 7;
+// Saturday 08:00: the finished week goes into the honours and its winner gets the shield (honoursCut moves on);
+// the table of that week stays on screen until Monday 06:00, then it starts again from zero (seasonId moves on).
+// The championship itself still runs from Monday 08:00 to Friday 20:00.
+function romeDay(msBack = 0){
+  const p = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23" }).formatToParts(new Date(Date.now() - msBack));
+  const g = k => +p.find(x => x.type === k).value; return { y: g("year"), m: g("month"), d: g("day"), h: g("hour") };
+}
+function seasonId(){ const r = romeDay(6 * 3600e3); return seasonOf(r.y, r.m, r.d); }
+function cutDay(back = 0){
+  const r = romeDay(), wd = (new Date(Date.UTC(r.y, r.m - 1, r.d)).getUTCDay() + 6) % 7;
   const shift = (wd === 5 && r.h >= 8) ? 2 : wd === 6 ? 1 : 0, dt = new Date(Date.UTC(r.y, r.m - 1, r.d + shift - back));
   return [dt.getUTCFullYear(), dt.getUTCMonth() + 1, dt.getUTCDate()];
 }
-function seasonId(){ return seasonOf(...shownDay()); }
-function prevSeasonId(){ return seasonOf(...shownDay(7)); }
+function honoursCut(){ return seasonOf(...cutDay()); }      // weeks before this one are finished and in the honours
+function prevSeasonId(){ return seasonOf(...cutDay(7)); }  // the week of the reigning champion
 function seasonLabel(sid){ return tr("Settimana {n}", { n: +sid.split("-W")[1] }) + " · " + sid.slice(0, 4); }
 // the championship is open from Monday 08:00 to Friday 20:00 (Rome time); outside those hours you can only train
 const OPEN_AT = 8 * 60, CLOSE_AT = 4 * 1440 + 20 * 60;   // minutes from Monday 00:00
@@ -1641,11 +1648,11 @@ function seasonLeft(){
   const v = { d, h, m, s: String(s2).padStart(2, "0") };
   return open ? tr("Si chiude venerdì alle 20:00 · tra {d} g {h} h {m} min {s} s", v) : tr("Si riapre lunedì alle 8:00 · tra {d} g {h} h {m} min {s} s", v);
 }
-let wasOpen = null, wasSid = seasonId();
+let wasOpen = null, wasSid = seasonId() + honoursCut();
 setInterval(() => {
   const o = leagueOpen(); if (o !== wasOpen) { const first = wasOpen === null; wasOpen = o; if (!first && !$("startScreen").hidden) renderHome(); }
-  // Saturday 08:00: the champion goes into the honours and a new table starts
-  const sid = seasonId(); if (sid !== wasSid) { wasSid = sid; if (srv.ok) srvLoad(); renderHome(); }
+  // Saturday 08:00 the champion goes into the honours; Monday 06:00 the table starts again
+  const sid = seasonId() + honoursCut(); if (sid !== wasSid) { wasSid = sid; if (srv.ok) srvLoad(); renderHome(); renderRanks(); }
 }, 1000);
 // live countdowns tick every second
 setInterval(() => { document.querySelectorAll(".cd").forEach(e => { if (e.offsetParent) e.textContent = seasonLeft(); }); }, 1000);
@@ -1692,7 +1699,7 @@ function teamMvps(sid){
 }
 // every past week: winner, points and MVP
 function weekList(){
-  const now = seasonId();
+  const now = honoursCut();
   if (srv.ok) return srv.winners.filter(w => w.pts > 0).map(w => ({ sid: w.season, team: w.team, pts: +w.pts, mvp: w.mvp_nick ? { name: w.mvp_nick, pts: +w.mvp_pts } : null }));
   return Object.keys(store.get("cucchiaio.seasons", {})).filter(k => k < now).sort().reverse().map(sid => {
     const { totals } = seasonTotals(sid), top = Object.entries(totals).sort((a, b) => b[1] - a[1])[0];
@@ -1706,7 +1713,7 @@ function weekTable(sid){
 }
 function honours(){
   if (srv.ok) return srv.winners.filter(w => w.pts > 0).map(w => ({ sid: w.season, team: w.team, pts: +w.pts }));
-  const sids = new Set(), now = seasonId();
+  const sids = new Set(), now = honoursCut();
   if (sharedMode()) online.docs.forEach(d => Object.keys(d.seasons || {}).forEach(k => sids.add(k)));
   else Object.keys(store.get("cucchiaio.seasons", {})).forEach(k => sids.add(k));
   return [...sids].filter(k => k < now).sort().reverse().slice(0, 4).map(sid => {
@@ -1764,6 +1771,7 @@ function rankStatus(){
 let rankTeam = null;   // team shown in the "Tifosi" tab (defaults to yours)
 function renderRanks(){
   const sid = seasonId(), bests = teamBests(sid), mvps = teamMvps(sid), mine = TEAMS[teamIdx][0];
+  const champ = (weekList().find(x => x.sid === prevSeasonId()) || {}).team || null;
   document.querySelectorAll("[data-rank]").forEach(box => {
     const tab = box.dataset.tab, list = box.querySelector(".rlist"), full = box.hasAttribute("data-full");
     box.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-pressed", b.dataset.tab === tab ? "true" : "false"));
@@ -1771,8 +1779,10 @@ function renderRanks(){
     const row = (pos, color, who, sub, pts, me, lv, rec, onTap) => {
       const r = document.createElement(onTap ? "button" : "div"); r.className = "rrow" + (me ? " me" : ""); if (onTap) { r.type = "button"; r.onclick = onTap; }
       const a = document.createElement("span"); a.className = "pos"; a.textContent = pos;
-      const i = document.createElement("span"); i.className = "mjw"; i.innerHTML = teamIcon(color.team || "");
+      const isChamp = !!champ && color.team === champ && who === champ;
+      const i = document.createElement("span"); i.className = "mjw"; i.innerHTML = teamIcon(color.team || "", 18, isChamp);
       const w = document.createElement("span"); w.className = "who"; w.textContent = who;
+      if (isChamp) w.insertAdjacentHTML("beforeend", scudoBadge());
       if (lv) { const b = document.createElement("span"); b.className = "lv"; b.textContent = "Liv. " + lv; w.appendChild(b); }
       if (sub) { const sm = document.createElement("small"); sm.textContent = sub; w.appendChild(sm); }
       const p = document.createElement("span"); p.className = "pts"; p.textContent = pts.toLocaleString(LOC());
@@ -2080,9 +2090,14 @@ function renderOverTable(rows, posA, posB){
     box.appendChild(r);
   });
 }
-function teamIcon(name, size = 18){
+function teamIcon(name, size = 18, scudo = false){
   const t = TEAMS.find(x => x[0] === name); if (!t) return '<span class="mj"></span>';
-  return '<span class="mj">' + jerseySVG(KIT[t[0]] || ["plain", t[1], t[2]], size) + "</span>";
+  return '<span class="mj">' + jerseySVG(KIT[t[0]] || ["plain", t[1], t[2]], size, scudo) + "</span>";
+}
+// the tricolour shield on its own, next to the champion's name
+function scudoBadge(){
+  const id = "sb" + (jid++), sh = "M10.65 5.25H13.35V7.15Q13.35 8.55 12 9.25Q10.65 8.55 10.65 7.15Z";
+  return `<svg class="scb" width="12" height="16" viewBox="10.45 5.05 3.1 4.4" aria-label="campione"><defs><clipPath id="${id}"><path d="${sh}"/></clipPath></defs><g clip-path="url(#${id})"><rect x="10.6" y="5" width=".95" height="4.5" fill="#169b45"/><rect x="11.55" y="5" width=".9" height="4.5" fill="#fff"/><rect x="12.45" y="5" width=".95" height="4.5" fill="#d72a36"/></g><path d="${sh}" fill="none" stroke="#d8b24a" stroke-width=".22"/></svg>`;
 }
 function leagueName(){ for (const n of NATIONS) for (const d of n.divs) if (d[0] === LEAGUE) return d[1]; return ""; }
 function countUp(el, to, prefix = "", delay = 0, sound = false){
