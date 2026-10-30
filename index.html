@@ -2741,8 +2741,8 @@ const sfx = (() => {
   let bus = null, wet = null, pink = null, brown = null, white = null;
   let bed = null, tense = 0;
   // level of every sound, calibrated by measuring each one on its own
-  const LV = { bed: 0.78, kick: 0.47, whoosh: 0.59, net: 0.46, gol: 0.7, golBig: 0.71, claps: 0.7, post: 0.72, thud: 0.68, whistle: 0.47, tick: 4.5, ding: 2.2 };
-  let cur = 1;
+  const LV = { bed: 0.78, kick: 0.47, whoosh: 0.59, net: 2.05, gol: 0.7, golBig: 0.71, claps: 0.7, post: 0.84, thud: 0.68, whistle: 0.47, tick: 4.5, ding: 2.2 };
+  let cur = 1, golNow = null;
   // sounds only during a real match: never in the home, the menus or the final screen (the final whistle is the exception)
   const live = () => { try { return !!G && !demo && phase !== "menu" && phase !== "over" && !isPaused(); } catch (e) { return false; } };
   const T = () => ac.currentTime;
@@ -2897,6 +2897,7 @@ const sfx = (() => {
     tension(x){ tense += ((x > 0 ? 0.25 + 0.75 * x : 0) - tense) * (x > 0 ? 0.25 : 0.06); },
     kick(){
       if (!ac || !live()) return; const t = T(); cur = LV.kick;
+      if (golNow) { try { golNow.gain.cancelScheduledValues(t); golNow.gain.setTargetAtTime(0.0001, t, 0.06); } catch (e) {} golNow = null; }
       const s = noise(white, t, 0.02), bp = filt("bandpass", 3400, 0.9), sg = ac.createGain(); env(sg, t, 0.0008, 0.55, 0.002, 0.012); s.connect(bp).connect(sg); out(sg, 1, 0.2);
       const o = osc("sine", 190, t, 0.2); o.frequency.exponentialRampToValueAtTime(62, t + 0.09); const g = ac.createGain(); env(g, t, 0.002, 0.85, 0.01, 0.11); o.connect(g); out(g, 1, 0.25);
       const p = osc("triangle", 430, t, 0.08); p.frequency.exponentialRampToValueAtTime(290, t + 0.05); const pg = ac.createGain(); env(pg, t, 0.001, 0.28, 0, 0.05); p.connect(pg); out(pg, 1, 0.3);
@@ -2909,17 +2910,19 @@ const sfx = (() => {
     // the net bulging: a dry swish
     net(){
       if (!ac || !live()) return; const t = T(); cur = LV.net;
-      const s = noise(white, t, 0.4), hp = filt("highpass", 2200, 0.7), bp = filt("bandpass", 5200, 0.8), g = ac.createGain(); env(g, t, 0.006, 0.42, 0.05, 0.28);
-      const am = osc("square", 38, t, 0.4), amg = ac.createGain(); amg.gain.value = 0.18; am.connect(amg).connect(g.gain);
-      s.connect(hp).connect(bp).connect(g); out(g, 1, 0.35);
+      const s = noise(pink, t, 0.45), hp = filt("highpass", 250, 0.6), bp = filt("bandpass", 850, 0.7), lp = filt("lowpass", 1700, 0.6), g = ac.createGain(); env(g, t, 0.01, 0.6, 0.06, 0.3);
+      const am = osc("sine", 24, t, 0.45), amg = ac.createGain(); amg.gain.value = 0.12; am.connect(amg).connect(g.gain);
+      s.connect(hp).connect(bp).connect(lp).connect(g); out(g, 1, 0.3);
     },
     // goal: the curva explodes and shouts GOOOOL!; k >= 1 = CAPOLAVORO (bigger roar, longer shout, rhythmic applause)
     roar(k){
       if (!ac || !live()) return; const t = T() + 0.06, big = k >= 1; cur = big ? LV.golBig : LV.gol;
       if (clips.gol) {
-        const s = ac.createBufferSource(), g = ac.createGain(); s.buffer = clips.gol; g.gain.value = big ? 1.0 : 0.85; s.connect(g); out(g, 1, 0.15); s.start(t);
-        if (bed) { bed.ducked = t + clips.gol.duration - 0.6; bed.g.gain.setTargetAtTime(0.07, t, 0.08); }
-        if (big) { cur = LV.claps; claps(t + clips.gol.duration - 0.9, 6, 0.42, 0.22); }
+        const s = ac.createBufferSource(), g = ac.createGain(), v = big ? 1.0 : 0.85, len = big ? 2.3 : 1.9;
+        s.buffer = clips.gol; g.gain.setValueAtTime(v, t); g.gain.setValueAtTime(v, t + len - 0.6); g.gain.linearRampToValueAtTime(0.0001, t + len);
+        s.connect(g); out(g, 1, 0.15); s.start(t); s.stop(t + len + 0.05); golNow = g;
+        if (bed) { bed.ducked = t + len - 0.5; bed.g.gain.setTargetAtTime(0.07, t, 0.08); }
+        if (big) { cur = LV.claps; claps(t + 1.0, 3, 0.33, 0.22); }
         return;
       }
       [pink, brown].forEach((buf, i) => {
@@ -2934,8 +2937,8 @@ const sfx = (() => {
     // the ball hits the bar: a ringing metal clang
     post(){
       if (!ac || !live()) return; const t = T(); cur = LV.post;
-      [[523, 1.4, 0.24], [1311, 0.9, 0.14], [2147, 0.6, 0.1], [3172, 0.45, 0.07], [4410, 0.3, 0.05]].forEach(([f, d, v]) => { const o = osc("sine", f, t, d), g = ac.createGain(); env(g, t, 0.001, v, 0, d); o.connect(g); out(g, 1, 0.5); });
-      const s = noise(white, t, 0.03), g = ac.createGain(); env(g, t, 0.0005, 0.4, 0, 0.025); s.connect(filt("highpass", 2000)).connect(g); out(g, 1, 0.3);
+      [[440, 1.2, 0.26], [1105, 0.75, 0.13], [1830, 0.45, 0.07], [2690, 0.28, 0.035]].forEach(([f, d, v]) => { const o = osc("sine", f, t, d), g = ac.createGain(); env(g, t, 0.001, v, 0, d); o.connect(g); out(g, 1, 0.5); });
+      const s = noise(white, t, 0.03), g = ac.createGain(); env(g, t, 0.0005, 0.4, 0, 0.025); s.connect(filt("highpass", 900)).connect(filt("lowpass", 3200)).connect(g); out(g, 1, 0.3);
     },
     // the keeper smothers the ball: a dull thud
     catch(){
@@ -2953,8 +2956,8 @@ const sfx = (() => {
       blast(t, 0.2, 0.15); blast(t + 0.32, 0.2, 0.15); blast(t + 0.64, 0.58, 0.16);
     },
     // one tick each time the points on the final screen move up (k = 0..1 along the count), a ding when they stop
-    tick(k){ if (!ac || !on || !bus || demo) return; cur = LV.tick; const t = T(), o = osc("triangle", 880 + k * 660, t, 0.05), g = ac.createGain(); env(g, t, 0.001, 0.09, 0, 0.035); o.connect(g); out(g, 1, 0.12); },
-    tickEnd(){ if (!ac || !on || !bus || demo) return; cur = LV.ding; const t = T(); [1046.5, 1568].forEach((f, i) => { const o = osc("sine", f, t, 0.6), g = ac.createGain(); env(g, t, 0.003, i ? 0.05 : 0.11, 0.02, 0.5); o.connect(g); out(g, 1, 0.35); }); }
+    tick(k){ if (!ac || !on || !bus) return; cur = LV.tick; const t = T(), o = osc("triangle", 880 + k * 660, t, 0.05), g = ac.createGain(); env(g, t, 0.001, 0.09, 0, 0.035); o.connect(g); out(g, 1, 0.12); },
+    tickEnd(){ if (!ac || !on || !bus) return; cur = LV.ding; const t = T(); [1046.5, 1568].forEach((f, i) => { const o = osc("sine", f, t, 0.6), g = ac.createGain(); env(g, t, 0.003, i ? 0.05 : 0.11, 0.02, 0.5); o.connect(g); out(g, 1, 0.35); }); }
   };
 })();
 // where the browser allows it (installed app, Android), lock the screen in landscape
