@@ -1926,7 +1926,6 @@ function resolve(res){
     G.lastGoal = { zone, perfect: tm.perfect };
     pop(label, `+${pts.toLocaleString(LANG === "it" ? "it-IT" : "en-GB")}` + (tags.length ? " · " + tags.join(" · ") : ""), zone === 3 || tm.perfect ? "gold" : "goal", tm);
     flashT = 1; buzz([30, 40, 70]); emitCelebration(); crowdCheer = performance.now() + 2200; sfx.roar(zone === 3 || tm.perfect ? 1 : 0.7);
-    if (G.streak >= 5) sfx.chant(G.streak - 4);
   } else {
     if (!G.practice) G.lives--; G.streak = 0; crowdSad = performance.now() + 1400;
     G.miss[res.label] = (G.miss[res.label] || 0) + 1;
@@ -1966,13 +1965,11 @@ function updateGuide(){
   guideText = t; $("guideStep").textContent = tr("Tiro di prova {n} di 3", { n: Math.min(3, G.shots + 1) }); $("guideText").innerHTML = t;
 }
 // crowd ambience during the match, louder and with chants as the streak grows
-let chantClock = 0;
+
 function crowdTick(dt){
   if (!G || demo || phase === "over" || phase === "menu" || isPaused()) { sfx.ambience(0); return; }
   sfx.tension(fingerDown && phase === "hold" && sim && setup && !sim.kicked ? clamp((sim.t - sim.chargeStart) / setup.chargeTime, 0, 1) : 0);
   sfx.ambience(1 + G.streak);
-  if (G.streak >= 3) { chantClock -= dt; if (chantClock <= 0) { chantClock = Math.max(3.5, 8 - G.streak * 0.3); sfx.chant(Math.min(6, G.streak - 2)); } }
-  else chantClock = 2;
 }
 $("guideSkip").onclick = () => { if (G && G.practice) { clearTimeout(nextTimer); endPractice(); } };
 // timers that wait while the match is paused
