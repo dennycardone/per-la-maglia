@@ -1925,7 +1925,7 @@ function resolve(res){
     else if (G.streak >= 5 && G.streak % 5 === 0) { label = tr("NON SI FERMA PIÙ!"); tags.unshift(tr("{n} di fila", { n: G.streak })); }
     G.lastGoal = { zone, perfect: tm.perfect };
     pop(label, `+${pts.toLocaleString(LANG === "it" ? "it-IT" : "en-GB")}` + (tags.length ? " · " + tags.join(" · ") : ""), zone === 3 || tm.perfect ? "gold" : "goal", tm);
-    flashT = 1; buzz([30, 40, 70]); emitCelebration(); crowdCheer = performance.now() + 2200; sfx.roar(zone === 3 || tm.perfect || G.streak >= 5 ? 1 : 0.7);
+    flashT = 1; buzz([30, 40, 70]); emitCelebration(); crowdCheer = performance.now() + 2200; sfx.roar(zone === 3 || tm.perfect ? 1 : 0.7);
     if (G.streak >= 5) sfx.chant(G.streak - 4);
   } else {
     if (!G.practice) G.lives--; G.streak = 0; crowdSad = performance.now() + 1400;
@@ -1969,6 +1969,7 @@ function updateGuide(){
 let chantClock = 0;
 function crowdTick(dt){
   if (!G || demo || phase === "over" || phase === "menu" || isPaused()) { sfx.ambience(0); return; }
+  sfx.tension(fingerDown && phase === "hold" && sim && setup && !sim.kicked ? clamp((sim.t - sim.chargeStart) / setup.chargeTime, 0, 1) : 0);
   sfx.ambience(1 + G.streak);
   if (G.streak >= 3) { chantClock -= dt; if (chantClock <= 0) { chantClock = Math.max(3.5, 8 - G.streak * 0.3); sfx.chant(Math.min(6, G.streak - 2)); } }
   else chantClock = 2;
@@ -1977,7 +1978,7 @@ $("guideSkip").onclick = () => { if (G && G.practice) { clearTimeout(nextTimer);
 // timers that wait while the match is paused
 function later(fn, ms){ clearTimeout(nextTimer); nextTimer = setTimeout(function run(){ if (isPaused()) { nextTimer = setTimeout(run, 250); return; } fn(); }, ms); }
 function gameOver(){
-  phase = "over"; $("guide").hidden = true;
+  phase = "over"; $("guide").hidden = true; sfx.endWhistle();
   const t = TEAMS[teamIdx], end = performance.now();
   const best = store.get("cucchiaio.best", 0); if (G.score > best) store.set("cucchiaio.best", G.score);
   // overtakes: compare this week's table before and after adding this match
@@ -2731,17 +2732,21 @@ $("rankBack").onclick = () => {
 $("menuBtn").onclick = () => { $("overScreen").hidden = true; renderTeams(); $("startScreen").hidden = false; if (!demo) startDemo(); };
 
 // ---------- Sound (synthesized, starts on the first touch) ----------
+const SILENT_WAV = "data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 const sfx = (() => {
-  let ac = null, noise = null, on = store.get("cucchiaio.sound", true);
-  let tag = null, amb = null;
-  // sounds only during a real match: never in the home, the menus, the demo match behind them or the final screen
+  // ---------- Stadium sound engine: everything is generated here, no audio files ----------
+  let ac = null, on = store.get("cucchiaio.sound", true), tag = null;
+  let bus = null, wet = null, pink = null, brown = null, white = null;
+  let bed = null, drum = null, tense = 0;
+  // sounds only during a real match: never in the home, the menus or the final screen (the final whistle is the exception)
   const live = () => { try { return !!G && !demo && phase !== "menu" && phase !== "over" && !isPaused(); } catch (e) { return false; } };
+  const T = () => ac.currentTime;
   function init(){
     if (!on) return;
     // iPhone: play through the media channel so the silent switch does not mute the game
     try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {}
     if (!tag && !navigator.audioSession) {
-      try { tag = new Audio("data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"); tag.loop = true; tag.volume = 0.01; tag.setAttribute("playsinline", ""); } catch (e) {}
+      try { tag = new Audio(SILENT_WAV); tag.loop = true; tag.volume = 0.01; tag.setAttribute("playsinline", ""); } catch (e) {}
     }
     if (tag) { try { const pr = tag.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (e) {} }
     if (ac) {
@@ -2753,61 +2758,188 @@ const sfx = (() => {
       ac = new (window.AudioContext || window.webkitAudioContext)();
       try { const b = ac.createBuffer(1, 1, 22050), s = ac.createBufferSource(); s.buffer = b; s.connect(ac.destination); s.start(0); } catch (e) {}
       if (ac.state !== "running") ac.resume();
-      const n = ac.sampleRate * 2; noise = ac.createBuffer(1, n, ac.sampleRate);
-      const d = noise.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+      build();
     } catch (e) { ac = null; }
   }
-  function env(g, t, a, peak, dec){ g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec); }
-  function hiss(dur, type, freq, q, peak, attack){
-    if (!ac || !live()) return null;
-    const t = ac.currentTime, src = ac.createBufferSource(); src.buffer = noise;
-    const f = ac.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
-    const g = ac.createGain(); env(g, t, attack, peak, dur);
-    src.connect(f).connect(g).connect(ac.destination); src.start(t, Math.random()); src.stop(t + attack + dur + 0.05);
-    return { f, t };
+  // master bus with a soft limiter, and a stadium reverb send
+  function build(){
+    const comp = ac.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.knee.value = 10; comp.ratio.value = 4; comp.attack.value = 0.004; comp.release.value = 0.2;
+    bus = ac.createGain(); bus.gain.value = 0.9; bus.connect(comp).connect(ac.destination);
+    const rev = ac.createConvolver(), len = Math.floor(ac.sampleRate * 2.4), ir = ac.createBuffer(2, len, ac.sampleRate);
+    for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) { const x = i / len; d[i] = (Math.random() * 2 - 1) * Math.pow(1 - x, 3.2) * (i < ac.sampleRate * 0.012 ? 0.3 : 1); } }
+    rev.buffer = ir; wet = ac.createGain(); wet.gain.value = 0.32; wet.connect(rev).connect(bus);
+    // noise colours, made once: white for clicks and rustles, pink for the crowd, brown for the low rumble
+    const n = ac.sampleRate * 6;
+    white = ac.createBuffer(1, n, ac.sampleRate); pink = ac.createBuffer(2, n, ac.sampleRate); brown = ac.createBuffer(2, n, ac.sampleRate);
+    const w = white.getChannelData(0); for (let i = 0; i < n; i++) w[i] = Math.random() * 2 - 1;
+    for (let ch = 0; ch < 2; ch++) {
+      const p = pink.getChannelData(ch), b = brown.getChannelData(ch);
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0, last = 0;
+      for (let i = 0; i < n; i++) {
+        const x = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + x * 0.0555179; b1 = 0.99332 * b1 + x * 0.0750759; b2 = 0.969 * b2 + x * 0.153852;
+        b3 = 0.8665 * b3 + x * 0.3104856; b4 = 0.55 * b4 + x * 0.5329522; b5 = -0.7616 * b5 - x * 0.016898;
+        p[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + x * 0.5362) * 0.11; b6 = x * 0.115926;
+        last = (last + 0.02 * x) / 1.02; b[i] = last * 3.5;
+      }
+    }
   }
-  function tone(type, f0, f1, dur, peak){
-    if (!ac || !live()) return;
-    const t = ac.currentTime, o = ac.createOscillator(); o.type = type;
-    o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
-    const g = ac.createGain(); env(g, t, 0.005, peak, dur); o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + 0.05);
+  // ---------- small helpers ----------
+  function out(node, dry = 1, rv = 0){ const g = ac.createGain(); g.gain.value = dry; node.connect(g).connect(bus); if (rv) { const s = ac.createGain(); s.gain.value = rv; node.connect(s).connect(wet); } return g; }
+  function env(g, t, a, peak, hold, rel){ g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.setValueAtTime(peak, t + a + hold); g.gain.exponentialRampToValueAtTime(0.0001, t + a + hold + rel); }
+  function noise(buf, t, dur, rate = 1){ const s = ac.createBufferSource(); s.buffer = buf; s.playbackRate.value = rate; s.start(t, Math.random() * 4); s.stop(t + dur + 0.05); return s; }
+  function filt(type, f, q = 0.7){ const b = ac.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; return b; }
+  function osc(type, f, t, dur){ const o = ac.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t); o.start(t); o.stop(t + dur + 0.05); return o; }
+  // the referee's whistle: a pea rattling inside, around 2.8-3.2 kHz
+  function blast(t, dur, vol){
+    const o = osc("sine", 3000, t, dur), fm = osc("sine", 31, t, dur), fmg = ac.createGain(); fmg.gain.value = 170; fm.connect(fmg).connect(o.frequency);
+    const o2 = osc("sine", 6000, t, dur); const g2 = ac.createGain(); g2.gain.value = 0.12; fmg.connect(o2.frequency); o2.connect(g2);
+    const am = osc("sine", 31, t, dur), amg = ac.createGain(); amg.gain.value = 0.35;
+    const g = ac.createGain(); am.connect(amg).connect(g.gain);
+    const e = ac.createGain(); env(e, t, 0.015, vol, Math.max(0, dur - 0.09), 0.07);
+    o.connect(g); g2.connect(g); g.connect(e); out(e, 1, 0.55);
+    o.frequency.setValueAtTime(3000, t); o.frequency.linearRampToValueAtTime(3150, t + dur);
   }
+  // a crowd of voices singing "oh": detuned voices through the formants of the vowel O
+  function voices(t, dur, f0, f1, vol, vowel){
+    const F = vowel === "a" ? [[800, 6], [1200, 8], [2500, 10]] : [[430, 5], [800, 7], [2400, 10]];
+    const mixv = ac.createGain(); mixv.gain.value = 1;
+    for (let i = 0; i < 14; i++) {
+      const o = osc("sawtooth", f0 * (0.82 + Math.random() * 0.4), t + Math.random() * 0.12, dur);
+      o.frequency.exponentialRampToValueAtTime(f1 * (0.82 + Math.random() * 0.4), t + dur);
+      const vib = osc("sine", 4.5 + Math.random() * 2, t, dur), vg = ac.createGain(); vg.gain.value = 3 + Math.random() * 3; vib.connect(vg).connect(o.frequency);
+      const g = ac.createGain(); g.gain.value = 0.05; o.connect(g).connect(mixv);
+    }
+    const br = noise(pink, t, dur), bg = ac.createGain(); bg.gain.value = 0.5; br.connect(bg).connect(mixv);
+    const sum = ac.createGain(); sum.gain.value = 1;
+    F.forEach(([f, q], k) => { const b = filt("bandpass", f, q); b.frequency.setValueAtTime(f, t); b.frequency.exponentialRampToValueAtTime(f * 0.86, t + dur); const g = ac.createGain(); g.gain.value = [1, 0.6, 0.18][k]; mixv.connect(b).connect(g).connect(sum); });
+    const e = ac.createGain(); env(e, t, 0.18, vol, dur * 0.35, dur * 0.6); sum.connect(e); out(e, 1, 0.6);
+  }
+  function claps(t, n, gap, vol){
+    for (let k = 0; k < n; k++) for (let j = 0; j < 9; j++) {
+      const tt = t + k * gap + Math.random() * 0.045, s = noise(white, tt, 0.05), b = filt("bandpass", 1100 + Math.random() * 900, 1.2), g = ac.createGain();
+      env(g, tt, 0.002, vol * (0.5 + Math.random() * 0.5), 0.005, 0.05); s.connect(b).connect(g); out(g, 1, 0.5);
+    }
+  }
+  // the curva horn: a brassy stadium trumpet, "pe-pe-peeee"
+  function horn(t, vol){
+    [[0, 0.16, 349.2], [0.2, 0.16, 349.2], [0.4, 0.62, 466.2]].forEach(([d, len, f]) => {
+      const tt = t + d, mixh = ac.createGain();
+      [1, 1.004, 0.996].forEach(m => { const o = osc("sawtooth", f * m, tt, len); o.connect(mixh); });
+      const lp = filt("lowpass", 1700, 1.4); lp.frequency.setValueAtTime(900, tt); lp.frequency.linearRampToValueAtTime(2400, tt + 0.05);
+      const e = ac.createGain(); env(e, tt, 0.02, vol, len - 0.08, 0.08); mixh.connect(lp).connect(e); out(e, 1, 0.45);
+    });
+  }
+  // ---------- the curva: crowd bed + ultras drum, running for the whole match ----------
+  function startBed(){
+    if (bed) return;
+    const t = T(), mk = (buf, rate) => { const s = ac.createBufferSource(); s.buffer = buf; s.loop = true; s.playbackRate.value = rate; s.start(t, Math.random() * 4); return s; };
+    const p = mk(pink, 1), b = mk(brown, 1);
+    const lp = filt("lowpass", 650, 0.5), hp = filt("highpass", 90, 0.5), g = ac.createGain(); g.gain.value = 0.0001;
+    const bg = ac.createGain(); bg.gain.value = 0.9; b.connect(bg).connect(lp); p.connect(lp); lp.connect(hp).connect(g); out(g, 1, 0.25);
+    // slow breathing of the crowd
+    const lfo = osc("sine", 0.09, t, 1e5), lg = ac.createGain(); lg.gain.value = 0.012; lfo.connect(lg).connect(g.gain);
+    const lfo2 = osc("sine", 0.06, t, 1e5), lg2 = ac.createGain(); lg2.gain.value = 120; lfo2.connect(lg2).connect(lp.frequency);
+    bed = { p, b, lp, g, lfo, lfo2, level: 0 };
+  }
+  function stopBed(){
+    if (!bed) return; const a = bed; bed = null;
+    try { a.g.gain.setTargetAtTime(0.0001, T(), 0.35); setTimeout(() => { try { [a.p, a.b, a.lfo, a.lfo2].forEach(s => s.stop()); } catch (e) {} }, 1600); } catch (e) {}
+  }
+  function drumHit(t, vol){
+    const o = osc("sine", 120, t, 0.6); o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(58, t + 0.07);
+    const g = ac.createGain(); env(g, t, 0.003, vol, 0.02, 0.38); o.connect(g); out(g, 1, 0.5);
+    const s = noise(white, t, 0.05), lp = filt("lowpass", 1400, 0.8), sg = ac.createGain(); env(sg, t, 0.001, vol * 0.35, 0, 0.04); s.connect(lp).connect(sg); out(sg, 1, 0.4);
+  }
+  // BUM ... BUM ... BUM-BUM: scheduled ahead on the audio clock, so it never drifts
+  const PATTERN = [0, 1.25, 2.5, 2.82], CYCLE = 3.75;
+  function drumTick(){
+    if (!drum || !ac) return;
+    while (drum.next < T() + 0.35) {
+      const v = drum.vol * (drum.i % 4 === 3 ? 0.85 : 1);
+      drumHit(drum.next, v);
+      drum.i++; const k = drum.i % 4, base = drum.start + Math.floor(drum.i / 4) * CYCLE;
+      drum.next = base + PATTERN[k];
+    }
+  }
+  function startDrum(){ if (drum) return; const t = T() + 0.3; drum = { start: t, next: t, i: 0, vol: 0.32, timer: setInterval(drumTick, 90) }; drumTick(); }
+  function stopDrum(){ if (!drum) return; clearInterval(drum.timer); drum = null; }
+  function stopAll(){ stopBed(); stopDrum(); tense = 0; }
   return {
     init,
     get on(){ return on; },
-    toggle(){ on = !on; store.set("cucchiaio.sound", on); if (on) init(); else { amb = null; if (ac) { try { ac.close(); } catch (e) {} ac = null; } } return on; },
-    // continuous murmur of the crowd; it swells with the streak
-    ambience(level){
-      if (!ac) return;
-      if (level <= 0 || !live()) { if (amb) { const a = amb; amb = null; try { a.g.gain.setTargetAtTime(0.0001, ac.currentTime, 0.4); setTimeout(() => { try { a.src.stop(); } catch (e) {} }, 1500); } catch (e) {} } return; }
-      if (!amb) {
-        const src = ac.createBufferSource(); src.buffer = noise; src.loop = true;
-        const f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 520; f.Q.value = 0.6;
-        const f2 = ac.createBiquadFilter(); f2.type = "lowpass"; f2.frequency.value = 1400;
-        const g = ac.createGain(); g.gain.value = 0.0001;
-        src.connect(f).connect(f2).connect(g).connect(ac.destination); src.start();
-        amb = { src, g, f };
-      }
-      const t = ac.currentTime, v = Math.min(0.11, 0.03 + level * 0.005);
-      amb.g.gain.setTargetAtTime(v, t, 0.8); amb.f.frequency.setTargetAtTime(480 + level * 12, t, 1);
+    toggle(){
+      on = !on; store.set("cucchiaio.sound", on);
+      if (on) { init(); if (ac && bus) bus.gain.setTargetAtTime(0.9, T(), 0.02); }
+      else if (ac) { stopAll(); try { bus.gain.setTargetAtTime(0.0001, T(), 0.01); } catch (e) {} }
+      return on;
     },
-    kick(){ tone("sine", 140, 45, 0.14, 0.6); hiss(0.04, "highpass", 1800, 0.7, 0.25, 0.002); },
-    net(){ hiss(0.45, "bandpass", 900, 0.6, 0.35, 0.02); },
-    roar(k){ const r = hiss(1.6, "bandpass", 700, 0.5, 0.35 * k, 0.25); if (r) r.f.frequency.linearRampToValueAtTime(1100, r.t + 0.8); },
-    groan(){ const r = hiss(0.9, "lowpass", 500, 0.7, 0.18, 0.15); if (r) r.f.frequency.linearRampToValueAtTime(220, r.t + 0.9); },
-    post(){ tone("sine", 1250, 1180, 0.6, 0.25); tone("sine", 1880, 1800, 0.45, 0.12); tone("triangle", 420, 400, 0.3, 0.15); },
-    catch(){ hiss(0.08, "bandpass", 600, 1, 0.4, 0.003); },
-    whoosh(){ hiss(0.35, "bandpass", 1500, 1.5, 0.1, 0.05); },
-    chant(level){
-      if (!ac || !live()) return;
-      const n = Math.min(9, 3 + level), vol = Math.min(0.5, 0.18 + level * 0.04), t0 = ac.currentTime + 0.5;
-      for (let i = 0; i < n; i++) {
-        const t = t0 + i * 0.32 + (i % 3 === 2 ? 0.16 : 0);
-        const src = ac.createBufferSource(); src.buffer = noise;
-        const f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1100; f.Q.value = 0.9;
-        const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
-        src.connect(f).connect(g).connect(ac.destination); src.start(t, Math.random()); src.stop(t + 0.15);
-      }
+    // crowd and drum: level grows with the streak; 0 stops them
+    ambience(level){
+      if (!ac || !on || !bus) return;
+      if (level <= 0 || !live()) { stopAll(); return; }
+      startBed(); startDrum();
+      const t = T(), v = Math.min(0.26, 0.13 + level * 0.01);
+      bed.g.gain.setTargetAtTime(v * (1 + tense * 0.7), t, 0.25);
+      bed.lp.frequency.setTargetAtTime(950 + level * 30 + tense * 1700, t, 0.12);
+      bed.p.playbackRate.setTargetAtTime(1 + tense * 0.07, t, 0.15);
+      drum.vol = Math.min(0.4, 0.22 + level * 0.015);
+    },
+    // while the finger is down: the stadium rises and holds its breath
+    tension(x){ tense += ((x > 0 ? 0.25 + 0.75 * x : 0) - tense) * (x > 0 ? 0.25 : 0.06); },
+    kick(){
+      if (!ac || !live()) return; const t = T();
+      const s = noise(white, t, 0.02), bp = filt("bandpass", 3400, 0.9), sg = ac.createGain(); env(sg, t, 0.0008, 0.55, 0.002, 0.012); s.connect(bp).connect(sg); out(sg, 1, 0.2);
+      const o = osc("sine", 190, t, 0.2); o.frequency.exponentialRampToValueAtTime(62, t + 0.09); const g = ac.createGain(); env(g, t, 0.002, 0.85, 0.01, 0.11); o.connect(g); out(g, 1, 0.25);
+      const p = osc("triangle", 430, t, 0.08); p.frequency.exponentialRampToValueAtTime(290, t + 0.05); const pg = ac.createGain(); env(pg, t, 0.001, 0.28, 0, 0.05); p.connect(pg); out(pg, 1, 0.3);
+      // air around the ball as the spoon goes up
+      const w = noise(pink, t + 0.05, 1.1), wb = filt("bandpass", 700, 1.3), wg = ac.createGain();
+      wb.frequency.setValueAtTime(700, t + 0.05); wb.frequency.exponentialRampToValueAtTime(1900, t + 0.6); wb.frequency.exponentialRampToValueAtTime(900, t + 1.1);
+      env(wg, t + 0.05, 0.25, 0.09, 0.3, 0.5); w.connect(wb).connect(wg); out(wg, 1, 0.3);
+    },
+    whoosh(){ if (!ac || !live()) return; const t = T(), w = noise(pink, t, 0.4), b = filt("bandpass", 1500, 1.5), g = ac.createGain(); env(g, t, 0.05, 0.08, 0.05, 0.25); w.connect(b).connect(g); out(g, 1, 0.3); },
+    // the net bulging: a dry swish
+    net(){
+      if (!ac || !live()) return; const t = T();
+      const s = noise(white, t, 0.4), hp = filt("highpass", 2200, 0.7), bp = filt("bandpass", 5200, 0.8), g = ac.createGain(); env(g, t, 0.006, 0.42, 0.05, 0.28);
+      const am = osc("square", 38, t, 0.4), amg = ac.createGain(); amg.gain.value = 0.18; am.connect(amg).connect(g.gain);
+      s.connect(hp).connect(bp).connect(g); out(g, 1, 0.35);
+    },
+    // goal: the curva explodes; k >= 1 = CAPOLAVORO (bigger roar, horn and rhythmic applause)
+    roar(k){
+      if (!ac || !live()) return; const t = T() + 0.06, big = k >= 1;
+      [pink, brown].forEach((buf, i) => {
+        const s = noise(buf, t, 2.8), lp = filt("lowpass", 700, 0.6), bp = filt("peaking", 1300, 0.8), g = ac.createGain();
+        bp.gain.value = 7; lp.frequency.setValueAtTime(700, t); lp.frequency.exponentialRampToValueAtTime(big ? 4200 : 3000, t + 0.25); lp.frequency.exponentialRampToValueAtTime(1100, t + 2.6);
+        env(g, t, 0.09, (i ? 0.5 : 0.65) * (big ? 1 : 0.75), 0.5, 2.0); s.connect(lp).connect(bp).connect(g); out(g, 1, 0.5);
+      });
+      voices(t + 0.05, 2.2, 230, 300, big ? 0.32 : 0.22, "a");
+      blast(t + 0.55, 0.32, 0.12);
+      if (big) { horn(t + 0.75, 0.13); claps(t + 1.45, 6, 0.42, 0.22); }
+    },
+    // the ball hits the bar: a ringing metal clang
+    post(){
+      if (!ac || !live()) return; const t = T();
+      [[523, 1.4, 0.24], [1311, 0.9, 0.14], [2147, 0.6, 0.1], [3172, 0.45, 0.07], [4410, 0.3, 0.05]].forEach(([f, d, v]) => { const o = osc("sine", f, t, d), g = ac.createGain(); env(g, t, 0.001, v, 0, d); o.connect(g); out(g, 1, 0.5); });
+      const s = noise(white, t, 0.03), g = ac.createGain(); env(g, t, 0.0005, 0.4, 0, 0.025); s.connect(filt("highpass", 2000)).connect(g); out(g, 1, 0.3);
+    },
+    // the keeper smothers the ball: a dull thud
+    catch(){
+      if (!ac || !live()) return; const t = T();
+      const o = osc("sine", 110, t, 0.2); o.frequency.exponentialRampToValueAtTime(55, t + 0.12); const g = ac.createGain(); env(g, t, 0.003, 0.6, 0.01, 0.14); o.connect(g); out(g, 1, 0.3);
+      const s = noise(brown, t, 0.1), sg = ac.createGain(); env(sg, t, 0.002, 0.5, 0.01, 0.08); s.connect(filt("lowpass", 600)).connect(sg); out(sg, 1, 0.3);
+    },
+    // a life lost: the whole stadium goes "OOOOOH!" and the pitch falls
+    groan(){ if (!ac || !live()) return; voices(T() + 0.08, 1.7, 205, 150, 0.55, "o"); },
+    // a streak of goals: the curva claps in rhythm
+    chant(level){ if (!ac || !live()) return; claps(T() + 0.4, Math.min(9, 3 + level), 0.36, Math.min(0.3, 0.14 + level * 0.025)); },
+    // end of the match: the referee's triple whistle, then the points counting into the table
+    endWhistle(){
+      if (!ac || !on || !bus || demo) return; stopAll(); const t = T() + 0.15;
+      blast(t, 0.26, 0.15); blast(t + 0.42, 0.26, 0.15); blast(t + 0.84, 0.95, 0.16);
+      for (let i = 0; i < 16; i++) { const tt = t + 2.05 + i * 0.055, o = osc("triangle", 900 + i * 45, tt, 0.05), g = ac.createGain(); env(g, tt, 0.001, 0.09, 0, 0.04); o.connect(g); out(g, 1, 0.15); }
+      const tt = t + 2.05 + 16 * 0.055; [1046.5, 1568].forEach((f, i) => { const o = osc("sine", f, tt, 0.6), g = ac.createGain(); env(g, tt, 0.003, i ? 0.05 : 0.11, 0.02, 0.5); o.connect(g); out(g, 1, 0.4); });
     }
   };
 })();
@@ -2818,6 +2950,8 @@ document.addEventListener("click", lockLandscape, { capture: true, once: true })
 // any real tap (finger lifted) unlocks or wakes the audio: iPhone only allows it there
 ["touchend", "click", "keydown"].forEach(ev => document.addEventListener(ev, () => sfx.init(), { capture: true, passive: true }));
 document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => sfx.init(), 0); });
+// app in the background: the curva and the drum stop at once (they start again with the match)
+document.addEventListener("visibilitychange", () => { if (document.hidden) sfx.ambience(0); });
 function buzz(p){ if (!SET.vibra || demo) return; try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
 function syncSound(){ const b = $("soundBtn"); b.textContent = sfx.on ? tr("Audio sì") : tr("Audio no"); b.setAttribute("aria-pressed", sfx.on ? "true" : "false"); }
 $("soundBtn").onclick = () => { sfx.toggle(); syncSound(); };
