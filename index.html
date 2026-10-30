@@ -897,7 +897,7 @@ I18N.en = {
   "← Tutte le squadre · tifosi {t}": "← All teams · {t} fans", "Nessuno ha ancora giocato {t} questa settimana.": "Nobody has played for {t} this week yet.",
   "Squadra": "Team", "Punti": "Points", "Record": "Best", "Giocatore": "Player", "record": "best", "Indietro": "Back", "🏆 Albo d'oro": "🏆 Hall of fame", "Albo d'oro": "Hall of fame",
   "Albo d'oro · Serie A": "Hall of fame · Serie A", "Tutte le settimane giocate. Tocca una settimana per la classifica completa.": "Every week played. Tap a week for the full table.",
-  "Ancora nessuna settimana conclusa: il primo campione arriva lunedì.": "No week finished yet: the first champion arrives on Monday.",
+  "Ancora nessuna settimana conclusa: il primo campione arriva sabato alle 8.": "No week finished yet: the first champion arrives on Saturday at 8am.",
   "Classifica finale della settimana": "Final table of the week", "Carico la settimana…": "Loading the week…", "Carico i tifosi…": "Loading fans…",
   "Classifica condivisa tra tutti i tifosi.": "Table shared by all fans.", "Classifica salvata su questo dispositivo.": "Table saved on this device.",
   "Classifica condivisa tra tutti i tifosi, aggiornata in tempo reale.": "Table shared by all fans, updated live.",
@@ -1569,7 +1569,7 @@ function renderHistory(){
     $("histTitle").textContent = tr("Albo d'oro") + " · " + leagueName();
     $("histHint").textContent = tr("Tutte le settimane giocate. Tocca una settimana per la classifica completa.");
     const weeks = weekList();
-    if (!weeks.length) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = tr("Ancora nessuna settimana conclusa: il primo campione arriva lunedì."); list.appendChild(e); return; }
+    if (!weeks.length) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = tr("Ancora nessuna settimana conclusa: il primo campione arriva sabato alle 8."); list.appendChild(e); return; }
     weeks.forEach(w => {
       const r = document.createElement("button"); r.type = "button"; r.className = "rrow hrow";
       r.innerHTML = `<span class="wk"></span><i></i><span class="who"></span><span class="pts"></span><span class="mvp"></span>`;
@@ -1606,7 +1606,8 @@ function srvProfile(){
   sb("rpc/set_profile", { body: { p_nick: cleanNick(store.get("cucchiaio.nick", "")) || "Tifoso", p_team: TEAMS[teamIdx][0] } }).then(() => { srv.fansAt = {}; }).catch(() => {});
 }
 
-// Weekly seasons (Monday 00:00 Europe/Rome). The team table resets every week; past winners stay in the honours list.
+// Weekly seasons (ISO weeks, Europe/Rome). Games count Monday 08:00 – Friday 20:00; on Saturday at 08:00 the week is closed:
+// the winner goes into the honours list and the team table starts again.
 function romeNow(){
   const p = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
   const g = k => +p.find(x => x.type === k).value;
@@ -1619,7 +1620,15 @@ function seasonOf(y, m, d){
   const wk = 1 + Math.round(((dt - jan4) / 864e5 - 3 + (jan4.getUTCDay() + 6) % 7) / 7);
   return yy + "-W" + String(wk).padStart(2, "0");
 }
-function seasonId(){ const r = romeNow(); return seasonOf(r.y, r.m, r.d); }
+// the week shown in the game: from Saturday 08:00 the finished week goes into the honours and the table starts again
+// (the championship itself still runs from Monday 08:00 to Friday 20:00)
+function shownDay(back = 0){
+  const r = romeNow(), wd = (new Date(Date.UTC(r.y, r.m - 1, r.d)).getUTCDay() + 6) % 7;
+  const shift = (wd === 5 && r.h >= 8) ? 2 : wd === 6 ? 1 : 0, dt = new Date(Date.UTC(r.y, r.m - 1, r.d + shift - back));
+  return [dt.getUTCFullYear(), dt.getUTCMonth() + 1, dt.getUTCDate()];
+}
+function seasonId(){ return seasonOf(...shownDay()); }
+function prevSeasonId(){ return seasonOf(...shownDay(7)); }
 function seasonLabel(sid){ return tr("Settimana {n}", { n: +sid.split("-W")[1] }) + " · " + sid.slice(0, 4); }
 // the championship is open from Monday 08:00 to Friday 20:00 (Rome time); outside those hours you can only train
 const OPEN_AT = 8 * 60, CLOSE_AT = 4 * 1440 + 20 * 60;   // minutes from Monday 00:00
@@ -1632,8 +1641,12 @@ function seasonLeft(){
   const v = { d, h, m, s: String(s2).padStart(2, "0") };
   return open ? tr("Si chiude venerdì alle 20:00 · tra {d} g {h} h {m} min {s} s", v) : tr("Si riapre lunedì alle 8:00 · tra {d} g {h} h {m} min {s} s", v);
 }
-let wasOpen = null;
-setInterval(() => { const o = leagueOpen(); if (o !== wasOpen) { const first = wasOpen === null; wasOpen = o; if (!first && !$("startScreen").hidden) renderHome(); } }, 1000);
+let wasOpen = null, wasSid = seasonId();
+setInterval(() => {
+  const o = leagueOpen(); if (o !== wasOpen) { const first = wasOpen === null; wasOpen = o; if (!first && !$("startScreen").hidden) renderHome(); }
+  // Saturday 08:00: the champion goes into the honours and a new table starts
+  const sid = seasonId(); if (sid !== wasSid) { wasSid = sid; if (srv.ok) srvLoad(); renderHome(); }
+}, 1000);
 // live countdowns tick every second
 setInterval(() => { document.querySelectorAll(".cd").forEach(e => { if (e.offsetParent) e.textContent = seasonLeft(); }); }, 1000);
 
@@ -2133,7 +2146,7 @@ function markBench(){
 }
 function renderChamp(){
   const c = $("champ"); if (!c) return;
-  const prev = (() => { const d = new Date(Date.now() - 7 * 864e5); const r = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome", year: "numeric", month: "2-digit", day: "2-digit" }).format(d).split("-").map(Number); return seasonOf(r[0], r[1], r[2]); })();
+  const prev = prevSeasonId();
   const w = weekList().find(x => x.sid === prev);
   champMark(w ? w.team : null);
   const cl = $("champLine");
