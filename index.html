@@ -2801,35 +2801,40 @@ const sfx = (() => {
     o.connect(g); g2.connect(g); g.connect(e); out(e, 1, 0.55);
     o.frequency.setValueAtTime(3000, t); o.frequency.linearRampToValueAtTime(3150, t + dur);
   }
-  // a crowd of voices singing "oh": detuned voices through the formants of the vowel O
-  function voices(t, dur, f0, f1, vol, vowel){
-    const F = vowel === "a" ? [[800, 6], [1200, 8], [2500, 10]] : [[430, 5], [800, 7], [2400, 10]];
-    const mixv = ac.createGain(); mixv.gain.value = 1;
-    for (let i = 0; i < 14; i++) {
-      const o = osc("sawtooth", f0 * (0.82 + Math.random() * 0.4), t + Math.random() * 0.12, dur);
-      o.frequency.exponentialRampToValueAtTime(f1 * (0.82 + Math.random() * 0.4), t + dur);
-      const vib = osc("sine", 4.5 + Math.random() * 2, t, dur), vg = ac.createGain(); vg.gain.value = 3 + Math.random() * 3; vib.connect(vg).connect(o.frequency);
-      const g = ac.createGain(); g.gain.value = 0.05; o.connect(g).connect(mixv);
+  // the whole curva shouting a word: many detuned voices whose formants move through the letters
+  // W = [[time 0..1, F1, F2, F3, level], ...]
+  function shout(t, dur, f0, f1, vol, W){
+    const src = ac.createGain(); src.gain.value = 1;
+    for (let i = 0; i < 22; i++) {
+      const st = t + Math.random() * 0.09, o = osc("sawtooth", f0 * (0.78 + Math.random() * 0.48), st, dur);
+      o.frequency.setValueAtTime(o.frequency.value, st); o.frequency.exponentialRampToValueAtTime(f1 * (0.78 + Math.random() * 0.48), st + dur);
+      const vib = osc("sine", 4 + Math.random() * 2.5, st, dur), vg = ac.createGain(); vg.gain.value = 4 + Math.random() * 5; vib.connect(vg).connect(o.frequency);
+      const g = ac.createGain(); g.gain.value = 0.075; o.connect(g).connect(src);
     }
-    const br = noise(pink, t, dur), bg = ac.createGain(); bg.gain.value = 0.5; br.connect(bg).connect(mixv);
-    const sum = ac.createGain(); sum.gain.value = 1;
-    F.forEach(([f, q], k) => { const b = filt("bandpass", f, q); b.frequency.setValueAtTime(f, t); b.frequency.exponentialRampToValueAtTime(f * 0.86, t + dur); const g = ac.createGain(); g.gain.value = [1, 0.6, 0.18][k]; mixv.connect(b).connect(g).connect(sum); });
-    const e = ac.createGain(); env(e, t, 0.18, vol, dur * 0.35, dur * 0.6); sum.connect(e); out(e, 1, 0.6);
+    const br = noise(pink, t, dur), bg = ac.createGain(); bg.gain.value = 0.35; br.connect(bg).connect(src);
+    const sum = ac.createGain(), lvl = ac.createGain(); sum.gain.value = 1; lvl.gain.value = W[0][4];
+    [1, 2, 3].forEach((k, j) => {
+      const bp = filt("bandpass", W[0][k], [2.4, 4, 6][j]), g = ac.createGain(); g.gain.value = [1, 0.6, 0.18][j];
+      W.forEach(w => bp.frequency.linearRampToValueAtTime(w[k], t + w[0] * dur));
+      src.connect(bp).connect(g).connect(sum);
+    });
+    W.forEach(w => lvl.gain.linearRampToValueAtTime(w[4], t + w[0] * dur));
+    const e = ac.createGain(); env(e, t, 0.07, vol, dur * 0.55, dur * 0.4); sum.connect(lvl).connect(e); out(e, 1, 0.6);
+  }
+  // "GOOOOL!": a hard G, a long O that rises, an L at the end
+  function gol(t, dur, vol){
+    const s = noise(brown, t, 0.05), g = ac.createGain(); env(g, t, 0.002, vol * 0.8, 0.01, 0.04); s.connect(filt("lowpass", 700)).connect(g); out(g, 1, 0.3);
+    shout(t + 0.03, dur, 190, 265, vol, [[0, 320, 900, 2300, 0.5], [0.06, 470, 820, 2450, 1], [0.82, 500, 860, 2500, 1], [0.93, 360, 1050, 2450, 0.8], [1, 340, 1000, 2400, 0.5]]);
+  }
+  // "NOOOOO!": a nasal N, then an O that falls with the disappointment
+  function nooo(t, dur, vol){
+    shout(t, dur, 215, 140, vol, [[0, 270, 1500, 2600, 0.45], [0.1, 300, 1300, 2500, 0.6], [0.2, 450, 800, 2450, 1], [1, 420, 760, 2400, 0.9]]);
   }
   function claps(t, n, gap, vol){
     for (let k = 0; k < n; k++) for (let j = 0; j < 9; j++) {
       const tt = t + k * gap + Math.random() * 0.045, s = noise(white, tt, 0.05), b = filt("bandpass", 1100 + Math.random() * 900, 1.2), g = ac.createGain();
       env(g, tt, 0.002, vol * (0.5 + Math.random() * 0.5), 0.005, 0.05); s.connect(b).connect(g); out(g, 1, 0.5);
     }
-  }
-  // the curva horn: a brassy stadium trumpet, "pe-pe-peeee"
-  function horn(t, vol){
-    [[0, 0.16, 349.2], [0.2, 0.16, 349.2], [0.4, 0.62, 466.2]].forEach(([d, len, f]) => {
-      const tt = t + d, mixh = ac.createGain();
-      [1, 1.004, 0.996].forEach(m => { const o = osc("sawtooth", f * m, tt, len); o.connect(mixh); });
-      const lp = filt("lowpass", 1700, 1.4); lp.frequency.setValueAtTime(900, tt); lp.frequency.linearRampToValueAtTime(2400, tt + 0.05);
-      const e = ac.createGain(); env(e, tt, 0.02, vol, len - 0.08, 0.08); mixh.connect(lp).connect(e); out(e, 1, 0.45);
-    });
   }
   // ---------- the curva: crowd bed + ultras drum, running for the whole match ----------
   function startBed(){
@@ -2906,7 +2911,7 @@ const sfx = (() => {
       const am = osc("square", 38, t, 0.4), amg = ac.createGain(); amg.gain.value = 0.18; am.connect(amg).connect(g.gain);
       s.connect(hp).connect(bp).connect(g); out(g, 1, 0.35);
     },
-    // goal: the curva explodes; k >= 1 = CAPOLAVORO (bigger roar, horn and rhythmic applause)
+    // goal: the curva explodes and shouts GOOOOL!; k >= 1 = CAPOLAVORO (bigger roar, longer shout, rhythmic applause)
     roar(k){
       if (!ac || !live()) return; const t = T() + 0.06, big = k >= 1;
       [pink, brown].forEach((buf, i) => {
@@ -2914,9 +2919,9 @@ const sfx = (() => {
         bp.gain.value = 7; lp.frequency.setValueAtTime(700, t); lp.frequency.exponentialRampToValueAtTime(big ? 4200 : 3000, t + 0.25); lp.frequency.exponentialRampToValueAtTime(1100, t + 2.6);
         env(g, t, 0.09, (i ? 0.5 : 0.65) * (big ? 1 : 0.75), 0.5, 2.0); s.connect(lp).connect(bp).connect(g); out(g, 1, 0.5);
       });
-      voices(t + 0.05, 2.2, 230, 300, big ? 0.32 : 0.22, "a");
-      blast(t + 0.55, 0.32, 0.12);
-      if (big) { horn(t + 0.75, 0.13); claps(t + 1.45, 6, 0.42, 0.22); }
+      gol(t + 0.08, big ? 2.4 : 1.9, big ? 0.55 : 0.42);
+      blast(t + 0.4, 0.32, 0.1);
+      if (big) claps(t + 1.9, 6, 0.42, 0.22);
     },
     // the ball hits the bar: a ringing metal clang
     post(){
@@ -2930,8 +2935,8 @@ const sfx = (() => {
       const o = osc("sine", 110, t, 0.2); o.frequency.exponentialRampToValueAtTime(55, t + 0.12); const g = ac.createGain(); env(g, t, 0.003, 0.6, 0.01, 0.14); o.connect(g); out(g, 1, 0.3);
       const s = noise(brown, t, 0.1), sg = ac.createGain(); env(sg, t, 0.002, 0.5, 0.01, 0.08); s.connect(filt("lowpass", 600)).connect(sg); out(sg, 1, 0.3);
     },
-    // a life lost: the whole stadium goes "OOOOOH!" and the pitch falls
-    groan(){ if (!ac || !live()) return; voices(T() + 0.08, 1.7, 205, 150, 0.55, "o"); },
+    // a life lost: the whole curva shouts "NOOOOO!" and the pitch falls
+    groan(){ if (!ac || !live()) return; nooo(T() + 0.08, 1.6, 1.0); },
     // a streak of goals: the curva claps in rhythm
     chant(level){ if (!ac || !live()) return; claps(T() + 0.4, Math.min(9, 3 + level), 0.36, Math.min(0.3, 0.14 + level * 0.025)); },
     // end of the match: the referee's triple whistle, then the points counting into the table
