@@ -2737,7 +2737,7 @@ const sfx = (() => {
   // ---------- Stadium sound engine: everything is generated here, no audio files ----------
   let ac = null, on = store.get("cucchiaio.sound", true), tag = null;
   let bus = null, wet = null, pink = null, brown = null, white = null;
-  let bed = null, drum = null, tense = 0;
+  let bed = null, tense = 0;
   // sounds only during a real match: never in the home, the menus or the final screen (the final whistle is the exception)
   const live = () => { try { return !!G && !demo && phase !== "menu" && phase !== "over" && !isPaused(); } catch (e) { return false; } };
   const T = () => ac.currentTime;
@@ -2769,6 +2769,7 @@ const sfx = (() => {
     const rev = ac.createConvolver(), len = Math.floor(ac.sampleRate * 2.4), ir = ac.createBuffer(2, len, ac.sampleRate);
     for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) { const x = i / len; d[i] = (Math.random() * 2 - 1) * Math.pow(1 - x, 3.2) * (i < ac.sampleRate * 0.012 ? 0.3 : 1); } }
     rev.buffer = ir; wet = ac.createGain(); wet.gain.value = 0.32; wet.connect(rev).connect(bus);
+    loadClips();
     // noise colours, made once: white for clicks and rustles, pink for the crowd, brown for the low rumble
     const n = ac.sampleRate * 6;
     white = ac.createBuffer(1, n, ac.sampleRate); pink = ac.createBuffer(2, n, ac.sampleRate); brown = ac.createBuffer(2, n, ac.sampleRate);
@@ -2826,70 +2827,66 @@ const sfx = (() => {
     const s = noise(brown, t, 0.05), g = ac.createGain(); env(g, t, 0.002, vol * 0.8, 0.01, 0.04); s.connect(filt("lowpass", 700)).connect(g); out(g, 1, 0.3);
     shout(t + 0.03, dur, 190, 265, vol, [[0, 320, 900, 2300, 0.5], [0.06, 470, 820, 2450, 1], [0.82, 500, 860, 2500, 1], [0.93, 360, 1050, 2450, 0.8], [1, 340, 1000, 2400, 0.5]]);
   }
-  // "NOOOOO!": a nasal N, then an O that falls with the disappointment
-  function nooo(t, dur, vol){
-    shout(t, dur, 215, 140, vol, [[0, 270, 1500, 2600, 0.45], [0.1, 300, 1300, 2500, 0.6], [0.2, 450, 800, 2450, 1], [1, 420, 760, 2400, 0.9]]);
-  }
   function claps(t, n, gap, vol){
     for (let k = 0; k < n; k++) for (let j = 0; j < 9; j++) {
       const tt = t + k * gap + Math.random() * 0.045, s = noise(white, tt, 0.05), b = filt("bandpass", 1100 + Math.random() * 900, 1.2), g = ac.createGain();
       env(g, tt, 0.002, vol * (0.5 + Math.random() * 0.5), 0.005, 0.05); s.connect(b).connect(g); out(g, 1, 0.5);
     }
   }
-  // ---------- the curva: crowd bed + ultras drum, running for the whole match ----------
+  // ---------- real recordings: the stadium bed and the goal (small files, loaded once; synthetic sound if they are missing) ----------
+  const clips = {}; let ready = Promise.resolve();
+  function loadClip(name){
+    return fetch("audio/" + name + ".mp3").then(r => r.ok ? r.arrayBuffer() : Promise.reject())
+      .then(a => new Promise((res, rej) => { const p = ac.decodeAudioData(a, res, rej); if (p && p.then) p.then(res, rej); }))
+      .then(buf => { clips[name] = buf; }).catch(() => {});
+  }
+  function loadClips(){ ready = Promise.all([loadClip("stadio"), loadClip("gol")]); }
+  // ---------- the curva: the stadium bed, running for the whole match ----------
   function startBed(){
     if (bed) return;
-    const t = T(), mk = (buf, rate) => { const s = ac.createBufferSource(); s.buffer = buf; s.loop = true; s.playbackRate.value = rate; s.start(t, Math.random() * 4); return s; };
-    const p = mk(pink, 1), b = mk(brown, 1);
-    const lp = filt("lowpass", 650, 0.5), hp = filt("highpass", 90, 0.5), g = ac.createGain(); g.gain.value = 0.0001;
+    const t = T(), g = ac.createGain(); g.gain.value = 0.0001;
+    if (clips.stadio) {
+      const src = ac.createBufferSource(); src.buffer = clips.stadio; src.loop = true; src.start(t, Math.random() * clips.stadio.duration);
+      const lp = filt("lowpass", 2600, 0.5); src.connect(lp).connect(g); out(g, 1, 0.12);
+      bed = { real: true, rate: src, lp, g, nodes: [src] }; return;
+    }
+    const mk = buf => { const s = ac.createBufferSource(); s.buffer = buf; s.loop = true; s.start(t, Math.random() * 4); return s; };
+    const p = mk(pink), b = mk(brown), lp = filt("lowpass", 950, 0.5), hp = filt("highpass", 90, 0.5);
     const bg = ac.createGain(); bg.gain.value = 0.9; b.connect(bg).connect(lp); p.connect(lp); lp.connect(hp).connect(g); out(g, 1, 0.25);
-    // slow breathing of the crowd
     const lfo = osc("sine", 0.09, t, 1e5), lg = ac.createGain(); lg.gain.value = 0.012; lfo.connect(lg).connect(g.gain);
-    const lfo2 = osc("sine", 0.06, t, 1e5), lg2 = ac.createGain(); lg2.gain.value = 120; lfo2.connect(lg2).connect(lp.frequency);
-    bed = { p, b, lp, g, lfo, lfo2, level: 0 };
+    bed = { real: false, rate: p, lp, g, nodes: [p, b, lfo] };
   }
   function stopBed(){
     if (!bed) return; const a = bed; bed = null;
-    try { a.g.gain.setTargetAtTime(0.0001, T(), 0.35); setTimeout(() => { try { [a.p, a.b, a.lfo, a.lfo2].forEach(s => s.stop()); } catch (e) {} }, 1600); } catch (e) {}
+    try { a.g.gain.setTargetAtTime(0.0001, T(), 0.35); setTimeout(() => { try { a.nodes.forEach(s => s.stop()); } catch (e) {} }, 1600); } catch (e) {}
   }
-  function drumHit(t, vol){
-    const o = osc("sine", 120, t, 0.6); o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(58, t + 0.07);
-    const g = ac.createGain(); env(g, t, 0.003, vol, 0.02, 0.38); o.connect(g); out(g, 1, 0.5);
-    const s = noise(white, t, 0.05), lp = filt("lowpass", 1400, 0.8), sg = ac.createGain(); env(sg, t, 0.001, vol * 0.35, 0, 0.04); s.connect(lp).connect(sg); out(sg, 1, 0.4);
-  }
-  // BUM ... BUM ... BUM-BUM: scheduled ahead on the audio clock, so it never drifts
-  const PATTERN = [0, 1.25, 2.5, 2.82], CYCLE = 3.75;
-  function drumTick(){
-    if (!drum || !ac) return;
-    while (drum.next < T() + 0.35) {
-      const v = drum.vol * (drum.i % 4 === 3 ? 0.85 : 1);
-      drumHit(drum.next, v);
-      drum.i++; const k = drum.i % 4, base = drum.start + Math.floor(drum.i / 4) * CYCLE;
-      drum.next = base + PATTERN[k];
-    }
-  }
-  function startDrum(){ if (drum) return; const t = T() + 0.3; drum = { start: t, next: t, i: 0, vol: 0.32, timer: setInterval(drumTick, 90) }; drumTick(); }
-  function stopDrum(){ if (!drum) return; clearInterval(drum.timer); drum = null; }
-  function stopAll(){ stopBed(); stopDrum(); tense = 0; }
+  function stopAll(){ stopBed(); tense = 0; }
   return {
     init,
     get on(){ return on; },
+    get ready(){ return ready; },
     toggle(){
       on = !on; store.set("cucchiaio.sound", on);
       if (on) { init(); if (ac && bus) bus.gain.setTargetAtTime(0.9, T(), 0.02); }
       else if (ac) { stopAll(); try { bus.gain.setTargetAtTime(0.0001, T(), 0.01); } catch (e) {} }
       return on;
     },
-    // crowd and drum: level grows with the streak; 0 stops them
+    // the crowd: louder as the streak grows; 0 stops it
     ambience(level){
       if (!ac || !on || !bus) return;
       if (level <= 0 || !live()) { stopAll(); return; }
-      startBed(); startDrum();
-      const t = T(), v = Math.min(0.26, 0.13 + level * 0.01);
-      bed.g.gain.setTargetAtTime(v * (1 + tense * 0.7), t, 0.25);
-      bed.lp.frequency.setTargetAtTime(950 + level * 30 + tense * 1700, t, 0.12);
-      bed.p.playbackRate.setTargetAtTime(1 + tense * 0.07, t, 0.15);
-      drum.vol = Math.min(0.4, 0.22 + level * 0.015);
+      startBed();
+      const t = T();
+      if (bed.ducked > t) return;   // the goal is playing over the crowd
+      if (bed.real) {
+        bed.g.gain.setTargetAtTime(Math.min(0.34, 0.22 + level * 0.012) * (1 + tense * 0.45), t, 0.25);
+        bed.lp.frequency.setTargetAtTime(2600 + tense * 12000, t, 0.12);
+        bed.rate.playbackRate.setTargetAtTime(1 + tense * 0.03, t, 0.2);
+      } else {
+        bed.g.gain.setTargetAtTime(Math.min(0.26, 0.13 + level * 0.01) * (1 + tense * 0.7), t, 0.25);
+        bed.lp.frequency.setTargetAtTime(950 + level * 30 + tense * 1700, t, 0.12);
+        bed.rate.playbackRate.setTargetAtTime(1 + tense * 0.07, t, 0.15);
+      }
     },
     // while the finger is down: the stadium rises and holds its breath
     tension(x){ tense += ((x > 0 ? 0.25 + 0.75 * x : 0) - tense) * (x > 0 ? 0.25 : 0.06); },
@@ -2914,6 +2911,12 @@ const sfx = (() => {
     // goal: the curva explodes and shouts GOOOOL!; k >= 1 = CAPOLAVORO (bigger roar, longer shout, rhythmic applause)
     roar(k){
       if (!ac || !live()) return; const t = T() + 0.06, big = k >= 1;
+      if (clips.gol) {
+        const s = ac.createBufferSource(), g = ac.createGain(); s.buffer = clips.gol; g.gain.value = big ? 1.0 : 0.85; s.connect(g); out(g, 1, 0.15); s.start(t);
+        if (bed) { bed.ducked = t + clips.gol.duration - 0.6; bed.g.gain.setTargetAtTime(0.07, t, 0.08); }
+        if (big) claps(t + clips.gol.duration - 0.9, 6, 0.42, 0.22);
+        return;
+      }
       [pink, brown].forEach((buf, i) => {
         const s = noise(buf, t, 2.8), lp = filt("lowpass", 700, 0.6), bp = filt("peaking", 1300, 0.8), g = ac.createGain();
         bp.gain.value = 7; lp.frequency.setValueAtTime(700, t); lp.frequency.exponentialRampToValueAtTime(big ? 4200 : 3000, t + 0.25); lp.frequency.exponentialRampToValueAtTime(1100, t + 2.6);
@@ -2935,8 +2938,8 @@ const sfx = (() => {
       const o = osc("sine", 110, t, 0.2); o.frequency.exponentialRampToValueAtTime(55, t + 0.12); const g = ac.createGain(); env(g, t, 0.003, 0.6, 0.01, 0.14); o.connect(g); out(g, 1, 0.3);
       const s = noise(brown, t, 0.1), sg = ac.createGain(); env(sg, t, 0.002, 0.5, 0.01, 0.08); s.connect(filt("lowpass", 600)).connect(sg); out(sg, 1, 0.3);
     },
-    // a life lost: the whole curva shouts "NOOOOO!" and the pitch falls
-    groan(){ if (!ac || !live()) return; nooo(T() + 0.08, 1.6, 1.0); },
+    // a life lost: no shout, the clang of the bar or the keeper's thud is enough
+    groan(){},
     // a streak of goals: the curva claps in rhythm
     chant(level){ if (!ac || !live()) return; claps(T() + 0.4, Math.min(9, 3 + level), 0.36, Math.min(0.3, 0.14 + level * 0.025)); },
     // end of the match: the referee's triple whistle, then the points counting into the table
