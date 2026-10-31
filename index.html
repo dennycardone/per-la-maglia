@@ -349,7 +349,7 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
   .hcenter{bottom:80px;top:calc(env(safe-area-inset-top,0px) + 50px)}
   .hask{bottom:74px;font-size:11px}
   .rail{bottom:76px;gap:4px}
-  .rb{min-height:24px;font-size:10px}
+  .rb{min-height:24px;font-size:11.5px;letter-spacing:-.01em}
   .rb svg{width:15px;height:15px}
   #startScreen .homeTeam,#startScreen .champLine{font-size:12px}
   #startScreen .champLine{padding:2px 12px 2px 4px}
@@ -921,7 +921,7 @@ I18N.en = {
   "Soprannome non ammesso: niente parolacce": "Nickname not allowed: no bad words", "Scrivi il tuo sfottò…": "Write your banter…", "Inviato alla curva": "Sent to the stand",
   "Una frase per partita · max 50 caratteri": "One line per game · max 50 characters", "INVIA": "SEND", "RIGIOCA": "PLAY AGAIN", "Fine partita": "Full time",
   "Ancora nessuno sfottò questa settimana. Il primo puoi scriverlo tu, alla fine di una partita.": "No banter yet this week. You can write the first one at the end of a game.",
-  "{n} min fa": "{n} min ago", "{n} h fa": "{n} h ago", "{n} g fa": "{n} d ago", "Una frase per partita, scritta a fine partita. Niente parolacce.": "One line per game, written at full time. No bad words.", "{t}": "for {t}", "ora {n}° ⬆": "now #{n} ⬆", "{n}° in classifica": "#{n} in the table",
+  "ancora a zero punti": "still on zero points", "classifica ancora vuota": "table still empty", "{n} min fa": "{n} min ago", "{n} h fa": "{n} h ago", "{n} g fa": "{n} d ago", "Una frase per partita, scritta a fine partita. Niente parolacce.": "One line per game, written at full time. No bad words.", "{t}": "for {t}", "ora {n}° ⬆": "now #{n} ⬆", "{n}° in classifica": "#{n} in the table",
   "Italia": "Italy", "Inghilterra": "England", "Spagna": "Spain", "Germania": "Germany", "Francia": "France", "Scegli il campionato": "Choose the league",
   "Opzioni": "Options", "Installa": "Install", "Attendi…": "Wait…", "Sfottò": "Banter", "📣 Sfottò": "📣 Banter", " è al {n}° posto in classifica questa settimana": " is #{n} in the table this week", "GIOCA": "PLAY", "Prima scegli la squadra": "Pick your team first", "presto": "soon",
   "Ciao {n}": "Hi {n}", "Benvenuto, tifoso": "Welcome, fan", "↓ Scegli la tua squadra per iniziare ↓": "↓ Pick your team to start ↓",
@@ -2046,7 +2046,11 @@ function gameOver(){
   const pos = posA + 1;
   $("overLine").innerHTML = "";
   $("overLine").append(document.createTextNode(tr("{t}", { t: sq(t[0], "per") }) + " · "));
-  const lb = document.createElement("b"); lb.textContent = posA < posB && G.score > 0 ? tr("ora {n}° ⬆", { n: pos }) : tr("{n}° in classifica", { n: pos }); $("overLine").appendChild(lb);
+  // with zero points the position is only alphabetical: say so instead of a fake rank
+  const myPts = (after[posA] || {}).pts || 0, anyPts = after.some(r => r.pts > 0);
+  const lb = document.createElement("b");
+  lb.textContent = myPts <= 0 ? (anyPts ? tr("ancora a zero punti") : tr("classifica ancora vuota")) : posA < posB && G.score > 0 ? tr("ora {n}° ⬆", { n: pos }) : tr("{n}° in classifica", { n: pos });
+  $("overLine").appendChild(lb);
   renderOverTable(after, posA, posB);
   resetSay();
   // contribution to the team this week (shared table only)
