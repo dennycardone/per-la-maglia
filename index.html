@@ -1589,8 +1589,10 @@ function renderHistory(){
   const rows = weekTable(histWeek);
   if (rows === null) { const e = document.createElement("div"); e.className = "rempty"; e.textContent = tr("Carico la settimana…"); list.appendChild(e); return; }
   const hd = document.createElement("div"); hd.className = "rhd"; hd.innerHTML = `<span></span><span></span><span>${tr("Squadra")}</span><span>${tr("Punti")}</span><span>${tr("Record")}</span><span>${tr("Giocatore")}</span>`;
-  const hd2 = hd.cloneNode(true); hd.style.gridArea = "1 / 1"; hd2.style.gridArea = "1 / 2"; list.append(hd, hd2);
-  const half = Math.max(1, Math.ceil(rows.length / 2));
+  // the left column fills first (half of the league), then the right one, as in the weekly table
+  const half = Math.max(1, Math.ceil(TEAMS.length / 2));
+  const hd2 = hd.cloneNode(true); hd.style.gridArea = "1 / 1"; hd2.style.gridArea = "1 / 2"; list.append(hd);
+  if (rows.length > half) list.append(hd2);   // the right header only when that column has teams
   rows.forEach((x, k) => {
     const r = document.createElement("div"); r.className = "rrow" + (x.team === TEAMS[teamIdx][0] ? " me" : "");
     r.innerHTML = `<span class="pos">${k + 1}</span><i></i><span class="who"></span><span class="pts"></span><span class="rec"></span><span class="rname"></span>`;
