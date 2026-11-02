@@ -1430,6 +1430,7 @@ function svData(){
   return s && s.week && s.winners ? s : null;
 }
 const srv = { legacy: false, league: null, mvp: {}, hist: {}, histAt: {}, ok: false, uid: null, sid: null, week: {}, records: {}, winners: [], fans: {}, fansAt: {}, mine: {}, loading: false };
+let authJob = null;   // the renewal (or first sign-up) in progress, shared by every request
 async function sbAuth(){
   let ses = store.get("pm.session", null);
   const call = async (path, body) => {
@@ -1438,8 +1439,27 @@ async function sbAuth(){
     return { at: j.access_token, rt: j.refresh_token, exp: Date.now() + (j.expires_in || 3600) * 1000 - 60000, uid: j.user && j.user.id };
   };
   if (ses && ses.exp > Date.now()) return ses;
-  if (ses && ses.rt) { try { ses = await call("token?grant_type=refresh_token", { refresh_token: ses.rt }); store.set("pm.session", ses); return ses; } catch (e) {} }
-  ses = await call("signup", { data: {} }); store.set("pm.session", ses); return ses;
+  // one renewal at a time: the requests that start together wait for the same one
+  if (authJob) return authJob;
+  authJob = (async () => {
+    if (ses && ses.rt) {
+      try { const nw = await call("token?grant_type=refresh_token", { refresh_token: ses.rt }); nw.uid = nw.uid || ses.uid; store.set("pm.session", nw); return nw; }
+      catch (e) {
+        // a network hiccup or a server error is not a lost profile: keep it and try again later
+        if (!/auth 4\d\d/.test(e.message) || /auth 429/.test(e.message)) throw e;
+        // another tab (or the app) has just renewed it: take that one instead of a new profile
+        const other = store.get("pm.session", null);
+        if (other && other.rt && other.rt !== ses.rt) {
+          if (other.exp > Date.now()) return other;
+          try { const nw = await call("token?grant_type=refresh_token", { refresh_token: other.rt }); nw.uid = nw.uid || other.uid; store.set("pm.session", nw); return nw; } catch (e2) { if (!/auth 4\d\d/.test(e2.message) || /auth 429/.test(e2.message)) throw e2; }
+        }
+        // the server says that session no longer exists: only then a new profile is made
+      }
+    }
+    // a new profile only for a phone that has never had one (or whose session the server no longer knows)
+    const nw = await call("signup", { data: {} }); store.set("pm.session", nw); return nw;
+  })();
+  try { return await authJob; } finally { authJob = null; }
 }
 async function sb(path, opt = {}){
   const ses = await sbAuth(); srv.uid = ses.uid;
