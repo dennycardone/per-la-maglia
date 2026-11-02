@@ -921,7 +921,7 @@ I18N.en = {
   "Soprannome non ammesso: niente parolacce": "Nickname not allowed: no bad words", "Scrivi il tuo sfottò…": "Write your banter…", "Inviato alla curva": "Sent to the stand",
   "Una frase per partita · max 50 caratteri": "One line per game · max 50 characters", "INVIA": "SEND", "RIGIOCA": "PLAY AGAIN", "Fine partita": "Full time",
   "Ancora nessuno sfottò questa settimana. Il primo puoi scriverlo tu, alla fine di una partita.": "No banter yet this week. You can write the first one at the end of a game.",
-  "ancora a zero punti": "still on zero points", "classifica ancora vuota": "table still empty", "{n} min fa": "{n} min ago", "{n} h fa": "{n} h ago", "{n} g fa": "{n} d ago", "Una frase per partita, scritta a fine partita. Niente parolacce.": "One line per game, written at full time. No bad words.", "{t}": "for {t}", "ora {n}° ⬆": "now #{n} ⬆", "{n}° in classifica": "#{n} in the table",
+  " · carico la classifica…": " · loading the table…", " · ancora a zero punti questa settimana: segna i primi!": " · still on zero points this week: score the first ones!", "ancora a zero punti": "still on zero points", "classifica ancora vuota": "table still empty", "{n} min fa": "{n} min ago", "{n} h fa": "{n} h ago", "{n} g fa": "{n} d ago", "Una frase per partita, scritta a fine partita. Niente parolacce.": "One line per game, written at full time. No bad words.", "{t}": "for {t}", "ora {n}° ⬆": "now #{n} ⬆", "{n}° in classifica": "#{n} in the table",
   "Italia": "Italy", "Inghilterra": "England", "Spagna": "Spain", "Germania": "Germany", "Francia": "France", "Scegli il campionato": "Choose the league",
   "Opzioni": "Options", "Installa": "Install", "Attendi…": "Wait…", "Sfottò": "Banter", "📣 Sfottò": "📣 Banter", " è al {n}° posto in classifica questa settimana": " is #{n} in the table this week", "GIOCA": "PLAY", "Prima scegli la squadra": "Pick your team first", "presto": "soon",
   "Ciao {n}": "Hi {n}", "Benvenuto, tifoso": "Welcome, fan", "↓ Scegli la tua squadra per iniziare ↓": "↓ Pick your team to start ↓",
@@ -1421,7 +1421,15 @@ const sharedMode = () => online.db && online.ready;
 // ---------- Shared leaderboard on the server (Supabase). If it cannot be reached, the phone's own data is used. ----------
 const SB = { url: "https://dhjnawjtqqkrcymycway.supabase.co",
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoam5hd2p0cXFrcmN5bXljd2F5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0Nzc1MDIsImV4cCI6MjEwODA1MzUwMn0.i28bdNPelalL73rx1KmJnJfi3e9aYBAMVhjpYepvisQ" };
-const srv = { legacy: false, mvp: {}, hist: {}, histAt: {}, ok: false, uid: null, sid: null, week: {}, records: {}, winners: [], fans: {}, fansAt: {}, mine: {}, loading: false };
+// the last data received from the server, per league, kept on the phone: shown at start-up until fresh data arrives
+const SERVER = true;
+function saveSnap(){ store.set("pm.snap." + srv.league, { sid: srv.sid, at: Date.now(), legacy: srv.legacy, week: srv.week, records: srv.records, mvp: srv.mvp, winners: srv.winners }); }
+function svData(){
+  if (srv.ok && srv.league === LEAGUE) return srv;
+  const s = store.get("pm.snap." + LEAGUE, null);
+  return s && s.week && s.winners ? s : null;
+}
+const srv = { legacy: false, league: null, mvp: {}, hist: {}, histAt: {}, ok: false, uid: null, sid: null, week: {}, records: {}, winners: [], fans: {}, fansAt: {}, mine: {}, loading: false };
 async function sbAuth(){
   let ses = store.get("pm.session", null);
   const call = async (path, body) => {
@@ -1476,7 +1484,7 @@ async function srvLoad(){
   if (srv.loading) return; srv.loading = true;
   try {
     const ses = await sbAuth(); srv.uid = ses.uid;
-    const sid = seasonId(), q = encodeURIComponent(sid);
+    const sid = seasonId(), q = encodeURIComponent(sid), lg = LEAGUE;
     let week, rec, win, mine, mvp = [];
     try {
       const L = "league=eq." + LEAGUE + "&";
@@ -1502,12 +1510,12 @@ async function srvLoad(){
     srv.records = {}; rec.forEach(x => srv.records[x.team] = { pts: x.pts, name: x.nick });
     srv.mvp = {}; mvp.forEach(x => srv.mvp[x.team] = { name: x.nick, pts: +x.pts });
     srv.winners = win; srv.mine = {}; mine.forEach(m => srv.mine[m.team] = m);
-    srv.fans = {}; srv.ok = true;
+    srv.fans = {}; srv.ok = true; srv.league = lg; saveSnap();
     await srvFlush();
     srvPing(); srvRefs();
   } catch (e) { console.warn("server", e); }
   srv.loading = false;
-  renderRanks(); if (!$("profileScreen").hidden) renderProfile();
+  renderRanks(); if (!$("profileScreen").hidden) renderProfile(); if (!$("startScreen").hidden) renderHome();
 }
 async function srvFans(team){
   if (srv.fansAt[team] && Date.now() - srv.fansAt[team] < 20000) return;
@@ -1677,8 +1685,9 @@ function myStats(){
   return (doc && doc.stats) || store.get("cucchiaio.stats", EMPTY_STATS);
 }
 function seasonTotals(sid){
-  const totals = {}, fans = {};
-  if (srv.ok && sid === srv.sid) { for (const [t, w] of Object.entries(srv.week)) { totals[t] = w.pts; fans[t] = w.fans; } return { totals, fans }; }
+  const totals = {}, fans = {}, d = svData();
+  if (d) { if (sid === d.sid) for (const [t, w] of Object.entries(d.week)) { totals[t] = w.pts; fans[t] = w.fans; } return { totals, fans }; }
+  if (SERVER) return { totals, fans };   // nothing from the server yet: an empty table, not this phone's games
   if (sharedMode()) {
     for (const d of online.docs) {
       const ss = d.seasons && d.seasons[sid]; if (!ss) continue;
@@ -1694,7 +1703,9 @@ function teamRows(extra){
     .sort((a, b) => b.pts - a.pts || a.name.localeCompare(b.name));
 }
 function teamMvps(sid){
-  if (srv.ok && sid === srv.sid && !srv.legacy) return srv.mvp;
+  const d = svData();
+  if (d) return sid === d.sid && !d.legacy ? d.mvp : {};
+  if (SERVER) return {};
   const out = {}, f = (store.get("cucchiaio.fans", {})[sid]) || {};
   for (const [team, fans] of Object.entries(f)) { const top = Object.entries(fans).sort((a, b) => b[1] - a[1])[0]; if (top && top[1] > 0) out[team] = { name: top[0], pts: top[1] }; }
   return out;
@@ -1702,7 +1713,9 @@ function teamMvps(sid){
 // every past week: winner, points and MVP
 function weekList(){
   const now = honoursCut();
-  if (srv.ok) return srv.winners.filter(w => w.pts > 0).map(w => ({ sid: w.season, team: w.team, pts: +w.pts, mvp: w.mvp_nick ? { name: w.mvp_nick, pts: +w.mvp_pts } : null }));
+  const d = svData();
+  if (d) return d.winners.filter(w => w.pts > 0).map(w => ({ sid: w.season, team: w.team, pts: +w.pts, mvp: w.mvp_nick ? { name: w.mvp_nick, pts: +w.mvp_pts } : null }));
+  if (SERVER) return [];
   return Object.keys(store.get("cucchiaio.seasons", {})).filter(k => k < now).sort().reverse().map(sid => {
     const { totals } = seasonTotals(sid), top = Object.entries(totals).sort((a, b) => b[1] - a[1])[0];
     return top && top[1] > 0 ? { sid, team: top[0], pts: top[1], mvp: teamMvps(sid)[top[0]] || null } : null;
@@ -1710,11 +1723,14 @@ function weekList(){
 }
 function weekTable(sid){
   if (srv.ok) { if (!srv.hist[sid]) { srvHistory(sid); return null; } return srv.hist[sid]; }
+  if (SERVER) return null;
   const { totals } = seasonTotals(sid), mv = teamMvps(sid), rc = (store.get("cucchiaio.teamBest", {})[sid]) || {};
   return Object.entries(totals).filter(([t, p]) => p > 0 && TEAMS.some(x => x[0] === t)).sort((a, b) => b[1] - a[1]).map(([team, pts]) => ({ team, pts, mvp: mv[team] || null, rec: rc[team] || null }));
 }
 function honours(){
-  if (srv.ok) return srv.winners.filter(w => w.pts > 0).map(w => ({ sid: w.season, team: w.team, pts: +w.pts }));
+  const d = svData();
+  if (d) return d.winners.filter(w => w.pts > 0).map(w => ({ sid: w.season, team: w.team, pts: +w.pts }));
+  if (SERVER) return [];
   const sids = new Set(), now = honoursCut();
   if (sharedMode()) online.docs.forEach(d => Object.keys(d.seasons || {}).forEach(k => sids.add(k)));
   else Object.keys(store.get("cucchiaio.seasons", {})).forEach(k => sids.add(k));
@@ -1726,8 +1742,8 @@ function honours(){
 }
 // record of the week for every team, with who made it
 function teamBests(sid){
-  const out = {};
-  if (srv.ok && sid === srv.sid) return Object.assign(out, srv.records);
+  const out = {}, d = svData();
+  if (d) return sid === d.sid ? Object.assign(out, d.records) : out;
   if (sharedMode()) {
     for (const d of online.docs) {
       const ss = d.seasons && d.seasons[sid]; if (!ss) continue;
@@ -2213,7 +2229,9 @@ function renderHome(){
   el.textContent = "";
   const b = document.createElement("b"); b.textContent = sq(me, "", true); el.appendChild(b);
   let txt;
-  if (!rows.some(x => x.pts > 0)) txt = tr(" · classifica della settimana ancora vuota: segna i primi punti!");
+  if (!svData()) txt = tr(" · carico la classifica…");
+  else if (!rows.some(x => x.pts > 0)) txt = tr(" · classifica della settimana ancora vuota: segna i primi punti!");
+  else if (!(r && r.pts > 0)) txt = tr(" · ancora a zero punti questa settimana: segna i primi!");   // a zero-point rank is only alphabetical
   else txt = tr(" è al {n}° posto in classifica questa settimana", { n: i + 1 });
   el.appendChild(document.createTextNode(txt));
 }
