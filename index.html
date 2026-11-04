@@ -265,6 +265,7 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .gsv .x{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#93a39b;font-size:15px}
 .switch.google{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#1f1f1f;border-color:#fff;letter-spacing:.04em;text-transform:none;font-family:var(--label)}
 .switch.google .gl{width:18px;height:18px;flex:none}
+.gbtn{flex:none;min-width:120px;display:flex;justify-content:flex-end;min-height:40px;align-items:center}
 .switch.saved{color:#7fe0a0;border-color:rgba(127,224,160,.55);background:rgba(127,224,160,.08);cursor:default}
 .ovbtns #againBtn{flex:1;height:50px;font-size:28px}
 .ovbtns #menuBtn{width:110px;font-size:16px;padding:0}
@@ -2598,6 +2599,70 @@ async function sbUser(ses){
   const r = await fetch(SB.url + "/auth/v1/user", { headers: { apikey: SB.key, Authorization: "Bearer " + ses.at } });
   if (!r.ok) throw new Error("user " + r.status); return r.json();
 }
+// Google's sign-in sheet over the game (Google Identity Services). The ID token goes to Supabase: it links Google to
+// the current anonymous profile, or, when that Google account already has a profile, signs in to it.
+// When the sheet cannot be shown, the page-to-page flow below is used instead.
+const GCID = "423796142444-n6eq4b2mhmpj8r0gst8t02dfqtrr260r.apps.googleusercontent.com";
+let gisJob = null, gisNonce = null;
+function gisLoad(){
+  return gisJob || (gisJob = new Promise(ok => {
+    if (window.google && google.accounts && google.accounts.id) return ok(true);
+    const sc = document.createElement("script"); sc.src = "https://accounts.google.com/gsi/client"; sc.async = true;
+    const t = setTimeout(() => ok(false), 9000);
+    sc.onload = () => { clearTimeout(t); ok(!!(window.google && google.accounts && google.accounts.id)); };
+    sc.onerror = () => { clearTimeout(t); gisJob = null; ok(false); };
+    document.head.appendChild(sc);
+  }));
+}
+async function gisReady(){
+  if (!navigator.onLine || !(await gisLoad())) return false;
+  try {
+    // a fresh nonce for every sheet: Google gets its fingerprint, Supabase the original
+    const raw = Array.from(crypto.getRandomValues(new Uint8Array(24)), b => b.toString(16).padStart(2, "0")).join("");
+    const h = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw))), b => b.toString(16).padStart(2, "0")).join("");
+    gisNonce = raw;
+    google.accounts.id.initialize({ client_id: GCID, nonce: h, callback: gisCredential, auto_select: false, cancel_on_tap_outside: true,
+      context: "use", ux_mode: "popup", use_fedcm_for_prompt: true, use_fedcm_for_button: true, itp_support: true });
+    return true;
+  } catch (e) { return false; }
+}
+async function gisCredential(resp){
+  const idt = resp && resp.credential, nonce = gisNonce; gisNonce = null;
+  if (!idt) return;
+  const tok = async (body, at) => {
+    const h = { apikey: SB.key, "Content-Type": "application/json" }; if (at) h.Authorization = "Bearer " + at;
+    const r = await fetch(SB.url + "/auth/v1/token?grant_type=id_token", { method: "POST", headers: h, body: JSON.stringify(Object.assign({ provider: "google", id_token: idt, nonce }, body)) });
+    const j = await r.json().catch(() => ({}));
+    return { ok: r.ok && !!j.access_token, j };
+  };
+  const keep = j => store.set("pm.session", { at: j.access_token, rt: j.refresh_token, exp: Date.now() + (j.expires_in || 3600) * 1000 - 60000, uid: j.user && j.user.id });
+  try {
+    const ses = await sbAuth();
+    let r = await tok({ link_identity: true }, ses.at);
+    if (r.ok) { keep(r.j); return googleDone({ ok: true, mode: "link" }); }
+    if (!/identity_already_exists|already/i.test(JSON.stringify(r.j))) throw new Error(JSON.stringify(r.j).slice(0, 160));
+    // this Google account already has a profile: the games of this phone are booked for it, then it signs in
+    let ticket = null; try { ticket = await sb("rpc/merge_start", { body: {} }); } catch (e) {}
+    r = await tok({});
+    if (!r.ok) throw new Error(JSON.stringify(r.j).slice(0, 160));
+    keep(r.j); return googleDone({ ok: true, mode: "login", ticket });
+  } catch (e) { console.warn("google", e); toast(tr("Google non ha risposto: riprova dalle Opzioni.")); }
+}
+// end-of-match invite: Google's sheet over the game; if it cannot appear, the Options page with Google's button
+async function googleQuick(){
+  if (await gisReady()) {
+    try {
+      google.accounts.id.prompt(n => {
+        const why = n && n.isSkippedMoment && n.isSkippedMoment() ? n.getSkippedReason() : "";
+        if (why && !/user_cancel|tap_outside|auto_cancel/.test(why) && gisNonce) goProfile();
+      });
+      return;
+    } catch (e) {}
+  }
+  goProfile();
+}
+function goProfile(){ if (!$("overScreen").hidden) $("menuBtn").click(); setTimeout(() => $("settingsBtn").click(), 60); }
+
 async function googleSave(){
   if (store.get("pm.google", null)) return;
   try {
@@ -2628,6 +2693,9 @@ async function googleBack(){
     if (/access_denied/i.test(b.code + " " + b.desc)) return;   // the player closed the Google page
     return toast(tr("Google non ha risposto: riprova dalle Opzioni."));
   }
+  return googleDone(b);
+}
+async function googleDone(b){
   try {
     const ses = await sbAuth(); srv.uid = ses.uid;
     const u = await sbUser(ses);
@@ -2650,7 +2718,7 @@ async function googleBack(){
 }
 $("gSaveBar").onclick = e => {
   if (e.target.closest("#gSaveNo")) { store.set("pm.gsaveNo", true); $("gSaveBar").hidden = true; return; }
-  googleSave();
+  googleQuick();
 };
 
 async function deleteMyData(){
@@ -2783,7 +2851,14 @@ function renderSettings(){
     const btn = document.createElement("button"); btn.type = "button"; btn.id = "set-google";
     if (g) { btn.className = "switch saved"; btn.textContent = "✓ " + tr("Salvato"); }
     else { btn.className = "switch google"; btn.innerHTML = $("gSaveBar").querySelector(".gl").outerHTML; btn.append(document.createTextNode(tr("Salva con Google"))); btn.onclick = googleSave; }
-    row.append(txt, btn); box.appendChild(row);
+    if (g) row.append(txt, btn);
+    else {
+      // Google's own button: the account sheet opens over the game ("Accedi a perlamaglia.com"); ours stays until it is ready
+      const wrap = document.createElement("div"); wrap.className = "gbtn"; wrap.appendChild(btn);
+      row.append(txt, wrap);
+      gisReady().then(ok => { if (!ok || !wrap.isConnected) return; const el = document.createElement("div"); google.accounts.id.renderButton(el, { type: "standard", theme: "outline", shape: "pill", size: "large", text: "continue_with", locale: LANG === "en" ? "en" : "it" }); wrap.replaceChildren(el); });
+    }
+    box.appendChild(row);
   }
   const canVibrate = typeof navigator.vibrate === "function";
   const items = [
