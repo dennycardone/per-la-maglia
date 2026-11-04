@@ -23,6 +23,27 @@ window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault()
     localStorage.setItem("pm.arrived", "1");
   } catch (e) {}
 })();
+// back from Google ("Salva con Google"): the new session or the error is in the address; it is taken once
+(function () {
+  var h = location.hash.slice(1), q = location.search.slice(1);
+  if (!/(^|&)(access_token|error|error_code)=/.test(h + "&" + q)) return;
+  var wait = null; try { wait = JSON.parse(localStorage.getItem("pm.gwait")); } catch (e) {}
+  if (!wait) return;   // not started from this phone
+  var p = new URLSearchParams(q + "&" + h);
+  try { history.replaceState(null, "", location.pathname); } catch (e) {}
+  try {
+    var at = p.get("access_token");
+    if (at) {
+      var uid = null;
+      try { uid = JSON.parse(atob(at.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).sub; } catch (e) {}
+      localStorage.setItem("pm.session", JSON.stringify({ at: at, rt: p.get("refresh_token"), exp: Date.now() + (+p.get("expires_in") || 3600) * 1000 - 60000, uid: uid }));
+      localStorage.setItem("pm.gback", JSON.stringify({ ok: true, mode: wait.mode, ticket: wait.ticket || null }));
+    } else {
+      localStorage.setItem("pm.gback", JSON.stringify({ ok: false, mode: wait.mode, code: p.get("error_code") || p.get("error") || "", desc: p.get("error_description") || "" }));
+    }
+    localStorage.removeItem("pm.gwait");
+  } catch (e) {}
+})();
 </script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#05080e">
@@ -236,6 +257,15 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .say.sent{border-color:rgba(127,224,160,.6);cursor:default}.say.sent .go{background:#7fe0a0}
 .say.empty .in #sayText{color:#93a39b}
 .ovbtns{display:flex;gap:8px;width:100%}
+.gsv{appearance:none;display:flex;align-items:center;gap:8px;max-width:100%;padding:5px 6px 5px 10px;border-radius:999px;background:rgba(5,8,14,.85);border:1px solid rgba(238,242,234,.22);color:#dfe7e2;font-family:var(--label);font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap}
+.gsv[hidden]{display:none}
+.gsv .gl{flex:none;width:18px;height:18px}
+.gsv .t{overflow:hidden;text-overflow:ellipsis}
+.gsv .t b{color:#fff}
+.gsv .x{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#93a39b;font-size:15px}
+.switch.google{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#1f1f1f;border-color:#fff;letter-spacing:.04em;text-transform:none;font-family:var(--label)}
+.switch.google .gl{width:18px;height:18px;flex:none}
+.switch.saved{color:#7fe0a0;border-color:rgba(127,224,160,.55);background:rgba(127,224,160,.08);cursor:default}
 .ovbtns #againBtn{flex:1;height:50px;font-size:28px}
 .ovbtns #menuBtn{width:110px;font-size:16px;padding:0}
 .ovtbl{border-radius:12px;background:rgba(5,8,14,.82);border:1px solid rgba(238,242,234,.14);padding:6px 8px;min-width:0}
@@ -788,6 +818,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
       <div class="ovbig" id="finalScore">0</div>
       <div class="ovline" id="overLine"></div>
       <button class="say" id="sayBtn" type="button"><span class="ic">📣</span><span class="in"><span id="sayText">Scrivi il tuo sfottò…</span><small id="sayHint">Una frase per partita · max 50 caratteri</small></span><span class="go" id="sayGo">INVIA</span></button>
+      <button class="gsv" id="gSaveBar" type="button" hidden><svg class="gl" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span class="t" id="gSaveText"><b>Salva il profilo</b> · se cambi telefono ritrovi i tuoi punti</span><span class="x" id="gSaveNo" aria-label="Chiudi">✕</span></button>
       <div class="ovbtns"><button class="btn" id="againBtn" type="button">RIGIOCA</button><button class="btn ghost home share" id="shareBtn" type="button"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 13v7h14v-7"/></svg><span>Condividi</span></button><button class="btn ghost home" id="menuBtn" type="button"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h5v-6h3v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Home</span></button></div>
     </div>
     <div class="ovtbl">
@@ -959,7 +990,15 @@ I18N.en = {
   // install
   "Installa dal menu": "Install from the menu", "Apri il menu del browser e scegli <b>Installa app</b>.": "Open the browser menu and choose <b>Install app</b>.",
   "Aggiungi alla Home": "Add to Home Screen", "Tocca <b>Condividi</b> in basso, poi <b>Aggiungi alla schermata Home</b>.": "Tap <b>Share</b> at the bottom, then <b>Add to Home Screen</b>.",
-  "Riprova tra poco": "Try again shortly", "Per la Maglia sul telefono": "Per la Maglia on your phone",
+  "Riprova tra poco": "Try again shortly",
+  "Salva il profilo": "Save your profile", "Profilo salvato": "Profile saved", "Salvato": "Saved", "Salva con Google": "Save with Google",
+  "Con Google · {e}. Su un altro telefono ritrovi tutto.": "With Google · {e}. On another phone you get it all back.",
+  "Ritrovi punti e partite su ogni telefono.": "Keep your points and games on every phone.",
+  "Serve la connessione per salvare il profilo: riprova tra poco.": "You need a connection to save your profile: try again shortly.",
+  "Google non ha risposto: riprova dalle Opzioni.": "Google didn't answer: try again from Options.",
+  "Bentornato {n}! Profilo ritrovato, con le {m} partite di questo telefono.": "Welcome back {n}! Profile found, with the {m} games from this phone.",
+  "Bentornato {n}! Profilo ritrovato.": "Welcome back {n}! Profile found.",
+  "<b>Salva il profilo</b> · se cambi telefono ritrovi i tuoi punti": "<b>Save your profile</b> · keep your points if you change phone", "Profilo salvato con Google ✓": "Profile saved with Google ✓", "Per la Maglia sul telefono": "Per la Maglia on your phone",
   "Chrome non ha ancora dato il via libera: chiudi e riapri la pagina, poi tocca di nuovo <b>Installa l'app</b>.": "Chrome isn't ready yet: close and reopen the page, then tap <b>Install the app</b> again.",
   "Una volta installato si apre a schermo intero dalla schermata Home e funziona anche senza connessione.": "Once installed it opens full screen from your Home Screen and works offline too."
 };
@@ -2075,6 +2114,7 @@ function gameOver(){
   } else ot.hidden = true;
   const sid = seasonId();
   lastMatch = { score: G.score, team: t[0] };
+  $("gSaveBar").hidden = true;
   $("trainTag").hidden = true; $("shareBtn").hidden = !!G.training || G.score <= 0; $("sayBtn").hidden = !!G.training;
   if (G.training) {
     countUp($("finalScore"), G.score, "+", 1250, true); homeTheme();
@@ -2098,6 +2138,8 @@ function gameOver(){
   const newStats = addStats(store.get("cucchiaio.stats", EMPTY_STATS), G); store.set("cucchiaio.stats", newStats);
   const ts = store.get("cucchiaio.teamStats", {}); ts[t[0]] = addStats(ts[t[0]] || EMPTY_STATS, G); store.set("cucchiaio.teamStats", ts);
   const nl = levelOf(newStats.points);
+  $("gSaveText").innerHTML = tr("<b>Salva il profilo</b> · se cambi telefono ritrovi i tuoi punti");
+  $("gSaveBar").hidden = !(newStats.games >= 3 && !store.get("pm.google", null) && !store.get("pm.gsaveNo", false) && navigator.onLine !== false);
   countUp($("finalScore"), G.score, "+", 1250, true);
   homeTheme();
   const nick = cleanNick(store.get("cucchiaio.nick", ""));
@@ -2547,6 +2589,70 @@ function tauntMenu(x){
   ]);
 }
 // delete everything: server (account, games, banter) and this phone
+// ---------- "Salva con Google": the anonymous profile becomes permanent (same profile, nothing moves) ----------
+// If that Google account already has a profile (saved on another phone), the player signs in to it and the games
+// played on this phone are added to it on the server (merge_start / merge_finish).
+const AUTH_BACK = location.origin + location.pathname;
+function maskMail(e){ const m = String(e).match(/^(.)(.*)(.)@(.+)$/); return m ? m[1] + "•••" + m[3] + "@" + m[4] : e; }
+async function sbUser(ses){
+  const r = await fetch(SB.url + "/auth/v1/user", { headers: { apikey: SB.key, Authorization: "Bearer " + ses.at } });
+  if (!r.ok) throw new Error("user " + r.status); return r.json();
+}
+async function googleSave(){
+  if (store.get("pm.google", null)) return;
+  try {
+    const ses = await sbAuth();
+    const u = await sbUser(ses);
+    if (u && u.is_anonymous === false) { store.set("pm.google", u.email || "Google"); renderSettings(); $("gSaveBar").hidden = true; return; }
+    const r = await fetch(SB.url + "/auth/v1/user/identities/authorize?provider=google&skip_http_redirect=true&redirect_to=" + encodeURIComponent(AUTH_BACK),
+      { headers: { apikey: SB.key, Authorization: "Bearer " + ses.at } });
+    if (!r.ok) throw new Error("link " + r.status);
+    const j = await r.json(); if (!j || !j.url) throw new Error("link url");
+    store.set("pm.gwait", { mode: "link", t: Date.now() });
+    location.href = j.url;
+  } catch (e) { toast(tr("Serve la connessione per salvare il profilo: riprova tra poco.")); }
+}
+async function googleLogin(){
+  // the games of this phone are booked for the profile that is about to sign in
+  let ticket = null;
+  try { ticket = await sb("rpc/merge_start", { body: {} }); } catch (e) {}
+  store.set("pm.gwait", { mode: "login", ticket, t: Date.now() });
+  location.href = SB.url + "/auth/v1/authorize?provider=google&redirect_to=" + encodeURIComponent(AUTH_BACK);
+}
+async function googleBack(){
+  const b = store.get("pm.gback", null); if (!b) return;
+  try { localStorage.removeItem("pm.gback"); } catch (e) {}
+  if (!b.ok) {
+    // that Google account already has a profile: sign in to it
+    if (b.mode === "link" && /identity_already_exists|already.*linked|already.*exists/i.test(b.code + " " + b.desc)) return googleLogin();
+    if (/access_denied/i.test(b.code + " " + b.desc)) return;   // the player closed the Google page
+    return toast(tr("Google non ha risposto: riprova dalle Opzioni."));
+  }
+  try {
+    const ses = await sbAuth(); srv.uid = ses.uid;
+    const u = await sbUser(ses);
+    store.set("pm.google", (u && u.email) || "Google");
+    let moved = 0;
+    if (b.ticket) { try { const m = await sb("rpc/merge_finish", { body: { p_ticket: b.ticket } }); moved = +((String(m || "").match(/(\d+) partite/) || [])[1] || 0); } catch (e) {} }
+    if (b.mode === "login") {
+      // the saved profile wins: its nickname (and its team, when it is in this league) come back on this phone
+      const rows = await sb("players?select=nick,team&id=eq." + ses.uid);
+      const me = rows && rows[0];
+      if (me && me.nick && me.nick !== "Tifoso") store.set("cucchiaio.nick", me.nick);
+      const i = me ? TEAMS.findIndex(t => t[0] === me.team) : -1;
+      if (i >= 0) { teamIdx = i; teamChosen = true; store.set(teamKey(), TEAMS[i][0]); renderTeams(); buildCrowd(); }
+      toast(moved ? tr("Bentornato {n}! Profilo ritrovato, con le {m} partite di questo telefono.", { n: cleanNick(store.get("cucchiaio.nick", "")), m: moved })
+                  : tr("Bentornato {n}! Profilo ritrovato.", { n: cleanNick(store.get("cucchiaio.nick", "")) }));
+    } else toast(tr("Profilo salvato con Google ✓"));
+    srv.fansAt = {}; srv.mine = {}; renderHome(); renderRanks(); srvLoad();
+    if (!$("settingsScreen").hidden) renderSettings();
+  } catch (e) { toast(tr("Google non ha risposto: riprova dalle Opzioni.")); }
+}
+$("gSaveBar").onclick = e => {
+  if (e.target.closest("#gSaveNo")) { store.set("pm.gsaveNo", true); $("gSaveBar").hidden = true; return; }
+  googleSave();
+};
+
 async function deleteMyData(){
   const hasAccount = !!store.get("pm.session", null);
   if (hasAccount) {
@@ -2665,6 +2771,20 @@ cv.addEventListener("contextmenu", e => e.preventDefault());
 let settingsFrom = "startScreen";
 function renderSettings(){
   const box = $("settingsList"); box.textContent = "";
+  {
+    // the profile: saved with Google or not
+    const g = store.get("pm.google", null);
+    const row = document.createElement("div"); row.className = "setrow";
+    const txt = document.createElement("div"); const b = document.createElement("b"); b.textContent = tr(g ? "Profilo salvato" : "Salva il profilo");
+    const sp = document.createElement("span");
+    sp.textContent = g ? tr("Con Google · {e}. Su un altro telefono ritrovi tutto.", { e: maskMail(g) })
+                       : tr("Ritrovi punti e partite su ogni telefono.");
+    txt.append(b, sp);
+    const btn = document.createElement("button"); btn.type = "button"; btn.id = "set-google";
+    if (g) { btn.className = "switch saved"; btn.textContent = "✓ " + tr("Salvato"); }
+    else { btn.className = "switch google"; btn.innerHTML = $("gSaveBar").querySelector(".gl").outerHTML; btn.append(document.createTextNode(tr("Salva con Google"))); btn.onclick = googleSave; }
+    row.append(txt, btn); box.appendChild(row);
+  }
   const canVibrate = typeof navigator.vibrate === "function";
   const items = [
     ["audio", "Audio", "Calcio, rete, pubblico e cori.", sfx.on, null],
@@ -3712,6 +3832,7 @@ if (!store.get(HOW_KEY, false)) { const howT = setInterval(() => { if (store.get
 renderTeams();
 startOnline();
 srvLoad();
+googleBack();
 setInterval(() => { if (document.visibilityState === "visible" && phase !== "hold" && phase !== "flight") srvLoad(); }, 60000);
 startDemo();
 requestAnimationFrame(frame);
