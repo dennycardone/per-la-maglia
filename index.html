@@ -970,7 +970,26 @@ function tr(text, vars){
   return o;
 }
 window.tr = tr;
-const LIGHT = () => SET.quality === "leggera";
+// performance, without changing the look: at most ~60 drawings a second, and automatic lightening on slow phones
+// level 0 = normal · 1 = lower pixel density · 2 = also fewer effects (as "Grafica leggera"); remembered on the phone
+const PERF = { iv: [], prev: 0, skip: 1, n: 0, last: 0, slow: [], level: Math.min(2, +store.get("pm.perf", 0) || 0), want: 0 };
+const LIGHT = () => SET.quality === "leggera" || PERF.level >= 2;
+function perfFrame(now, inMatch){
+  // refresh rate, measured on the first frames: on 120 Hz screens one frame out of two is skipped (it looks the same at 60)
+  if (PERF.iv.length < 40) { if (PERF.prev) PERF.iv.push(now - PERF.prev); PERF.prev = now; if (PERF.iv.length === 40) PERF.skip = PERF.iv.slice().sort((a, b) => a - b)[20] < 10 ? 2 : 1; }
+  if (PERF.skip > 1 && (++PERF.n % PERF.skip)) return false;
+  // during the match: if the drawings come too slowly (under ~38 a second), lighten one step, between two shots
+  if (inMatch && PERF.last && now - PERF.last < 250) {
+    PERF.slow.push(now - PERF.last);
+    if (PERF.slow.length >= 90) {
+      const med = PERF.slow.sort((a, b) => a - b)[45]; PERF.slow = [];
+      if (med > 26 && PERF.level < 2) PERF.want = PERF.level + 1;
+    }
+  } else if (!inMatch) PERF.slow = [];
+  PERF.last = now;
+  if (PERF.want > PERF.level && (phase === "after" || phase === "ready")) { PERF.level = PERF.want; store.set("pm.perf", PERF.level); resize(); }
+  return true;
+}
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 const cv = $("cv"), ctx = cv.getContext("2d");
 let W = 0, H = 0, DPR = 1;
@@ -1134,7 +1153,7 @@ let trail = [], lastCharge = null, holdStart = 0, holdY = 0, slowLeft = 0, flash
 // ---------- Layout & stadium (landscape side view) ----------
 let L = {}, bg = null;
 function resize(){
-  DPR = LIGHT() ? 1 : Math.min(2, window.devicePixelRatio || 1);
+  DPR = LIGHT() || PERF.level >= 1 ? 1 : Math.min(1.5, window.devicePixelRatio || 1);
   W = window.innerWidth; H = window.innerHeight;
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -2648,7 +2667,7 @@ function renderSettings(){
   const items = [
     ["audio", "Audio", "Calcio, rete, pubblico e cori.", sfx.on, null],
     ["vibra", "Vibrazione", canVibrate ? "Piccoli colpi al tiro e al gol." : "Non disponibile su questo telefono.", SET.vibra && canVibrate, !canVibrate],
-    ["quality", "Grafica leggera", "Meno effetti, per telefoni meno potenti.", SET.quality === "leggera", null],
+    ["quality", "Grafica leggera", "Meno effetti, per telefoni meno potenti.", LIGHT(), null],
     ["cb", "Colori per daltonici", "Errori in blu invece che in rosso, contorni più marcati.", SET.cb, null]
   ];
   for (const [key, title, desc, on, disabled] of items) {
@@ -2659,7 +2678,7 @@ function renderSettings(){
     sw.onclick = () => {
       if (key === "audio") { sfx.toggle(); syncSound(); }
       else if (key === "vibra") SET.vibra = !SET.vibra;
-      else if (key === "quality") { SET.quality = SET.quality === "leggera" ? "alta" : "leggera"; resize(); homeTheme(); }
+      else if (key === "quality") { SET.quality = LIGHT() ? "alta" : "leggera"; PERF.level = PERF.want = 0; store.set("pm.perf", 0); resize(); homeTheme(); }
       else if (key === "cb") { SET.cb = !SET.cb; document.body.classList.toggle("cb", SET.cb); }
       saveSet(); renderSettings();
     };
@@ -3560,6 +3579,7 @@ function afterStep(h){
 // ---------- Loop ----------
 let last = performance.now();
 function frame(now){
+  if (!perfFrame(now, !!G && !demo && (phase === "ready" || phase === "hold" || phase === "flight" || phase === "after"))) { requestAnimationFrame(frame); return; }
   const dt = Math.min(1/20, (now - last) / 1000); last = now;
   // the match is played in landscape: in portrait it waits behind the "turn your phone" card
   const inMatch = G && (phase === "ready" || phase === "hold" || phase === "flight" || phase === "after");
