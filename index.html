@@ -1553,9 +1553,9 @@ async function sb(path, opt = {}){
 }
 // error log: the queue gathered since the page opened goes to the server, quietly, every few seconds
 const errVer = (() => { const d = new Date(document.lastModified); return isNaN(d) ? "" : d.toISOString().slice(0, 16).replace("T", " "); })();
-let errBusy = false;
+let errBusy = false, errFails = 0;
 async function errFlush(){
-  if (errBusy || !window.__errs.length || navigator.onLine === false || !store.get("pm.session", null)) return;
+  if (errBusy || errFails >= 3 || !window.__errs.length || navigator.onLine === false || !store.get("pm.session", null)) return;
   errBusy = true;
   try {
     while (window.__errs.length) {
@@ -1564,7 +1564,7 @@ async function errFlush(){
         where: [phase, LEAGUE, document.referrer.indexOf("android-app://") === 0 || store.get("pm.twa", false) ? "app" : "web", PERF.level ? "perf" + PERF.level : "", LIGHT() ? "leggera" : ""].filter(Boolean).join(" ") }) } });
       window.__errs.shift();
     }
-  } catch (e) {} finally { errBusy = false; }
+  } catch (e) { errFails++; } finally { errBusy = false; }
 }
 setInterval(errFlush, 8000);
 // who is online right now: every open phone says hello once a minute
