@@ -7,6 +7,28 @@
 window.__bip = null; window.__t0 = Date.now(); window.__taps = 0;
 window.addEventListener("pointerdown", function () { window.__taps++; }, true);
 window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.__bip = e; window.__bipSeen = true; window.dispatchEvent(new Event("bipready")); });
+// opened from the Play Store app (Trusted Web Activity): remembered, so the site never sends it to the Store again
+try { if (document.referrer.indexOf("android-app://com.perlamaglia.app") === 0) localStorage.setItem("pm.twa", "true"); } catch (e) {}
+// error log: what breaks on the players' phones is queued here and sent to the server (at most 5 different errors per visit)
+window.__errs = []; window.__errSeen = {};
+window.__errAdd = function (o) {
+  try {
+    var m = String(o.msg || "").slice(0, 300);
+    if (!m || /^Script error\.?$|ResizeObserver loop|Failed to fetch|Load failed|NetworkError|network error|AbortError|The user aborted|cancel/i.test(m)) return;
+    if (o.src && o.src.indexOf(location.origin) !== 0) return;   // browser extensions and other sites
+    var k = m + "|" + (o.line || 0);
+    if (window.__errSeen[k] || Object.keys(window.__errSeen).length >= 5) return;
+    window.__errSeen[k] = 1; window.__errs.push(o);
+  } catch (e) {}
+};
+window.addEventListener("error", function (e) {
+  if (!e || !e.message) return;
+  window.__errAdd({ msg: e.message, src: e.filename || "", line: e.lineno || 0, col: e.colno || 0, stack: e.error && e.error.stack ? String(e.error.stack).slice(0, 1500) : "" });
+});
+window.addEventListener("unhandledrejection", function (e) {
+  var r = e && e.reason; if (!r) return;
+  window.__errAdd({ msg: "promise: " + (r.message || String(r)), src: "", line: 0, col: 0, stack: r.stack ? String(r.stack).slice(0, 1500) : "" });
+});
 // players arriving from the old address bring their saved data in the link (#trasloco=…); it is taken once
 (function () {
   var m = location.hash.match(/^#trasloco=([A-Za-z0-9_-]+)/);
@@ -1529,6 +1551,22 @@ async function sb(path, opt = {}){
   if (!r.ok) { const t = await r.text().catch(() => ""); throw new Error(r.status + " " + t); }
   const tx = await r.text(); return tx ? JSON.parse(tx) : null;
 }
+// error log: the queue gathered since the page opened goes to the server, quietly, every few seconds
+const errVer = (() => { const d = new Date(document.lastModified); return isNaN(d) ? "" : d.toISOString().slice(0, 16).replace("T", " "); })();
+let errBusy = false;
+async function errFlush(){
+  if (errBusy || !window.__errs.length || navigator.onLine === false || !store.get("pm.session", null)) return;
+  errBusy = true;
+  try {
+    while (window.__errs.length) {
+      const o = window.__errs[0];
+      await sb("rpc/log_error", { body: { p: Object.assign({}, o, { ver: errVer, ua: navigator.userAgent.slice(0, 160),
+        where: [phase, LEAGUE, document.referrer.indexOf("android-app://") === 0 || store.get("pm.twa", false) ? "app" : "web", PERF.level ? "perf" + PERF.level : "", LIGHT() ? "leggera" : ""].filter(Boolean).join(" ") }) } });
+      window.__errs.shift();
+    }
+  } catch (e) {} finally { errBusy = false; }
+}
+setInterval(errFlush, 8000);
 // who is online right now: every open phone says hello once a minute
 async function srvPing(){
   if (document.visibilityState !== "visible" || !store.get("pm.session", null)) return;
@@ -2735,7 +2773,7 @@ let lastMatch = null;
 function toast(msg){ const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 3200); }
 const SITE = new URL("./", location.href.split("?")[0]).href;
 const slugOf = n => n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-const PLAY_URL = "";   // the Play Store page, once the app is published
+const PLAY_URL = "https://play.google.com/store/apps/details?id=com.perlamaglia.app";   // the game's page in the Play Store
 async function teamLink(team){ const c = await myRefCode(); return SITE + (team ? slugOf(team) + "/" : "") + (c ? "?da=" + c : ""); }
 async function copyText(t){ try { await navigator.clipboard.writeText(t); return true; } catch (e) { const a = document.createElement("textarea"); a.value = t; document.body.appendChild(a); a.select(); let ok = false; try { ok = document.execCommand("copy"); } catch (x) {} a.remove(); return ok; } }
 async function shareFile(blob, name, text){
@@ -3944,6 +3982,11 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
 
 // install button: one tap starts the installation
 (() => {
+  // Play Store: when PLAY_ON is true, "Installa" on Android phones opens the game's page in the Play Store app.
+  // Switch it on the day the app is public (until then the page only exists for testers).
+  const PLAY_ON = false;
+  const PLAY_ID = "com.perlamaglia.app";
+  const PLAY_URL = "https://play.google.com/store/apps/details?id=" + PLAY_ID;
   const btn = document.getElementById("installBtn");
   const scr = document.getElementById("installScreen");
   const start = document.getElementById("startScreen");
@@ -3954,7 +3997,10 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
   const android = /Android/.test(ua);
   const installed = () => window.matchMedia("(display-mode: standalone)").matches || window.matchMedia("(display-mode: fullscreen)").matches || navigator.standalone === true;
   const label = btn.querySelector("span");
-  const sync = () => { btn.hidden = installed(); };
+  const inApp = () => { try { if (localStorage.getItem("pm.twa") === "true") return true; } catch (e) {} return document.referrer.indexOf("android-app://" + PLAY_ID) === 0; };
+  const sync = () => { btn.hidden = installed() || inApp(); };
+  // with the Play Store on: the button disappears when the Store app is already on this phone
+  if (PLAY_ON && android && navigator.getInstalledRelatedApps) navigator.getInstalledRelatedApps().then(a => { if (a.some(x => x.platform === "play")) btn.hidden = true; }).catch(() => {});
   const fromChrome = /[?&]installa\b/.test(location.search);
   window.addEventListener("appinstalled", () => { window.__bip = null; scr.hidden = true; start.hidden = false; sync(); });
   // the prompt usually arrives a moment after the page opens: wait for it briefly while the tap still counts
@@ -3988,6 +4034,11 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
   window.addEventListener("bipready", ready);
   let waiting = false;
   btn.onclick = async () => {
+    if (PLAY_ON && android) {
+      // straight to the game's page in the Play Store app (from Chrome or from inside WhatsApp, Instagram…)
+      location.href = "intent://details?id=" + PLAY_ID + "#Intent;scheme=market;package=com.android.vending;S.browser_fallback_url=" + encodeURIComponent(PLAY_URL) + ";end";
+      return;
+    }
     if (window.__bip) {
       const bip = window.__bip; window.__bip = null;
       btn.classList.remove("go"); label.textContent = tr("Installa");

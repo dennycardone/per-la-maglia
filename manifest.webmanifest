@@ -14,6 +14,11 @@
     {
       "platform": "webapp",
       "url": "https://perlamaglia.com/manifest.webmanifest"
+    },
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.perlamaglia.app",
+      "id": "com.perlamaglia.app"
     }
   ],
   "icons": [
