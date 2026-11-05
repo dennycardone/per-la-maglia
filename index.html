@@ -376,6 +376,14 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 #startScreen .champLine .cs{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:rgba(255,194,75,.16)}
 #startScreen .champLine b{color:var(--amber)}
 #startScreen .champLine .mv{color:#cfd8d1}
+#startScreen .moveLine{margin-top:6px;border-color:rgba(62,207,116,.8)}
+#startScreen .moveLine.down{border-color:rgba(255,90,90,.8)}
+#startScreen .moveLine b{color:#7fe0a0}
+#startScreen .moveLine.down b{color:#ff8f8f}
+.rrow.zup{box-shadow:inset 3px 0 0 #3ecf74}.rrow.zdown{box-shadow:inset 3px 0 0 #ff5a5a}
+.rrow .zt{margin-left:6px;font-size:.78em;font-weight:700;letter-spacing:.04em}
+.rrow.zup .zt{color:#3ecf74}.rrow.zdown .zt{color:#ff6b6b}
+.zleg{margin-left:10px;white-space:nowrap}.zleg i{display:inline-block;width:3px;height:11px;margin:0 4px -1px 8px;border-radius:1px}.zleg .zu{background:#3ecf74}.zleg .zd{background:#ff5a5a}
 .hask{position:absolute;left:0;right:0;bottom:96px;text-align:center;font-family:var(--label);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);text-shadow:0 2px 8px #000;z-index:1;animation:pulse2 1.4s ease-in-out infinite}
 @keyframes pulse2{50%{opacity:.5}}
 .bench{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);display:flex;gap:6px;overflow-x:auto;padding:8px max(16px,env(safe-area-inset-left,0px)) 4px;scrollbar-width:none;touch-action:pan-x;z-index:2;-webkit-mask:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
@@ -698,6 +706,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
       <li><span aria-hidden="true">🧤</span><span>Scavalca il portiere col cucchiaio</span></li>
       <li><span aria-hidden="true">🔥</span><span>Gol di fila = punti moltiplicati. 3 errori e finisce la partita</span></li>
       <li><span aria-hidden="true">🏆</span><span>I tuoi punti si sommano a quelli dei tifosi della tua squadra: ogni settimana vince la tifoseria migliore</span></li>
+      <li><span aria-hidden="true">↕️</span><span>Ogni lunedì le ultime 3 scendono di serie e le prime 3 salgono: la tua squadra la segui ovunque</span></li>
     </ul>
     <button class="btn" id="howOk" type="button">In campo!</button>
   </div>
@@ -735,6 +744,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
     <div class="playRow"><button class="btn hplay" id="playBtn" type="button">GIOCA</button><button class="hhelp" id="helpBtn" type="button" aria-label="Come si gioca">?</button></div>
     <div class="homeTeam" id="homeTeam"></div>
     <button class="champLine" id="champLine" type="button" hidden></button>
+    <button class="champLine moveLine" id="moveLine" type="button" hidden></button>
   </div>
   <div class="hask" id="hask" hidden>↓ Scegli la tua squadra per iniziare ↓</div>
   <div class="bench" id="teams"></div>
@@ -895,6 +905,33 @@ const store = {
   get(k, d){ try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } },
   set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
 };
+// ---------- Promotions and relegations: every Monday the bottom 3 go down and the top 3 go up ----------
+// The server says in which division every team plays this week (leagues_now). The lists above are the starting line-up.
+const ALL_TEAMS = [...TEAMS_A, ...TEAMS_B, ...TEAMS_C], TEAM_BY = Object.fromEntries(ALL_TEAMS.map(t => [t[0], t]));
+const BASE_LEAGUE = {}; for (const [l, arr] of Object.entries(LEAGUE_TEAMS)) arr.forEach(t => BASE_LEAGUE[t[0]] = l);
+const LEAGUE_ORDER = ["serie-c", "serie-b", "serie-a"];
+let MEMBERS = store.get("pm.members", null);   // { season, map: { team: league }, moved: [[team, from, to]], next: [[team, from, to]] | null }
+const leagueOf = name => (MEMBERS && MEMBERS.map && MEMBERS.map[name]) || BASE_LEAGUE[name];
+const slotKey = l => l === "serie-a" ? "cucchiaio.teamName" : "pm.team." + l;
+function buildLeagues(){
+  for (const l of Object.keys(LEAGUE_TEAMS)) {
+    const list = ALL_TEAMS.filter(t => leagueOf(t[0]) === l).sort((a, b) => a[0].localeCompare(b[0], "it"));
+    LEAGUE_TEAMS[l].splice(0, LEAGUE_TEAMS[l].length, ...list);   // same arrays: everything that points to them sees the new teams
+  }
+}
+// the player follows his teams: one moved to another division → it takes its place there, and the division he was playing follows it
+function followTeams(){
+  const slots = {}; for (const l of LEAGUE_ORDER) { const n = store.get(slotKey(l), ""); if (n && TEAM_BY[n]) slots[l] = n; }
+  const out = {}, cur = slots[LEAGUE];
+  for (const l of LEAGUE_ORDER) { const n = slots[l]; if (!n) continue; const to = leagueOf(n); if (!out[to] || n === cur) out[to] = n; }
+  let changed = false;
+  for (const l of LEAGUE_ORDER) { if ((slots[l] || "") !== (out[l] || "")) { changed = true; if (out[l]) store.set(slotKey(l), out[l]); else try { localStorage.removeItem(slotKey(l)); } catch (e) {} } }
+  if (changed && slots["serie-a"] && out["serie-a"] !== slots["serie-a"]) try { localStorage.removeItem("cucchiaio.team"); localStorage.removeItem("pennellata.team"); } catch (e) {}
+  if (cur && leagueOf(cur) !== LEAGUE) { LEAGUE = leagueOf(cur); store.set("pm.league", LEAGUE); }
+  else if (!out[LEAGUE]) { const only = LEAGUE_ORDER.filter(l => out[l]); if (only.length === 1) { LEAGUE = only[0]; store.set("pm.league", LEAGUE); } }
+  return changed;
+}
+buildLeagues(); followTeams(); TEAMS = LEAGUE_TEAMS[LEAGUE];
 const $ = id => document.getElementById(id);
 const SET = Object.assign({ vibra: true, quality: "alta", cb: false }, store.get("cucchiaio.settings", {}));
 function saveSet(){ store.set("cucchiaio.settings", SET); }
@@ -1008,6 +1045,7 @@ I18N.en = {
   "Come si gioca": "How to play", "Tieni premuto, trascina per la parabola, rilascia per tirare": "Hold, drag for the arc, release to shoot",
   "Scavalca il portiere col cucchiaio": "Chip the goalkeeper", "Gol di fila = punti moltiplicati. 3 errori e finisce la partita": "Goals in a row = multiplied points. 3 misses and the game is over",
   "I tuoi punti si sommano a quelli dei tifosi della tua squadra: ogni settimana vince la tifoseria migliore": "Your points add up with your team's fans: every week the best fan base wins",
+  "Ogni lunedì le ultime 3 scendono di serie e le prime 3 salgono: la tua squadra la segui ovunque": "Every Monday the bottom 3 go down a division and the top 3 go up: you follow your team wherever it goes",
   "In campo!": "Let's play!", "Vuoi rileggerlo?": "Want to read it again?", "Tocca": "Tap", "nella home quando vuoi": "on the home screen whenever you like", "Ho capito": "Got it",
   "Tutorial": "Tutorial", "Rifai i tre tiri di prova alla prossima partita.": "Replay the three practice shots in your next game.", "Rivedi": "Replay", "Alla prossima partita": "Next game",
   // install
@@ -1021,6 +1059,10 @@ I18N.en = {
   "Google non ha risposto: riprova dalle Opzioni.": "Google didn't answer: try again from Options.",
   "Bentornato {n}! Profilo ritrovato, con le {m} partite di questo telefono.": "Welcome back {n}! Profile found, with the {m} games from this phone.",
   "Bentornato {n}! Profilo ritrovato.": "Welcome back {n}! Profile found.",
+  "Promozione! {t} sale in {l}": "Promoted! {t} go up to {l}", "Retrocessione: {t} scende in {l}": "Relegated: {t} go down to {l}",
+  "Da lunedì {t} sale in {l}!": "From Monday {t} go up to {l}!", "Da lunedì {t} scende in {l}": "From Monday {t} go down to {l}",
+  "difendi la categoria": "stay up", "riportala su": "bring them back up", "le ultime 3 tornano giù": "the bottom 3 go back down", "riportala su: le prime 3 salgono": "bring them back: the top 3 go up",
+  "le prime 3 salgono": "top 3 go up", "le ultime 3 scendono": "bottom 3 go down", "promozione": "promotion", "retrocessione": "relegation",
   "<b>Salva il profilo</b> · se cambi telefono ritrovi i tuoi punti": "<b>Save your profile</b> · keep your points if you change phone", "Profilo salvato con Google ✓": "Profile saved with Google ✓", "Per la Maglia sul telefono": "Per la Maglia on your phone",
   "Chrome non ha ancora dato il via libera: chiudi e riapri la pagina, poi tocca di nuovo <b>Installa l'app</b>.": "Chrome isn't ready yet: close and reopen the page, then tap <b>Install the app</b> again.",
   "Una volta installato si apre a schermo intero dalla schermata Home e funziona anche senza connessione.": "Once installed it opens full screen from your Home Screen and works offline too."
@@ -1599,10 +1641,33 @@ async function myRefCode(){
   if (!c) { try { await sbAuth(); c = await sb("rpc/my_ref_code", { body: {} }); if (c) store.set("pm.refCode", c); } catch (e) { c = ""; } }
   return c;
 }
+async function srvMembers(){
+  try {
+    const d = await sb("rpc/leagues_now", { body: {} });
+    if (!d || !Array.isArray(d.teams) || d.teams.length < 50) return;
+    const M = { season: d.season, map: Object.fromEntries(d.teams.map(([l, t]) => [t, l])), moved: d.moved || [], next: d.next || null };
+    if (MEMBERS && JSON.stringify(MEMBERS) === JSON.stringify(M)) return;
+    if (inMatchNow()) { srv.pendingMembers = M; return; }
+    applyMembers(M);
+  } catch (e) {}
+}
+function applyMembers(M){
+  srv.pendingMembers = null;
+  const before = LEAGUE, mapBefore = JSON.stringify(MEMBERS && MEMBERS.map);
+  MEMBERS = M; store.set("pm.members", M);
+  buildLeagues(); followTeams(); TEAMS = LEAGUE_TEAMS[LEAGUE];
+  const name = store.get(teamKey(), ""), i = TEAMS.findIndex(t => t[0] === name);
+  teamChosen = i >= 0; teamIdx = i >= 0 ? i : 0;
+  if (LEAGUE !== before) Object.assign(srv, { week: {}, records: {}, mvp: {}, winners: [], mine: {}, fans: {}, fansAt: {}, hist: {}, histAt: {}, sid: null, ok: false, taunts: null, tauntsAt: 0 });
+  renderLeagues(); if (mapBefore !== JSON.stringify(M.map) || LEAGUE !== before) { renderTeams(); buildCrowd(); }
+  renderHome(); renderRanks();
+  if (LEAGUE !== before) srvLoad();
+}
 async function srvLoad(){
   if (srv.loading) return; srv.loading = true;
   try {
     const ses = await sbAuth(); srv.uid = ses.uid;
+    if (!srv.membersAt || Date.now() - srv.membersAt > 10 * 60000 || (MEMBERS && MEMBERS.season !== isoWeekNow())) { srv.membersAt = Date.now(); await srvMembers(); }
     const sid = seasonId(), q = encodeURIComponent(sid), lg = LEAGUE;
     let week, rec, win, mine, mvp = [];
     try {
@@ -1763,6 +1828,7 @@ function cutDay(back = 0){
   const shift = (wd === 5 && r.h >= 8) ? 2 : wd === 6 ? 1 : 0, dt = new Date(Date.UTC(r.y, r.m - 1, r.d + shift - back));
   return [dt.getUTCFullYear(), dt.getUTCMonth() + 1, dt.getUTCDate()];
 }
+function isoWeekNow(){ const r = romeDay(); return seasonOf(r.y, r.m, r.d); }   // the server's week (from Monday 00:00)
 function honoursCut(){ return seasonOf(...cutDay()); }      // weeks before this one are finished and in the honours
 function prevSeasonId(){ return seasonOf(...cutDay(7)); }  // the week of the reigning champion
 function seasonLabel(sid){ return tr("Settimana {n}", { n: +sid.split("-W")[1] }) + " · " + sid.slice(0, 4); }
@@ -1819,7 +1885,7 @@ function teamRows(extra){
   const { totals, fans } = seasonTotals(seasonId());
   if (extra) totals[extra.team] = (totals[extra.team] || 0) + extra.pts;
   return TEAMS.map(t => ({ name: t[0], color: t[1], pts: totals[t[0]] || 0, fans: fans[t[0]] || 0 }))
-    .sort((a, b) => b.pts - a.pts || a.name.localeCompare(b.name));
+    .sort((a, b) => b.pts - a.pts || b.fans - a.fans || a.name.localeCompare(b.name));
 }
 function teamMvps(sid){
   const d = svData();
@@ -1941,8 +2007,18 @@ function renderRanks(){
         const hd2 = hd.cloneNode(true); hd.style.gridArea = "1 / 1"; hd2.style.gridArea = "1 / 2";
         list.appendChild(hd); list.appendChild(hd2);
       }
+      // the finished week at the weekend: who goes up and down on Monday (after midnight on Monday: who has just moved)
+      const nl = sid === prevSeasonId() && MEMBERS ? (MEMBERS.season === sid ? MEMBERS.next : MEMBERS.season > sid ? MEMBERS.moved : null) : null;
+      const nxt = nl ? Object.fromEntries(nl.map(x => [x[0], x[2]])) : null;
+      const zone = (k, name) => {
+        if (nxt) { const to = nxt[name]; return to ? (LEAGUE_ORDER.indexOf(to) > LEAGUE_ORDER.indexOf(LEAGUE) ? "zup" : "zdown") : ""; }
+        if (sid !== seasonId()) return "";
+        return LEAGUE !== "serie-a" && k < 3 ? "zup" : LEAGUE !== "serie-c" && k >= rows.length - 3 ? "zdown" : "";
+      };
       rows.forEach((r, k) => { row(k + 1, { team: r.name }, r.name, !full && bests[r.name] ? `${tr("record")} ${bests[r.name].pts.toLocaleString(LOC())} · ${bests[r.name].name}` : "", r.pts, r.name === mine, 0, bests[r.name],
         () => { rankTeam = r.name; box.dataset.tab = "fans"; renderRanks(); });
+        const z = zone(k, r.name); if (z) { list.lastChild.classList.add(z);
+          if (nxt) { const zt = document.createElement("span"); zt.className = "zt"; zt.textContent = (z === "zup" ? "↑ " : "↓ ") + leagueName(nxt[r.name]).replace("Serie ", ""); zt.title = tr(z === "zup" ? "promozione" : "retrocessione"); list.lastChild.querySelector(".who").appendChild(zt); } }
         if (full) { const half = Math.ceil(rows.length / 2); list.lastChild.style.gridArea = `${(k % half) + 2} / ${k < half ? 1 : 2}`; } });
     } else {
       const team = rankTeam || mine, color = (TEAMS.find(t => t[0] === team) || ["", "#888"])[1];
@@ -1966,6 +2042,8 @@ function renderRanks(){
         if (k === 0) { const b = document.createElement("span"); b.className = "mvpTag"; b.textContent = "MVP"; list.lastChild.querySelector(".who").appendChild(b); } });
     }
     const st = box.querySelector(".rstatus"); st.textContent = seasonLabel(sid) + " · "; const cd = document.createElement("span"); cd.className = "cd"; cd.textContent = seasonLeft(); st.appendChild(cd);
+    if (tab === "teams" && sid === seasonId()) { const zl = document.createElement("span"); zl.className = "zleg";
+      zl.innerHTML = (LEAGUE !== "serie-a" ? `<i class="zu"></i>${tr("le prime 3 salgono")} ` : "") + (LEAGUE !== "serie-c" ? `<i class="zd"></i>${tr("le ultime 3 scendono")}` : ""); st.appendChild(zl); }
   });
   renderHome();
   document.querySelectorAll(".seasonName").forEach(e => e.textContent = seasonLabel(seasonId()));
@@ -2327,8 +2405,31 @@ function renderChamp(){
   c.hidden = false;
   c.onclick = () => openHistory("startScreen");
 }
+// this week (moved) or from Monday (next, shown from Saturday 08:00): the player's team changes division
+function leagueName(id){ for (const n of NATIONS) for (const d of n.divs) if (d[0] === id) return d[1]; return ""; }
+function renderMove(){
+  const el = $("moveLine"); if (!el) return;
+  const mine = teamChosen && TEAMS[teamIdx] ? TEAMS[teamIdx][0] : null;
+  let m = null, soon = false;
+  if (mine && MEMBERS) {
+    const weekend = honoursCut() > seasonId();
+    if (weekend && MEMBERS.next && MEMBERS.season === seasonId()) { m = MEMBERS.next.find(x => x[0] === mine); soon = !!m; }
+    if (!m && MEMBERS.season === isoWeekNow()) m = (MEMBERS.moved || []).find(x => x[0] === mine);
+  }
+  if (!m) { el.hidden = true; return; }
+  const [t, from, to] = m, up = LEAGUE_ORDER.indexOf(to) > LEAGUE_ORDER.indexOf(from);
+  el.classList.toggle("down", !up);
+  el.innerHTML = `<span class="cs">${up ? "⬆️" : "⬇️"}</span><span><b></b><span class="mv"></span></span>`;
+  el.querySelector("b").textContent = soon
+    ? tr(up ? "Da lunedì {t} sale in {l}!" : "Da lunedì {t} scende in {l}", { t: sq(t), l: leagueName(to) })
+    : tr(up ? "Promozione! {t} sale in {l}" : "Retrocessione: {t} scende in {l}", { t: sq(t, "", up), l: leagueName(to) });
+  el.querySelector(".mv").textContent = " · " + (soon ? tr(up ? "difendi la categoria" : "riportala su") : up ? tr("le ultime 3 tornano giù") : tr("riportala su: le prime 3 salgono"));
+  el.onclick = () => $("rankBtn").click();
+  el.hidden = false;
+}
 function renderHome(){
-  renderChamp();
+  if (srv.pendingMembers && !inMatchNow()) { applyMembers(srv.pendingMembers); return; }
+  renderChamp(); renderMove();
   const nick = cleanNick(store.get("cucchiaio.nick", ""));
   const nb = $("nickBtn");
   if (nb) {
