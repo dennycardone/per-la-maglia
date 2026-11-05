@@ -706,7 +706,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
       <li><span aria-hidden="true">🧤</span><span>Scavalca il portiere col cucchiaio</span></li>
       <li><span aria-hidden="true">🔥</span><span>Gol di fila = punti moltiplicati. 3 errori e finisce la partita</span></li>
       <li><span aria-hidden="true">🏆</span><span>I tuoi punti si sommano a quelli dei tifosi della tua squadra: ogni settimana vince la tifoseria migliore</span></li>
-      <li><span aria-hidden="true">↕️</span><span>Ogni lunedì le ultime 3 scendono di serie e le prime 3 salgono: la tua squadra la segui ovunque</span></li>
+      <li><span aria-hidden="true">↕️</span><span>Ogni lunedì salgono di serie le prime 3 che hanno fatto punti e ne scendono altrettante: la tua squadra la segui ovunque</span></li>
     </ul>
     <button class="btn" id="howOk" type="button">In campo!</button>
   </div>
@@ -1045,7 +1045,7 @@ I18N.en = {
   "Come si gioca": "How to play", "Tieni premuto, trascina per la parabola, rilascia per tirare": "Hold, drag for the arc, release to shoot",
   "Scavalca il portiere col cucchiaio": "Chip the goalkeeper", "Gol di fila = punti moltiplicati. 3 errori e finisce la partita": "Goals in a row = multiplied points. 3 misses and the game is over",
   "I tuoi punti si sommano a quelli dei tifosi della tua squadra: ogni settimana vince la tifoseria migliore": "Your points add up with your team's fans: every week the best fan base wins",
-  "Ogni lunedì le ultime 3 scendono di serie e le prime 3 salgono: la tua squadra la segui ovunque": "Every Monday the bottom 3 go down a division and the top 3 go up: you follow your team wherever it goes",
+  "Ogni lunedì salgono di serie le prime 3 che hanno fatto punti e ne scendono altrettante: la tua squadra la segui ovunque": "Every Monday the top 3 that scored go up a division and as many go down: you follow your team wherever it goes",
   "In campo!": "Let's play!", "Vuoi rileggerlo?": "Want to read it again?", "Tocca": "Tap", "nella home quando vuoi": "on the home screen whenever you like", "Ho capito": "Got it",
   "Tutorial": "Tutorial", "Rifai i tre tiri di prova alla prossima partita.": "Replay the three practice shots in your next game.", "Rivedi": "Replay", "Alla prossima partita": "Next game",
   // install
@@ -1062,7 +1062,7 @@ I18N.en = {
   "Promozione! {t} sale in {l}": "Promoted! {t} go up to {l}", "Retrocessione: {t} scende in {l}": "Relegated: {t} go down to {l}",
   "Da lunedì {t} sale in {l}!": "From Monday {t} go up to {l}!", "Da lunedì {t} scende in {l}": "From Monday {t} go down to {l}",
   "difendi la categoria": "stay up", "riportala su": "bring them back up", "le ultime 3 tornano giù": "the bottom 3 go back down", "riportala su: le prime 3 salgono": "bring them back: the top 3 go up",
-  "le prime 3 salgono": "top 3 go up", "le ultime 3 scendono": "bottom 3 go down", "promozione": "promotion", "retrocessione": "relegation",
+  "salgono le prime 3 che fanno punti": "the top 3 that score go up", "scende l'ultima": "the last one goes down", "scendono le ultime {n}": "the bottom {n} go down", "per ora non scende nessuno": "nobody goes down for now", "promozione": "promotion", "retrocessione": "relegation",
   "<b>Salva il profilo</b> · se cambi telefono ritrovi i tuoi punti": "<b>Save your profile</b> · keep your points if you change phone", "Profilo salvato con Google ✓": "Profile saved with Google ✓", "Per la Maglia sul telefono": "Per la Maglia on your phone",
   "Chrome non ha ancora dato il via libera: chiudi e riapri la pagina, poi tocca di nuovo <b>Installa l'app</b>.": "Chrome isn't ready yet: close and reopen the page, then tap <b>Install the app</b> again.",
   "Una volta installato si apre a schermo intero dalla schermata Home e funziona anche senza connessione.": "Once installed it opens full screen from your Home Screen and works offline too."
@@ -1645,7 +1645,7 @@ async function srvMembers(){
   try {
     const d = await sb("rpc/leagues_now", { body: {} });
     if (!d || !Array.isArray(d.teams) || d.teams.length < 50) return;
-    const M = { season: d.season, map: Object.fromEntries(d.teams.map(([l, t]) => [t, l])), moved: d.moved || [], next: d.next || null };
+    const M = { season: d.season, map: Object.fromEntries(d.teams.map(([l, t]) => [t, l])), moved: d.moved || [], next: d.next || null, swaps: d.swaps || null };
     if (MEMBERS && JSON.stringify(MEMBERS) === JSON.stringify(M)) return;
     if (inMatchNow()) { srv.pendingMembers = M; return; }
     applyMembers(M);
@@ -2013,7 +2013,8 @@ function renderRanks(){
       const zone = (k, name) => {
         if (nxt) { const to = nxt[name]; return to ? (LEAGUE_ORDER.indexOf(to) > LEAGUE_ORDER.indexOf(LEAGUE) ? "zup" : "zdown") : ""; }
         if (sid !== seasonId()) return "";
-        return LEAGUE !== "serie-a" && k < 3 ? "zup" : LEAGUE !== "serie-c" && k >= rows.length - 3 ? "zdown" : "";
+        const up = LEAGUE !== "serie-a" && k < swapsUp() && rows[k].pts > 0, down = LEAGUE !== "serie-c" && k >= rows.length - swapsDown();
+        return up ? "zup" : down ? "zdown" : "";
       };
       rows.forEach((r, k) => { row(k + 1, { team: r.name }, r.name, !full && bests[r.name] ? `${tr("record")} ${bests[r.name].pts.toLocaleString(LOC())} · ${bests[r.name].name}` : "", r.pts, r.name === mine, 0, bests[r.name],
         () => { rankTeam = r.name; box.dataset.tab = "fans"; renderRanks(); });
@@ -2043,7 +2044,9 @@ function renderRanks(){
     }
     const st = box.querySelector(".rstatus"); st.textContent = seasonLabel(sid) + " · "; const cd = document.createElement("span"); cd.className = "cd"; cd.textContent = seasonLeft(); st.appendChild(cd);
     if (tab === "teams" && sid === seasonId()) { const zl = document.createElement("span"); zl.className = "zleg";
-      zl.innerHTML = (LEAGUE !== "serie-a" ? `<i class="zu"></i>${tr("le prime 3 salgono")} ` : "") + (LEAGUE !== "serie-c" ? `<i class="zd"></i>${tr("le ultime 3 scendono")}` : ""); st.appendChild(zl); }
+      const dn = swapsDown();
+      zl.innerHTML = (LEAGUE !== "serie-a" ? `<i class="zu"></i>${tr("salgono le prime 3 che fanno punti")} ` : "")
+        + (LEAGUE !== "serie-c" ? `<i class="zd"></i>${dn ? tr(dn === 1 ? "scende l'ultima" : "scendono le ultime {n}", { n: dn }) : tr("per ora non scende nessuno")}` : ""); st.appendChild(zl); }
   });
   renderHome();
   document.querySelectorAll(".seasonName").forEach(e => e.textContent = seasonLabel(seasonId()));
@@ -2405,6 +2408,10 @@ function renderChamp(){
   c.hidden = false;
   c.onclick = () => openHistory("startScreen");
 }
+// how many teams swap this week: as many as the teams of the lower division that scored (at most 3)
+const swapsOf = key => { const w = MEMBERS && MEMBERS.season === isoWeekNow() && MEMBERS.swaps; return w && typeof w[key] === "number" ? w[key] : 3; };
+const swapsUp = () => LEAGUE === "serie-b" ? swapsOf("ab") : LEAGUE === "serie-c" ? swapsOf("bc") : 0;
+const swapsDown = () => LEAGUE === "serie-a" ? swapsOf("ab") : LEAGUE === "serie-b" ? swapsOf("bc") : 0;
 // this week (moved) or from Monday (next, shown from Saturday 08:00): the player's team changes division
 function leagueName(id){ for (const n of NATIONS) for (const d of n.divs) if (d[0] === id) return d[1]; return ""; }
 function renderMove(){
@@ -2423,7 +2430,7 @@ function renderMove(){
   el.querySelector("b").textContent = soon
     ? tr(up ? "Da lunedì {t} sale in {l}!" : "Da lunedì {t} scende in {l}", { t: sq(t), l: leagueName(to) })
     : tr(up ? "Promozione! {t} sale in {l}" : "Retrocessione: {t} scende in {l}", { t: sq(t, "", up), l: leagueName(to) });
-  el.querySelector(".mv").textContent = " · " + (soon ? tr(up ? "difendi la categoria" : "riportala su") : up ? tr("le ultime 3 tornano giù") : tr("riportala su: le prime 3 salgono"));
+  el.querySelector(".mv").textContent = " · " + tr(up ? "difendi la categoria" : "riportala su");
   el.onclick = () => $("rankBtn").click();
   el.hidden = false;
 }

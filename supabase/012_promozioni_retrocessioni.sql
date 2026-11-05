@@ -1,6 +1,7 @@
 -- Per la Maglia · 012 · Promozioni e retrocessioni
 -- Ogni settimana, alla chiusura del campionato: le ultime 3 della Serie A scendono in B e le prime 3 della B salgono in A;
 -- le ultime 3 della B scendono in C e le prime 3 della C salgono in B. Le ultime della C restano in C.
+-- Sale solo chi ha fatto punti: se nella serie sotto ne hanno fatti solo 1 o 2 squadre, salgono solo loro e ne scendono altrettante.
 -- A parità di punti conta chi ha avuto più tifosi in settimana, poi i punti di tutte le settimane passate.
 -- Chi gioca per una squadra la segue nella nuova serie. Le partite già giocate restano dove sono (storico e Albo d'oro intatti).
 -- La settimana in cui esegui questo file è la formazione di partenza: i primi cambi avvengono il lunedì successivo.
@@ -31,11 +32,14 @@ language sql stable security definer set search_path = public as $$
   r as (
     select *, row_number() over (partition by league order by p desc, f desc, h desc, team) as up,
               row_number() over (partition by league order by p asc, f asc, h asc, team desc) as dn
-      from pts)
-  select team, league, 'serie-b' from r where league = 'serie-a' and dn <= 3
-  union all select team, league, 'serie-a' from r where league = 'serie-b' and up <= 3
-  union all select team, league, 'serie-c' from r where league = 'serie-b' and dn <= 3
-  union all select team, league, 'serie-b' from r where league = 'serie-c' and up <= 3
+      from pts),
+  -- sale solo chi ha fatto punti (al massimo 3) e ne scendono altrettante: se in C fa punti una sola squadra, sale una e scende una
+  k as (select least(3, count(*) filter (where league = 'serie-b' and p > 0)) as ab,
+               least(3, count(*) filter (where league = 'serie-c' and p > 0)) as bc from pts)
+  select team, league, 'serie-b' from r, k where league = 'serie-a' and dn <= k.ab
+  union all select team, league, 'serie-a' from r, k where league = 'serie-b' and up <= k.ab
+  union all select team, league, 'serie-c' from r, k where league = 'serie-b' and dn <= k.bc
+  union all select team, league, 'serie-b' from r, k where league = 'serie-c' and up <= k.bc
 $$;
 revoke all on function public.lt_moves(text) from public, anon, authenticated;
 
@@ -71,7 +75,13 @@ begin
     'season', s,
     'teams', (select json_agg(json_build_array(league, team) order by league, team) from league_members where season = s),
     'moved', case when prev is null then '[]'::json else coalesce((select json_agg(json_build_array(team, from_league, to_league)) from lt_moves(prev)), '[]'::json) end,
-    'next', case when is_open(now()) then null else coalesce((select json_agg(json_build_array(team, from_league, to_league)) from lt_moves(s)), '[]'::json) end
+    'next', case when is_open(now()) then null else coalesce((select json_agg(json_build_array(team, from_league, to_league)) from lt_moves(s)), '[]'::json) end,
+    -- quante squadre si scambiano adesso tra A e B e tra B e C (quelle della serie sotto che hanno fatto punti, al massimo 3)
+    'swaps', (select json_build_object(
+                'ab', least(3, count(distinct team) filter (where league = 'serie-b')),
+                'bc', least(3, count(distinct team) filter (where league = 'serie-c')))
+              from (select g.league, g.team from games g join league_members m on m.season = s and m.team = g.team and m.league = g.league
+                     where g.season = s group by g.league, g.team having sum(g.score) > 0) x)
   );
 end $$;
 revoke all on function public.leagues_now() from public;
