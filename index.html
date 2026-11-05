@@ -2043,7 +2043,7 @@ function renderRanks(){
         if (k === 0) { const b = document.createElement("span"); b.className = "mvpTag"; b.textContent = "MVP"; list.lastChild.querySelector(".who").appendChild(b); } });
     }
     const st = box.querySelector(".rstatus"); st.textContent = seasonLabel(sid) + " · "; const cd = document.createElement("span"); cd.className = "cd"; cd.textContent = seasonLeft(); st.appendChild(cd);
-    if (tab === "teams" && sid === seasonId()) { const zl = document.createElement("span"); zl.className = "zleg";
+    if (tab === "teams" && sid === seasonId() && MEMBERS && MEMBERS.swaps && MEMBERS.season === isoWeekNow()) { const zl = document.createElement("span"); zl.className = "zleg";
       const dn = swapsDown();
       zl.innerHTML = (LEAGUE !== "serie-a" ? `<i class="zu"></i>${tr("salgono le prime 3 che fanno punti")} ` : "")
         + (LEAGUE !== "serie-c" ? `<i class="zd"></i>${dn ? tr(dn === 1 ? "scende l'ultima" : "scendono le ultime {n}", { n: dn }) : tr("per ora non scende nessuno")}` : ""); st.appendChild(zl); }
@@ -2409,7 +2409,7 @@ function renderChamp(){
   c.onclick = () => openHistory("startScreen");
 }
 // how many teams swap this week: as many as the teams of the lower division that scored (at most 3)
-const swapsOf = key => { const w = MEMBERS && MEMBERS.season === isoWeekNow() && MEMBERS.swaps; return w && typeof w[key] === "number" ? w[key] : 3; };
+const swapsOf = key => { const w = MEMBERS && MEMBERS.season === isoWeekNow() && MEMBERS.swaps; return w && typeof w[key] === "number" ? w[key] : 0; };   // no data (or before the start): no zones
 const swapsUp = () => LEAGUE === "serie-b" ? swapsOf("ab") : LEAGUE === "serie-c" ? swapsOf("bc") : 0;
 const swapsDown = () => LEAGUE === "serie-a" ? swapsOf("ab") : LEAGUE === "serie-b" ? swapsOf("bc") : 0;
 // this week (moved) or from Monday (next, shown from Saturday 08:00): the player's team changes division

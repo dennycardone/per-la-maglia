@@ -4,7 +4,8 @@
 -- Sale solo chi ha fatto punti: se nella serie sotto ne hanno fatti solo 1 o 2 squadre, salgono solo loro e ne scendono altrettante.
 -- A parità di punti conta chi ha avuto più tifosi in settimana, poi i punti di tutte le settimane passate.
 -- Chi gioca per una squadra la segue nella nuova serie. Le partite già giocate restano dove sono (storico e Albo d'oro intatti).
--- La settimana in cui esegui questo file è la formazione di partenza: i primi cambi avvengono il lunedì successivo.
+-- Si parte lunedì 9 novembre 2026 (settimana 2026-W46) con le serie di oggi: i primi verdetti venerdì 13 alle 20,
+-- i primi cambi lunedì 16. Fino ad allora nessuno sale e nessuno scende.
 -- Esegui tutto una volta nell'editor SQL di Supabase. Non cancella nessuna partita.
 
 -- 1) in che serie gioca ogni squadra, settimana per settimana
@@ -17,6 +18,9 @@ create table if not exists public.league_members (
 create index if not exists league_members_season_league on public.league_members (season, league);
 alter table public.league_members enable row level security;   -- il gioco legge solo con leagues_now()
 revoke all on public.league_members from anon, authenticated;
+
+-- la prima settimana con promozioni e retrocessioni
+create or replace function public.lt_start() returns text language sql immutable as $$ select '2026-W46' $$;
 
 -- 2) chi sale e chi scende alla fine di una settimana
 create or replace function public.lt_moves(p_season text)
@@ -52,7 +56,7 @@ begin
   perform pg_advisory_xact_lock(4242012);
   if exists (select 1 from league_members where season = s) then return s; end if;
   select max(season) into prev from league_members where season < s;
-  if prev is null then
+  if prev is null or s <= lt_start() then   -- fino alla prima settimana compresa: le serie di partenza
     insert into league_members (season, league, team)
     select s, l, unnest(league_teams(l)) from unnest(array['serie-a', 'serie-b', 'serie-c']) as l;
   else
@@ -74,14 +78,15 @@ begin
   return json_build_object(
     'season', s,
     'teams', (select json_agg(json_build_array(league, team) order by league, team) from league_members where season = s),
-    'moved', case when prev is null then '[]'::json else coalesce((select json_agg(json_build_array(team, from_league, to_league)) from lt_moves(prev)), '[]'::json) end,
-    'next', case when is_open(now()) then null else coalesce((select json_agg(json_build_array(team, from_league, to_league)) from lt_moves(s)), '[]'::json) end,
+    'start', lt_start(),
+    'moved', case when prev is null or s <= lt_start() then '[]'::json else coalesce((select json_agg(json_build_array(team, from_league, to_league)) from lt_moves(prev)), '[]'::json) end,
+    'next', case when is_open(now()) or s < lt_start() then null else coalesce((select json_agg(json_build_array(team, from_league, to_league)) from lt_moves(s)), '[]'::json) end,
     -- quante squadre si scambiano adesso tra A e B e tra B e C (quelle della serie sotto che hanno fatto punti, al massimo 3)
-    'swaps', (select json_build_object(
+    'swaps', case when s < lt_start() then null else (select json_build_object(
                 'ab', least(3, count(distinct team) filter (where league = 'serie-b')),
                 'bc', least(3, count(distinct team) filter (where league = 'serie-c')))
               from (select g.league, g.team from games g join league_members m on m.season = s and m.team = g.team and m.league = g.league
-                     where g.season = s group by g.league, g.team having sum(g.score) > 0) x)
+                     where g.season = s group by g.league, g.team having sum(g.score) > 0) x) end
   );
 end $$;
 revoke all on function public.leagues_now() from public;
