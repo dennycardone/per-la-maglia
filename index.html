@@ -219,6 +219,14 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .rrow .who small{margin-left:6px;color:var(--mute);font-size:13px;font-weight:500}
 .rrow .pts{color:var(--chalk)}
 .rrow .pts .dl{margin-left:5px;font-size:.78em;font-weight:700;color:#7fe0a0;white-space:nowrap}
+/* with differences on screen: the points stay in one column, the "(+…)" in a fixed slot on their right */
+.rlist.withdl .pts{display:flex;justify-content:flex-end;align-items:baseline;gap:4px}
+.rlist.withdl .pts .dl{margin-left:0;min-width:4.4em;text-align:left}
+.rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:22px 18px minmax(80px,1fr) 118px 58px minmax(56px,.9fr)}
+.rlist.full.fans.withdl .rrow{grid-template-columns:28px minmax(0,1fr) auto}
+@media (max-width:720px){.rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:18px 16px minmax(50px,1fr) 92px 44px}.rlist.full.withdl .rname,.rhd.withdl span:nth-child(6){display:none}.rlist.withdl .pts .dl{min-width:3.9em;font-size:.72em}.rlist.full.fans.withdl .rrow{grid-template-columns:26px minmax(0,1fr) auto}}
+@keyframes rflash{0%,20%{background-color:rgba(255,194,75,.3)}}
+.rrow.flash{animation:rflash 1.6s ease-out}
 .rrow .who .mv{margin-left:6px;font-size:.78em;font-weight:700;white-space:nowrap}
 .rrow .who .mv.up{color:#7fe0a0}.rrow .who .mv.down{color:#ff8f8f}
 .rrow.me{background:rgba(255,194,75,.12);color:var(--amber)}
@@ -2007,14 +2015,14 @@ function rankStatus(){
 }
 let rankTeam = null;   // team shown in the "Tifosi" tab (defaults to yours)
 // "(+800)": what teams and players added since the table was last closed (same week and division)
-let rankBase = null;
+let rankBase = null, rankFlashAt = 0;
 function rankSnapshot(){
   const sid = seasonId(), teams = {}, fans = {}, pos = {}, fpos = {};
   teamRows().forEach((r, k) => { teams[r.name] = r.pts; pos[r.name] = k + 1; });
   if (srv.ok && srv.fansSid === sid) for (const [t, list] of Object.entries(srv.fans)) { fans[t] = Object.fromEntries(list.map(x => [x.name, x.pts])); fpos[t] = Object.fromEntries(list.map((x, k) => [x.name, k + 1])); }
   return { sid, league: LEAGUE, teams, fans, pos, fpos };
 }
-function rankOpen(){ const b = store.get("pm.rankSeen", null); rankBase = b && b.sid === seasonId() && b.league === LEAGUE ? b : null; }
+function rankOpen(){ const b = store.get("pm.rankSeen", null); rankBase = b && b.sid === seasonId() && b.league === LEAGUE ? b : null; rankFlashAt = Date.now(); }
 function rankClose(){ const s = rankSnapshot(); if (Object.keys(s.teams).length) store.set("pm.rankSeen", s); rankBase = null; }
 const rankDelta = (now, before) => before === undefined ? (rankBase ? now : 0) : now - before;
 function renderRanks(){
@@ -2036,7 +2044,8 @@ function renderRanks(){
       if (lv) { const b = document.createElement("span"); b.className = "lv"; b.textContent = "Liv. " + lv; w.appendChild(b); }
       if (sub) { const sm = document.createElement("small"); sm.textContent = sub; w.appendChild(sm); }
       const p = document.createElement("span"); p.className = "pts"; p.textContent = pts.toLocaleString(LOC());
-      if (dl > 0) { const d = document.createElement("span"); d.className = "dl"; d.textContent = "(+" + dl.toLocaleString(LOC()) + ")"; p.appendChild(d); }
+      if (list.classList.contains("withdl")) { p.textContent = ""; const n = document.createElement("span"); n.textContent = pts.toLocaleString(LOC()); const d = document.createElement("span"); d.className = "dl"; if (dl > 0) d.textContent = "(+" + dl.toLocaleString(LOC()) + ")"; p.append(n, d); }
+      if ((dl > 0 || (was && was !== pos)) && Date.now() - rankFlashAt < 1600) { r.classList.add("flash"); r.style.animationDelay = -(Date.now() - rankFlashAt) + "ms"; }
       r.append(a, i, w, p);
       if (full && tab === "teams") {
         const rc = document.createElement("span"); rc.className = "rec"; rc.textContent = rec ? rec.pts.toLocaleString(LOC()) : "–"; r.appendChild(rc);
@@ -2049,8 +2058,10 @@ function renderRanks(){
       if (title) title.textContent = tr("Classifica squadre");
       const hint = box.querySelector(".rhint"); if (hint) hint.textContent = tr("Tocca una squadra per vedere i suoi tifosi");
       const rows = teamRows();
+      const hasDl = full && rankBase && sid === rankBase.sid && rows.some(r => rankDelta(r.pts, rankBase.teams[r.name]) > 0);
+      if (hasDl) list.classList.add("withdl");
       if (full) {
-        const hd = document.createElement("div"); hd.className = "rhd"; hd.innerHTML = `<span></span><span></span><span>${tr("Squadra")}</span><span>${tr("Punti")}</span><span>${tr("Record")}</span><span>${tr("Giocatore")}</span>`;
+        const hd = document.createElement("div"); hd.className = "rhd" + (hasDl ? " withdl" : ""); hd.innerHTML = `<span></span><span></span><span>${tr("Squadra")}</span><span>${tr("Punti")}</span><span>${tr("Record")}</span><span>${tr("Giocatore")}</span>`;
         const hd2 = hd.cloneNode(true); hd.style.gridArea = "1 / 1"; hd2.style.gridArea = "1 / 2";
         list.appendChild(hd); list.appendChild(hd2);
       }
@@ -2064,7 +2075,7 @@ function renderRanks(){
         return up ? "zup" : down ? "zdown" : "";
       };
       rows.forEach((r, k) => { row(k + 1, { team: r.name }, r.name, !full && bests[r.name] ? `${tr("record")} ${bests[r.name].pts.toLocaleString(LOC())} · ${bests[r.name].name}` : "", r.pts, r.name === mine, 0, bests[r.name],
-        () => { rankTeam = r.name; box.dataset.tab = "fans"; renderRanks(); }, full && rankBase && sid === rankBase.sid ? rankDelta(r.pts, rankBase.teams[r.name]) : 0, full && rankBase && sid === rankBase.sid && rankBase.pos ? rankBase.pos[r.name] : 0);
+        () => { rankTeam = r.name; box.dataset.tab = "fans"; rankFlashAt = Date.now(); renderRanks(); }, full && rankBase && sid === rankBase.sid ? rankDelta(r.pts, rankBase.teams[r.name]) : 0, full && rankBase && sid === rankBase.sid && rankBase.pos ? rankBase.pos[r.name] : 0);
         const z = zone(k, r.name); if (z) { list.lastChild.classList.add(z);
           if (nxt) { const zt = document.createElement("span"); zt.className = "zt"; zt.textContent = (z === "zup" ? "↑ " : "↓ ") + leagueName(nxt[r.name]).replace("Serie ", ""); zt.title = tr(z === "zup" ? "promozione" : "retrocessione"); list.lastChild.querySelector(".who").appendChild(zt); } }
         if (full) { const half = Math.ceil(rows.length / 2); list.lastChild.style.gridArea = `${(k % half) + 2} / ${k < half ? 1 : 2}`; } });
@@ -2085,6 +2096,7 @@ function renderRanks(){
         list.appendChild(hd); if (rows.length > 10) list.appendChild(hd2);
       }
       const fb = full && rankBase && sid === rankBase.sid && rankBase.fans[team] ? rankBase.fans[team] : null, fp = fb && rankBase.fpos ? rankBase.fpos[team] || {} : {};
+      if (fb && rows.some(r => (fb[r.name] === undefined ? r.pts : r.pts - fb[r.name]) > 0)) list.classList.add("withdl");
       if (rows.length) rows.slice(0, 100).forEach((r, k) => { row(k + 1, { team }, (k === 0 ? "👑 " : "") + r.name, "", r.pts, r.me, r.lv, null, null, fb ? (fb[r.name] === undefined ? r.pts : r.pts - fb[r.name]) : 0, fp[r.name] || 0);
         if (full) { const blk = Math.floor(k / 20), w = k % 20; list.lastChild.style.gridArea = `${2 + blk * 10 + (w % 10)} / ${w < 10 ? 1 : 2}`; }
         const bd = badgeOf(r.refs || 0); if (bd) { const s = document.createElement("span"); s.className = "badgeTag"; s.textContent = bd[2]; s.title = tr(bd[1]); list.lastChild.querySelector(".who").appendChild(s); }
