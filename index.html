@@ -221,10 +221,12 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .rrow .pts .dl{margin-left:5px;font-size:.78em;font-weight:700;color:#7fe0a0;white-space:nowrap}
 /* with differences on screen: the points stay in one column, the "(+…)" in a fixed slot on their right */
 .rlist.withdl .pts{display:flex;justify-content:flex-end;align-items:baseline;gap:4px}
-.rlist.withdl .pts .dl{margin-left:0;min-width:4.4em;text-align:left}
+.rlist.withdl .pts .dl{margin-left:0;width:58px;text-align:left}
+.rhd.withdl span:nth-child(4){padding-right:62px}
+.rhd.fhd.withdl{grid-template-columns:28px minmax(0,1fr) auto}.rhd.fhd.withdl span:nth-child(3){padding-right:62px}
 .rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:22px 18px minmax(80px,1fr) 118px 58px minmax(56px,.9fr)}
 .rlist.full.fans.withdl .rrow{grid-template-columns:28px minmax(0,1fr) auto}
-@media (max-width:720px){.rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:18px 16px minmax(50px,1fr) 92px 44px}.rlist.full.withdl .rname,.rhd.withdl span:nth-child(6){display:none}.rlist.withdl .pts .dl{min-width:3.9em;font-size:.72em}.rlist.full.fans.withdl .rrow{grid-template-columns:26px minmax(0,1fr) auto}}
+@media (max-width:720px){.rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:18px 16px minmax(50px,1fr) 92px 44px}.rlist.full.withdl .rname,.rhd.withdl span:nth-child(6){display:none}.rlist.withdl .pts .dl{width:46px;font-size:.72em}.rhd.withdl span:nth-child(4){padding-right:50px}.rhd.fhd.withdl{grid-template-columns:26px minmax(0,1fr) auto}.rhd.fhd.withdl span:nth-child(3){padding-right:50px}.rlist.full.fans.withdl .rrow{grid-template-columns:26px minmax(0,1fr) auto}}
 @keyframes rflash{0%,20%{background-color:rgba(255,194,75,.3)}}
 .rrow.flash{animation:rflash 1.6s ease-out}
 .rrow .who .mv{margin-left:6px;font-size:.78em;font-weight:700;white-space:nowrap}
@@ -2096,7 +2098,7 @@ function renderRanks(){
         list.appendChild(hd); if (rows.length > 10) list.appendChild(hd2);
       }
       const fb = full && rankBase && sid === rankBase.sid && rankBase.fans[team] ? rankBase.fans[team] : null, fp = fb && rankBase.fpos ? rankBase.fpos[team] || {} : {};
-      if (fb && rows.some(r => (fb[r.name] === undefined ? r.pts : r.pts - fb[r.name]) > 0)) list.classList.add("withdl");
+      if (fb && rows.some(r => (fb[r.name] === undefined ? r.pts : r.pts - fb[r.name]) > 0)) { list.classList.add("withdl"); list.querySelectorAll(".rhd").forEach(h => h.classList.add("withdl")); }
       if (rows.length) rows.slice(0, 100).forEach((r, k) => { row(k + 1, { team }, (k === 0 ? "👑 " : "") + r.name, "", r.pts, r.me, r.lv, null, null, fb ? (fb[r.name] === undefined ? r.pts : r.pts - fb[r.name]) : 0, fp[r.name] || 0);
         if (full) { const blk = Math.floor(k / 20), w = k % 20; list.lastChild.style.gridArea = `${2 + blk * 10 + (w % 10)} / ${w < 10 ? 1 : 2}`; }
         const bd = badgeOf(r.refs || 0); if (bd) { const s = document.createElement("span"); s.className = "badgeTag"; s.textContent = bd[2]; s.title = tr(bd[1]); list.lastChild.querySelector(".who").appendChild(s); }
