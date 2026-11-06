@@ -219,6 +219,8 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .rrow .who small{margin-left:6px;color:var(--mute);font-size:13px;font-weight:500}
 .rrow .pts{color:var(--chalk)}
 .rrow .pts .dl{margin-left:5px;font-size:.78em;font-weight:700;color:#7fe0a0;white-space:nowrap}
+.rrow .who .mv{margin-left:6px;font-size:.78em;font-weight:700;white-space:nowrap}
+.rrow .who .mv.up{color:#7fe0a0}.rrow .who .mv.down{color:#ff8f8f}
 .rrow.me{background:rgba(255,194,75,.12);color:var(--amber)}
 .rrow.me .pts{color:var(--amber)}
 .rrow.gap{background:none;color:var(--mute);justify-content:center;display:block;text-align:center;padding:0}
@@ -1078,7 +1080,7 @@ I18N.en = {
   "Bentornato {n}! Profilo ritrovato.": "Welcome back {n}! Profile found.",
   "Promozione! {t} sale in {l}": "Promoted! {t} go up to {l}", "Retrocessione: {t} scende in {l}": "Relegated: {t} go down to {l}",
   "Da lunedì {t} sale in {l}!": "From Monday {t} go up to {l}!", "Da lunedì {t} scende in {l}": "From Monday {t} go down to {l}",
-  "difendi la categoria": "stay up", "riportala su": "bring them back up", "le ultime 3 tornano giù": "the bottom 3 go back down", "riportala su: le prime 3 salgono": "bring them back: the top 3 go up",
+  "posizioni dall'ultima volta": "places since last time", "difendi la categoria": "stay up", "riportala su": "bring them back up", "le ultime 3 tornano giù": "the bottom 3 go back down", "riportala su: le prime 3 salgono": "bring them back: the top 3 go up",
   "salgono le prime 3 che fanno punti": "the top 3 that score go up", "scende l'ultima": "the last one goes down", "scendono le ultime {n}": "the bottom {n} go down", "per ora non scende nessuno": "nobody goes down for now", "promozione": "promotion", "retrocessione": "relegation",
   "<b>Salva il profilo</b> · se cambi telefono ritrovi i tuoi punti": "<b>Save your profile</b> · keep your points if you change phone", "Profilo salvato con Google ✓": "Profile saved with Google ✓", "Per la Maglia sul telefono": "Per la Maglia on your phone",
   "Chrome non ha ancora dato il via libera: chiudi e riapri la pagina, poi tocca di nuovo <b>Installa l'app</b>.": "Chrome isn't ready yet: close and reopen the page, then tap <b>Install the app</b> again.",
@@ -2007,10 +2009,10 @@ let rankTeam = null;   // team shown in the "Tifosi" tab (defaults to yours)
 // "(+800)": what teams and players added since the table was last closed (same week and division)
 let rankBase = null;
 function rankSnapshot(){
-  const sid = seasonId(), teams = {}, fans = {};
-  for (const r of teamRows()) teams[r.name] = r.pts;
-  if (srv.ok && srv.fansSid === sid) for (const [t, list] of Object.entries(srv.fans)) fans[t] = Object.fromEntries(list.map(x => [x.name, x.pts]));
-  return { sid, league: LEAGUE, teams, fans };
+  const sid = seasonId(), teams = {}, fans = {}, pos = {}, fpos = {};
+  teamRows().forEach((r, k) => { teams[r.name] = r.pts; pos[r.name] = k + 1; });
+  if (srv.ok && srv.fansSid === sid) for (const [t, list] of Object.entries(srv.fans)) { fans[t] = Object.fromEntries(list.map(x => [x.name, x.pts])); fpos[t] = Object.fromEntries(list.map((x, k) => [x.name, k + 1])); }
+  return { sid, league: LEAGUE, teams, fans, pos, fpos };
 }
 function rankOpen(){ const b = store.get("pm.rankSeen", null); rankBase = b && b.sid === seasonId() && b.league === LEAGUE ? b : null; }
 function rankClose(){ const s = rankSnapshot(); if (Object.keys(s.teams).length) store.set("pm.rankSeen", s); rankBase = null; }
@@ -2023,13 +2025,14 @@ function renderRanks(){
     const tab = box.dataset.tab, list = box.querySelector(".rlist"), full = box.hasAttribute("data-full");
     box.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-pressed", b.dataset.tab === tab ? "true" : "false"));
     list.textContent = ""; list.className = "rlist" + (full ? " full " + tab : "");
-    const row = (pos, color, who, sub, pts, me, lv, rec, onTap, dl) => {
+    const row = (pos, color, who, sub, pts, me, lv, rec, onTap, dl, was) => {
       const r = document.createElement(onTap ? "button" : "div"); r.className = "rrow" + (me ? " me" : ""); if (onTap) { r.type = "button"; r.onclick = onTap; }
       const a = document.createElement("span"); a.className = "pos"; a.textContent = pos;
       const isChamp = !!champ && color.team === champ && who === champ;
       const i = document.createElement("span"); i.className = "mjw"; i.innerHTML = teamIcon(color.team || "", 18, isChamp);
       const w = document.createElement("span"); w.className = "who"; w.textContent = who;
       if (isChamp) w.insertAdjacentHTML("beforeend", scudoBadge());
+      if (was && was !== pos) { const m = document.createElement("span"); m.className = "mv " + (was > pos ? "up" : "down"); m.textContent = (was > pos ? "↑" : "↓") + Math.abs(was - pos); m.title = tr("posizioni dall'ultima volta"); w.appendChild(m); }
       if (lv) { const b = document.createElement("span"); b.className = "lv"; b.textContent = "Liv. " + lv; w.appendChild(b); }
       if (sub) { const sm = document.createElement("small"); sm.textContent = sub; w.appendChild(sm); }
       const p = document.createElement("span"); p.className = "pts"; p.textContent = pts.toLocaleString(LOC());
@@ -2061,7 +2064,7 @@ function renderRanks(){
         return up ? "zup" : down ? "zdown" : "";
       };
       rows.forEach((r, k) => { row(k + 1, { team: r.name }, r.name, !full && bests[r.name] ? `${tr("record")} ${bests[r.name].pts.toLocaleString(LOC())} · ${bests[r.name].name}` : "", r.pts, r.name === mine, 0, bests[r.name],
-        () => { rankTeam = r.name; box.dataset.tab = "fans"; renderRanks(); }, full && rankBase && sid === rankBase.sid ? rankDelta(r.pts, rankBase.teams[r.name]) : 0);
+        () => { rankTeam = r.name; box.dataset.tab = "fans"; renderRanks(); }, full && rankBase && sid === rankBase.sid ? rankDelta(r.pts, rankBase.teams[r.name]) : 0, full && rankBase && sid === rankBase.sid && rankBase.pos ? rankBase.pos[r.name] : 0);
         const z = zone(k, r.name); if (z) { list.lastChild.classList.add(z);
           if (nxt) { const zt = document.createElement("span"); zt.className = "zt"; zt.textContent = (z === "zup" ? "↑ " : "↓ ") + leagueName(nxt[r.name]).replace("Serie ", ""); zt.title = tr(z === "zup" ? "promozione" : "retrocessione"); list.lastChild.querySelector(".who").appendChild(zt); } }
         if (full) { const half = Math.ceil(rows.length / 2); list.lastChild.style.gridArea = `${(k % half) + 2} / ${k < half ? 1 : 2}`; } });
@@ -2081,8 +2084,8 @@ function renderRanks(){
         const hd2 = hd.cloneNode(true); hd.style.gridArea = "1 / 1"; hd2.style.gridArea = "1 / 2";
         list.appendChild(hd); if (rows.length > 10) list.appendChild(hd2);
       }
-      const fb = full && rankBase && sid === rankBase.sid && rankBase.fans[team] ? rankBase.fans[team] : null;
-      if (rows.length) rows.slice(0, 100).forEach((r, k) => { row(k + 1, { team }, (k === 0 ? "👑 " : "") + r.name, "", r.pts, r.me, r.lv, null, null, fb ? (fb[r.name] === undefined ? r.pts : r.pts - fb[r.name]) : 0);
+      const fb = full && rankBase && sid === rankBase.sid && rankBase.fans[team] ? rankBase.fans[team] : null, fp = fb && rankBase.fpos ? rankBase.fpos[team] || {} : {};
+      if (rows.length) rows.slice(0, 100).forEach((r, k) => { row(k + 1, { team }, (k === 0 ? "👑 " : "") + r.name, "", r.pts, r.me, r.lv, null, null, fb ? (fb[r.name] === undefined ? r.pts : r.pts - fb[r.name]) : 0, fp[r.name] || 0);
         if (full) { const blk = Math.floor(k / 20), w = k % 20; list.lastChild.style.gridArea = `${2 + blk * 10 + (w % 10)} / ${w < 10 ? 1 : 2}`; }
         const bd = badgeOf(r.refs || 0); if (bd) { const s = document.createElement("span"); s.className = "badgeTag"; s.textContent = bd[2]; s.title = tr(bd[1]); list.lastChild.querySelector(".who").appendChild(s); }
         if (k === 0) { const b = document.createElement("span"); b.className = "mvpTag"; b.textContent = "MVP"; list.lastChild.querySelector(".who").appendChild(b); } });
