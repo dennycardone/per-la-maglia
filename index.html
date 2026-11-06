@@ -1710,21 +1710,36 @@ async function srvLoad(){
     srv.records = {}; rec.forEach(x => srv.records[x.team] = { pts: x.pts, name: x.nick });
     srv.mvp = {}; mvp.forEach(x => srv.mvp[x.team] = { name: x.nick, pts: +x.pts });
     srv.winners = win; srv.mine = {}; mine.forEach(m => srv.mine[m.team] = m);
-    srv.fans = {}; srv.ok = true; srv.league = lg; saveSnap();
+    if (srv.fansSid !== sid || srv.fansLeague !== lg) { srv.fans = {}; srv.fansAt = {}; srv.fansAll = false; }
+    srv.ok = true; srv.league = lg; saveSnap();
+    if (!srv.legacy) srvFansAll(sid, lg);
     await srvFlush();
     srvPing(); srvRefs();
   } catch (e) { console.warn("server", e); }
   srv.loading = false;
   renderRanks(); if (!$("profileScreen").hidden) renderProfile(); if (!$("startScreen").hidden) renderHome();
 }
+// who played for each team this week: all teams of the division in one go, so opening a team is instant
+const fanRow = x => ({ me: x.player_id === srv.uid && x.nick === cleanNick(store.get("cucchiaio.nick", "")), name: x.nick, pts: +x.pts, lv: 0, refs: +x.refs || 0 });
+async function fansQuery(q){
+  if (!srv.noRefs) { try { return await sb(q + ",refs"); } catch (e) { srv.noRefs = true; } }
+  return sb(q);
+}
+async function srvFansAll(sid, lg){
+  try {
+    const rows = await fansQuery(`team_fans?league=eq.${lg}&season=eq.${encodeURIComponent(sid)}&order=pts.desc&limit=5000&select=team,player_id,nick,pts`);
+    if (LEAGUE !== lg || seasonId() !== sid) return;
+    const by = {}; for (const x of rows) (by[x.team] = by[x.team] || []).push(fanRow(x));
+    srv.fans = by; srv.fansSid = sid; srv.fansLeague = lg; srv.fansAll = true; const now = Date.now(); for (const t of Object.keys(by)) srv.fansAt[t] = now;
+    if (!$("rankScreen").hidden) renderRanks();
+  } catch (e) {}
+}
 async function srvFans(team){
   if (srv.fansAt[team] && Date.now() - srv.fansAt[team] < 20000) return;
   srv.fansAt[team] = Date.now();
   try {
     const q = `team_fans?${srv.legacy ? "" : "league=eq." + LEAGUE + "&"}season=eq.${encodeURIComponent(seasonId())}&team=eq.${encodeURIComponent(team)}&order=pts.desc&limit=200&select=player_id,nick,pts`;
-    const rows = await sb(q + ",refs").catch(() => sb(q));
-    const myNick = cleanNick(store.get("cucchiaio.nick", ""));
-    srv.fans[team] = rows.map(x => ({ me: x.player_id === srv.uid && x.nick === myNick, name: x.nick, pts: +x.pts, lv: 0, refs: +x.refs || 0 }));
+    srv.fans[team] = (await fansQuery(q)).map(fanRow);
   } catch (e) { srv.fansAt[team] = 0; }
   renderRanks();
 }
@@ -1956,7 +1971,7 @@ function teamBests(sid){
 }
 // everyone who played for a team this week, with their total for that team
 function fansOf(team, sid){
-  if (srv.ok) { if (!srv.fans[team]) { srvFans(team); return null; } return srv.fans[team]; }
+  if (srv.ok) { if (srv.fans[team]) return srv.fans[team]; if (srv.fansAll && srv.fansSid === sid) return []; srvFans(team); return null; }
   if (sharedMode()) {
     return online.docs.filter(d => d.seasons && d.seasons[sid] && d.seasons[sid].teams && d.seasons[sid].teams[team] > 0).map(d => ({
       me: d.id === online.uid, name: cleanNick(d.nick) || online.names[d.id] || (d.id === online.uid ? "Tu" : "Tifoso"),
