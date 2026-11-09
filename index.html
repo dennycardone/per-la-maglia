@@ -2387,7 +2387,7 @@ function scudoBadge(){
   const id = "sb" + (jid++), sh = "M10.65 5.25H13.35V7.15Q13.35 8.55 12 9.25Q10.65 8.55 10.65 7.15Z";
   return `<svg class="scb" width="12" height="16" viewBox="10.45 5.05 3.1 4.4" aria-label="campione"><defs><clipPath id="${id}"><path d="${sh}"/></clipPath></defs><g clip-path="url(#${id})"><rect x="10.6" y="5" width=".95" height="4.5" fill="#169b45"/><rect x="11.55" y="5" width=".9" height="4.5" fill="#fff"/><rect x="12.45" y="5" width=".95" height="4.5" fill="#d72a36"/></g><path d="${sh}" fill="none" stroke="#d8b24a" stroke-width=".22"/></svg>`;
 }
-function leagueName(){ for (const n of NATIONS) for (const d of n.divs) if (d[0] === LEAGUE) return d[1]; return ""; }
+function leagueName(id = LEAGUE){ for (const n of NATIONS) for (const d of n.divs) if (d[0] === id) return d[1]; return ""; }
 function countUp(el, to, prefix = "", delay = 0, sound = false){
   const dur = Math.min(1600, 500 + to / 4), N = to > 0 ? Math.max(6, Math.min(18, Math.round(dur / 85))) : 0;
   let t0 = 0, ticks = 0;
@@ -2475,7 +2475,6 @@ const swapsOf = key => { const w = MEMBERS && MEMBERS.season === isoWeekNow() &&
 const swapsUp = () => LEAGUE === "serie-b" ? swapsOf("ab") : LEAGUE === "serie-c" ? swapsOf("bc") : 0;
 const swapsDown = () => LEAGUE === "serie-a" ? swapsOf("ab") : LEAGUE === "serie-b" ? swapsOf("bc") : 0;
 // this week (moved) or from Monday (next, shown from Saturday 08:00): the player's team changes division
-function leagueName(id){ for (const n of NATIONS) for (const d of n.divs) if (d[0] === id) return d[1]; return ""; }
 function renderMove(){
   const el = $("moveLine"); if (!el) return;
   const mine = teamChosen && TEAMS[teamIdx] ? TEAMS[teamIdx][0] : null;
@@ -3161,7 +3160,8 @@ function careerStats(){
 function renderProfile(){
   const t = TEAMS[teamIdx], kit = teamKit(), num = SET.num || 10, nick = cleanNick(store.get("cucchiaio.nick", "")) || tr("Tifoso");
   const c1 = t[1], c2 = t[2] === t[1] ? "#ffffff" : t[2], band = lum(c1) > 0.75 ? c2 : c1, ink = contrast(band, "#05080e") >= 4.5 ? "#05080e" : "#ffffff";
-  const card = $("pCard"), dpr = Math.min(2, window.devicePixelRatio || 1);
+  // the figure is drawn on the game canvas and copied: never ask for more pixels than it has (lighter graphics lower its density)
+  const card = $("pCard"), dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1, cv.width / Math.max(1, innerWidth)));
   card.style.setProperty("--c1", c1); card.style.setProperty("--c2", c2); card.style.setProperty("--band", band); card.style.setProperty("--ink", ink);
   card.innerHTML = `<div class="pin"><div class="pnum"></div><div class="pjs">${jerseySVG(kit, 30)}</div><canvas></canvas><div class="pband"><b></b><small></small></div></div>`;
   card.querySelector(".pnum").textContent = num;
