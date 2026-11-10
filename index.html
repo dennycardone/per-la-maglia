@@ -166,7 +166,6 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--chalk);overfl
 .howList li{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:8px;font-family:var(--label);font-weight:600;font-size:18px;line-height:1.2;color:var(--chalk)}
 .howList li span:first-child{font-size:22px;text-align:center}
 .howCard .btn{width:100%;padding:11px 14px;font-size:24px}
-#updNo{margin-top:8px;font-size:18px;padding:8px 14px}
 .howTip{width:min(400px,100%);text-align:center}
 .howTip h2{font-size:26px;margin-bottom:8px}
 .howTip p{margin:0 0 16px;font-family:var(--label);font-weight:600;font-size:18px;line-height:1.3;color:var(--chalk)}
@@ -746,10 +745,8 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
     <h2 id="updTitle"><span class="nkick">Play Store · versione 1.1</span>Aggiorna l'app</h2>
     <ul class="howList">
       <li><span aria-hidden="true">📲</span><span>Sul Play Store c'è la nuova versione di Per la Maglia: se non l'hai già fatto, aggiornala</span></li>
-      <li><span aria-hidden="true">💬</span><span>Hai un'idea o hai trovato un problema? Scrivilo nella pagina dell'app: ci aiuta a uscire ufficialmente</span></li>
     </ul>
     <button class="btn" id="updGo" type="button">Apri il Play Store</button>
-    <button class="btn ghost" id="updNo" type="button">Più tardi</button>
   </div>
 </div>
 
@@ -4121,7 +4118,7 @@ $("howOk").onclick = () => {
   try { $("howTipOk").focus({ preventScroll: true }); } catch (e) {}
 };
 $("howTipOk").onclick = () => { closeHow(); const b = $("helpBtn"); b.classList.remove("ping"); void b.offsetWidth; b.classList.add("ping"); };
-document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("howVeil").hidden) (!$("updCard").hidden ? $("updNo") : !$("newsCard").hidden ? $("newsOk") : $("howTip").hidden ? $("howOk") : $("howTipOk")).click(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("howVeil").hidden) !$("updCard").hidden ? null : (!$("newsCard").hidden ? $("newsOk") : $("howTip").hidden ? $("howOk") : $("howTipOk")).click(); });
 if (!store.get(HOW_KEY, false)) { const howT = setInterval(() => { if (store.get(HOW_KEY, false)) return clearInterval(howT); maybeHow(); }, 700); }
 // news: promotions and relegations, once for the players who were already here (new players read it in "Come si gioca"); off from week 47
 const NEWS_KEY = "pm.news", NEWS_ID = "promozioni-w46";
@@ -4148,7 +4145,6 @@ function maybeUpd(){
   return true;
 }
 const updClose = () => { store.set(UPD_KEY, UPD_ID); $("updCard").hidden = true; $("howVeil").hidden = true; };
-$("updNo").onclick = updClose;
 $("updGo").onclick = () => {
   updClose();
   location.href = "intent://details?id=com.perlamaglia.app#Intent;scheme=market;package=com.android.vending;S.browser_fallback_url=" + encodeURIComponent("https://play.google.com/store/apps/details?id=com.perlamaglia.app") + ";end";
