@@ -9,6 +9,8 @@ window.addEventListener("pointerdown", function () { window.__taps++; }, true);
 window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.__bip = e; window.__bipSeen = true; window.dispatchEvent(new Event("bipready")); });
 // opened from the Play Store app (Trusted Web Activity): remembered, so the site never sends it to the Store again
 try { if (document.referrer.indexOf("android-app://com.perlamaglia.app") === 0) localStorage.setItem("pm.twa", "true"); } catch (e) {}
+// this visit started inside the Play Store app (per tab, so Chrome on the same phone does not count)
+try { if (document.referrer.indexOf("android-app://com.perlamaglia.app") === 0) sessionStorage.setItem("pm.twaNow", "1"); } catch (e) {}
 // error log: what breaks on the players' phones is queued here and sent to the server (at most 5 different errors per visit)
 window.__errs = []; window.__errSeen = {};
 window.__errAdd = function (o) {
@@ -156,7 +158,7 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--chalk);overfl
 #rotate p{margin:0;font-family:var(--display);font-weight:900;font-size:30px;line-height:1}
 #rotate small{display:block;margin-top:8px;font-family:var(--label);font-size:15px;letter-spacing:.06em;color:var(--mute)}
 /* how to play: shown once, then from the "?" next to GIOCA */
-#newsCard .nkick{display:block;font-size:.5em;letter-spacing:.18em;color:var(--amber);margin-bottom:2px;text-transform:uppercase}
+#newsCard .nkick,#updCard .nkick{display:block;font-size:.5em;letter-spacing:.18em;color:var(--amber);margin-bottom:2px;text-transform:uppercase}
 .howVeil{position:fixed;inset:0;z-index:150;display:grid;place-items:center;padding:calc(env(safe-area-inset-top,0px) + 12px) max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 12px) max(16px,env(safe-area-inset-left,0px));background:rgba(5,8,14,.8);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .howCard{width:min(540px,100%);max-height:100%;overflow-y:auto;padding:18px 22px;border-radius:14px;background:#0b111c;border:1.5px solid rgba(255,194,75,.65);box-shadow:0 18px 50px rgba(0,0,0,.7)}
 .howCard h2{margin:0 0 12px;font-family:var(--display);font-weight:900;font-size:30px;line-height:1;letter-spacing:.02em;color:var(--amber);text-transform:uppercase}
@@ -164,6 +166,7 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--chalk);overfl
 .howList li{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:8px;font-family:var(--label);font-weight:600;font-size:18px;line-height:1.2;color:var(--chalk)}
 .howList li span:first-child{font-size:22px;text-align:center}
 .howCard .btn{width:100%;padding:11px 14px;font-size:24px}
+#updNo{margin-top:8px;font-size:18px;padding:8px 14px}
 .howTip{width:min(400px,100%);text-align:center}
 .howTip h2{font-size:26px;margin-bottom:8px}
 .howTip p{margin:0 0 16px;font-family:var(--label);font-weight:600;font-size:18px;line-height:1.3;color:var(--chalk)}
@@ -738,6 +741,15 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
       <li><span aria-hidden="true">🏁</span><span>Primi verdetti venerdì 13 alle 20, primi cambi lunedì 16</span></li>
     </ul>
     <button class="btn" id="newsOk" type="button">Forza ragazzi!</button>
+  </div>
+  <div class="howCard" id="updCard" role="dialog" aria-modal="true" aria-labelledby="updTitle" hidden>
+    <h2 id="updTitle"><span class="nkick">Play Store · versione 1.1</span>Aggiorna l'app</h2>
+    <ul class="howList">
+      <li><span aria-hidden="true">📲</span><span>Sul Play Store c'è la nuova versione di Per la Maglia: se non l'hai già fatto, aggiornala</span></li>
+      <li><span aria-hidden="true">💬</span><span>Hai un'idea o hai trovato un problema? Scrivilo nella pagina dell'app: ci aiuta a uscire ufficialmente</span></li>
+    </ul>
+    <button class="btn" id="updGo" type="button">Apri il Play Store</button>
+    <button class="btn ghost" id="updNo" type="button">Più tardi</button>
   </div>
 </div>
 
@@ -4093,7 +4105,7 @@ trNode(document.body);
 const HOW_KEY = "pm.howSeen";
 let howFirst = false;
 function openHow(first){
-  howFirst = first; $("howCard").hidden = false; $("howTip").hidden = true; $("newsCard").hidden = true; $("howVeil").hidden = false;
+  howFirst = first; $("howCard").hidden = false; $("howTip").hidden = true; $("newsCard").hidden = true; $("updCard").hidden = true; $("howVeil").hidden = false;
   try { $("howOk").focus({ preventScroll: true }); } catch (e) {}
 }
 function closeHow(){ $("howVeil").hidden = true; store.set(HOW_KEY, true); }
@@ -4109,7 +4121,7 @@ $("howOk").onclick = () => {
   try { $("howTipOk").focus({ preventScroll: true }); } catch (e) {}
 };
 $("howTipOk").onclick = () => { closeHow(); const b = $("helpBtn"); b.classList.remove("ping"); void b.offsetWidth; b.classList.add("ping"); };
-document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("howVeil").hidden) (!$("newsCard").hidden ? $("newsOk") : $("howTip").hidden ? $("howOk") : $("howTipOk")).click(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("howVeil").hidden) (!$("updCard").hidden ? $("updNo") : !$("newsCard").hidden ? $("newsOk") : $("howTip").hidden ? $("howOk") : $("howTipOk")).click(); });
 if (!store.get(HOW_KEY, false)) { const howT = setInterval(() => { if (store.get(HOW_KEY, false)) return clearInterval(howT); maybeHow(); }, 700); }
 // news: promotions and relegations, once for the players who were already here (new players read it in "Come si gioca"); off from week 47
 const NEWS_KEY = "pm.news", NEWS_ID = "promozioni-w46";
@@ -4117,12 +4129,31 @@ if (!store.get(HOW_KEY, false)) store.set(NEWS_KEY, NEWS_ID);
 function maybeNews(){
   if (store.get(NEWS_KEY, "") === NEWS_ID || isoWeekNow() > "2026-W46") return true;
   if (!$("howVeil").hidden || $("startScreen").hidden || !$("rotate").hidden || !$("kbd").hidden || !$("compSheet").hidden || inMatchNow()) return false;
-  $("howCard").hidden = true; $("howTip").hidden = true; $("newsCard").hidden = false; $("howVeil").hidden = false;
+  $("howCard").hidden = true; $("howTip").hidden = true; $("updCard").hidden = true; $("newsCard").hidden = false; $("howVeil").hidden = false;
   try { $("newsOk").focus({ preventScroll: true }); } catch (e) {}
   return true;
 }
 $("newsOk").onclick = () => { store.set(NEWS_KEY, NEWS_ID); $("newsCard").hidden = true; $("howVeil").hidden = true; };
 { const newsT = setInterval(() => { if (maybeNews()) clearInterval(newsT); }, 900); }
+// Play Store update notice: once per version, only while playing inside the Play Store app (players already here before this version)
+const UPD_KEY = "pm.upd", UPD_ID = "1.1";
+if (!store.get(HOW_KEY, false)) store.set(UPD_KEY, UPD_ID);
+const inPlayApp = () => { try { return sessionStorage.getItem("pm.twaNow") === "1"; } catch (e) { return false; } };
+function maybeUpd(){
+  if (store.get(UPD_KEY, "") === UPD_ID || !inPlayApp()) return true;
+  if (store.get(NEWS_KEY, "") !== NEWS_ID && isoWeekNow() <= "2026-W46") return false;
+  if (!$("howVeil").hidden || $("startScreen").hidden || !$("rotate").hidden || !$("kbd").hidden || !$("compSheet").hidden || inMatchNow()) return false;
+  $("howCard").hidden = true; $("howTip").hidden = true; $("newsCard").hidden = true; $("updCard").hidden = false; $("howVeil").hidden = false;
+  try { $("updGo").focus({ preventScroll: true }); } catch (e) {}
+  return true;
+}
+const updClose = () => { store.set(UPD_KEY, UPD_ID); $("updCard").hidden = true; $("howVeil").hidden = true; };
+$("updNo").onclick = updClose;
+$("updGo").onclick = () => {
+  updClose();
+  location.href = "intent://details?id=com.perlamaglia.app#Intent;scheme=market;package=com.android.vending;S.browser_fallback_url=" + encodeURIComponent("https://play.google.com/store/apps/details?id=com.perlamaglia.app") + ";end";
+};
+{ const updT = setInterval(() => { if (maybeUpd()) clearInterval(updT); }, 1100); }
 
 renderTeams();
 startOnline();
