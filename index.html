@@ -158,7 +158,7 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--chalk);overfl
 #rotate p{margin:0;font-family:var(--display);font-weight:900;font-size:30px;line-height:1}
 #rotate small{display:block;margin-top:8px;font-family:var(--label);font-size:15px;letter-spacing:.06em;color:var(--mute)}
 /* how to play: shown once, then from the "?" next to GIOCA */
-#newsCard .nkick,#updCard .nkick,#gPopCard .nkick{display:block;font-size:.5em;letter-spacing:.18em;color:var(--amber);margin-bottom:2px;text-transform:uppercase}
+#newsCard .nkick,#updCard .nkick{display:block;font-size:.5em;letter-spacing:.18em;color:var(--amber);margin-bottom:2px;text-transform:uppercase}
 .howVeil{position:fixed;inset:0;z-index:150;display:grid;place-items:center;padding:calc(env(safe-area-inset-top,0px) + 12px) max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 12px) max(16px,env(safe-area-inset-left,0px));background:rgba(5,8,14,.8);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .howCard{width:min(540px,100%);max-height:100%;overflow-y:auto;padding:18px 22px;border-radius:14px;background:#0b111c;border:1.5px solid rgba(255,194,75,.65);box-shadow:0 18px 50px rgba(0,0,0,.7)}
 .howCard h2{margin:0 0 12px;font-family:var(--display);font-weight:900;font-size:30px;line-height:1;letter-spacing:.02em;color:var(--amber);text-transform:uppercase}
@@ -752,7 +752,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
     <button class="btn" id="updGo" type="button">Apri il Play Store</button>
   </div>
   <div class="howCard" id="gPopCard" role="dialog" aria-modal="true" aria-labelledby="gPopTitle" hidden>
-    <h2 id="gPopTitle"><span class="nkick">Il tuo profilo</span>Non perdere i progressi</h2>
+    <h2 id="gPopTitle">Non perdere i progressi</h2>
     <ul class="howList">
       <li><span aria-hidden="true">🛡️</span><span>Salva i dati con Google per evitare di perdere i tuoi progressi</span></li>
     </ul>
@@ -1038,7 +1038,7 @@ I18N.en = {
   "Classifica condivisa tra tutti i tifosi.": "Table shared by all fans.", "Classifica salvata su questo dispositivo.": "Table saved on this device.",
   "Classifica condivisa tra tutti i tifosi, aggiornata in tempo reale.": "Table shared by all fans, updated live.",
   // profile
-  "Il tuo profilo": "Your profile", "Statistiche": "Stats", "Statistiche con {t}": "Stats for {t}", "Partite": "Games", "Record personale": "Best",
+  "Statistiche": "Stats", "Statistiche con {t}": "Stats for {t}", "Partite": "Games", "Record personale": "Best",
   "Serie max": "Best streak", "Partite in totale": "Games in total", "Livello {n}": "Level {n}", "{a} / {b} punti": "{a} / {b} points",
   "Mancano {p} punti al livello {n}. Il livello compare accanto al tuo nome nella classifica Tifosi.": "{p} points to level {n}. Your level appears next to your name in the fans table.",
   "Gioca la prima partita: ogni punto che segni fa crescere il tuo livello di tifoso.": "Play your first game: every point you score raises your fan level.",
@@ -4176,7 +4176,8 @@ function maybeGPop(){
 }
 const gPopClose = () => { store.set(GPOP_KEY, true); $("gPopCard").hidden = true; $("howVeil").hidden = true; };
 $("gPopNo").onclick = gPopClose;
-$("gPopGo").onclick = () => { gPopClose(); googleSave(); };
+// Google's account sheet over the game (never the redirect to another page); if it cannot appear, the Profile page inside the game
+$("gPopGo").onclick = () => { gPopClose(); googleQuick(); };
 setInterval(maybeGPop, 1300);
 
 renderTeams();
