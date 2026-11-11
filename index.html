@@ -158,7 +158,7 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--chalk);overfl
 #rotate p{margin:0;font-family:var(--display);font-weight:900;font-size:30px;line-height:1}
 #rotate small{display:block;margin-top:8px;font-family:var(--label);font-size:15px;letter-spacing:.06em;color:var(--mute)}
 /* how to play: shown once, then from the "?" next to GIOCA */
-#newsCard .nkick,#updCard .nkick{display:block;font-size:.5em;letter-spacing:.18em;color:var(--amber);margin-bottom:2px;text-transform:uppercase}
+#newsCard .nkick,#updCard .nkick,#gPopCard .nkick{display:block;font-size:.5em;letter-spacing:.18em;color:var(--amber);margin-bottom:2px;text-transform:uppercase}
 .howVeil{position:fixed;inset:0;z-index:150;display:grid;place-items:center;padding:calc(env(safe-area-inset-top,0px) + 12px) max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 12px) max(16px,env(safe-area-inset-left,0px));background:rgba(5,8,14,.8);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .howCard{width:min(540px,100%);max-height:100%;overflow-y:auto;padding:18px 22px;border-radius:14px;background:#0b111c;border:1.5px solid rgba(255,194,75,.65);box-shadow:0 18px 50px rgba(0,0,0,.7)}
 .howCard h2{margin:0 0 12px;font-family:var(--display);font-weight:900;font-size:30px;line-height:1;letter-spacing:.02em;color:var(--amber);text-transform:uppercase}
@@ -166,6 +166,9 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--chalk);overfl
 .howList li{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:8px;font-family:var(--label);font-weight:600;font-size:18px;line-height:1.2;color:var(--chalk)}
 .howList li span:first-child{font-size:22px;text-align:center}
 .howCard .btn{width:100%;padding:11px 14px;font-size:24px}
+#gPopCard .gpop{display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#1f1f1f;border:0}
+#gPopCard .gpop .gl{width:26px;height:26px;flex:none}
+#gPopNo{margin-top:8px;font-size:18px;padding:8px 14px}
 .howTip{width:min(400px,100%);text-align:center}
 .howTip h2{font-size:26px;margin-bottom:8px}
 .howTip p{margin:0 0 16px;font-family:var(--label);font-weight:600;font-size:18px;line-height:1.3;color:var(--chalk)}
@@ -748,6 +751,14 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
     </ul>
     <button class="btn" id="updGo" type="button">Apri il Play Store</button>
   </div>
+  <div class="howCard" id="gPopCard" role="dialog" aria-modal="true" aria-labelledby="gPopTitle" hidden>
+    <h2 id="gPopTitle"><span class="nkick">Il tuo profilo</span>Non perdere i progressi</h2>
+    <ul class="howList">
+      <li><span aria-hidden="true">🛡️</span><span>Salva i dati con Google per evitare di perdere i tuoi progressi</span></li>
+    </ul>
+    <button class="btn gpop" id="gPopGo" type="button"><svg class="gl" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span>Salva con Google</span></button>
+    <button class="btn ghost" id="gPopNo" type="button">Non ora</button>
+  </div>
 </div>
 
 <section class="screen home" id="startScreen">
@@ -1083,6 +1094,8 @@ I18N.en = {
   "Altrettante scendono: chi resta a zero rischia la retrocessione": "As many go down: teams stuck at zero risk relegation",
   "La tua squadra la segui ovunque: se scende, giochi per riportarla su": "You follow your team everywhere: if it goes down, play to bring it back up",
   "Primi verdetti venerdì 13 alle 20, primi cambi lunedì 16": "First verdicts Friday 13 at 8 pm, first moves Monday 16", "Forza ragazzi!": "Come on lads!",
+  "Play Store · versione 1.1": "Play Store · version 1.1", "Aggiorna l'app": "Update the app", "Sul Play Store c'è la nuova versione di Per la Maglia: se non l'hai già fatto, aggiornala": "A new version of Per la Maglia is on the Play Store: update it if you haven't yet", "Apri il Play Store": "Open the Play Store",
+  "Il tuo profilo": "Your profile", "Non perdere i progressi": "Don't lose your progress", "Salva i dati con Google per evitare di perdere i tuoi progressi": "Save your data with Google so you never lose your progress", "Non ora": "Not now",
   "Ogni lunedì salgono di serie le prime 3 che hanno fatto punti e ne scendono altrettante: la tua squadra la segui ovunque": "Every Monday the top 3 that scored go up a division and as many go down: you follow your team wherever it goes",
   "In campo!": "Let's play!", "Vuoi rileggerlo?": "Want to read it again?", "Tocca": "Tap", "nella home quando vuoi": "on the home screen whenever you like", "Ho capito": "Got it",
   "Tutorial": "Tutorial", "Rifai i tre tiri di prova alla prossima partita.": "Replay the three practice shots in your next game.", "Rivedi": "Replay", "Alla prossima partita": "Next game",
@@ -4102,7 +4115,7 @@ trNode(document.body);
 const HOW_KEY = "pm.howSeen";
 let howFirst = false;
 function openHow(first){
-  howFirst = first; $("howCard").hidden = false; $("howTip").hidden = true; $("newsCard").hidden = true; $("updCard").hidden = true; $("howVeil").hidden = false;
+  howFirst = first; $("howCard").hidden = false; $("howTip").hidden = true; $("newsCard").hidden = true; $("updCard").hidden = true; $("gPopCard").hidden = true; $("howVeil").hidden = false;
   try { $("howOk").focus({ preventScroll: true }); } catch (e) {}
 }
 function closeHow(){ $("howVeil").hidden = true; store.set(HOW_KEY, true); }
@@ -4118,7 +4131,7 @@ $("howOk").onclick = () => {
   try { $("howTipOk").focus({ preventScroll: true }); } catch (e) {}
 };
 $("howTipOk").onclick = () => { closeHow(); const b = $("helpBtn"); b.classList.remove("ping"); void b.offsetWidth; b.classList.add("ping"); };
-document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("howVeil").hidden) !$("updCard").hidden ? null : (!$("newsCard").hidden ? $("newsOk") : $("howTip").hidden ? $("howOk") : $("howTipOk")).click(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("howVeil").hidden) !$("updCard").hidden ? null : (!$("gPopCard").hidden ? $("gPopNo") : !$("newsCard").hidden ? $("newsOk") : $("howTip").hidden ? $("howOk") : $("howTipOk")).click(); });
 if (!store.get(HOW_KEY, false)) { const howT = setInterval(() => { if (store.get(HOW_KEY, false)) return clearInterval(howT); maybeHow(); }, 700); }
 // news: promotions and relegations, once for the players who were already here (new players read it in "Come si gioca"); off from week 47
 const NEWS_KEY = "pm.news", NEWS_ID = "promozioni-w46";
@@ -4126,7 +4139,7 @@ if (!store.get(HOW_KEY, false)) store.set(NEWS_KEY, NEWS_ID);
 function maybeNews(){
   if (store.get(NEWS_KEY, "") === NEWS_ID || isoWeekNow() > "2026-W46") return true;
   if (!$("howVeil").hidden || $("startScreen").hidden || !$("rotate").hidden || !$("kbd").hidden || !$("compSheet").hidden || inMatchNow()) return false;
-  $("howCard").hidden = true; $("howTip").hidden = true; $("updCard").hidden = true; $("newsCard").hidden = false; $("howVeil").hidden = false;
+  $("howCard").hidden = true; $("howTip").hidden = true; $("updCard").hidden = true; $("gPopCard").hidden = true; $("newsCard").hidden = false; $("howVeil").hidden = false;
   try { $("newsOk").focus({ preventScroll: true }); } catch (e) {}
   return true;
 }
@@ -4140,7 +4153,7 @@ function maybeUpd(){
   if (store.get(UPD_KEY, "") === UPD_ID || !inPlayApp()) return true;
   if (store.get(NEWS_KEY, "") !== NEWS_ID && isoWeekNow() <= "2026-W46") return false;
   if (!$("howVeil").hidden || $("startScreen").hidden || !$("rotate").hidden || !$("kbd").hidden || !$("compSheet").hidden || inMatchNow()) return false;
-  $("howCard").hidden = true; $("howTip").hidden = true; $("newsCard").hidden = true; $("updCard").hidden = false; $("howVeil").hidden = false;
+  $("howCard").hidden = true; $("howTip").hidden = true; $("newsCard").hidden = true; $("gPopCard").hidden = true; $("updCard").hidden = false; $("howVeil").hidden = false;
   try { $("updGo").focus({ preventScroll: true }); } catch (e) {}
   return true;
 }
@@ -4150,6 +4163,21 @@ $("updGo").onclick = () => {
   location.href = "intent://details?id=com.perlamaglia.app#Intent;scheme=market;package=com.android.vending;S.browser_fallback_url=" + encodeURIComponent("https://play.google.com/store/apps/details?id=com.perlamaglia.app") + ";end";
 };
 { const updT = setInterval(() => { if (maybeUpd()) clearInterval(updT); }, 1100); }
+// "Salva con Google" notice: once, in the home after the 3rd game, for profiles not saved yet
+const GPOP_KEY = "pm.gpop";
+function maybeGPop(){
+  if (store.get(GPOP_KEY, false) || store.get("pm.google", null)) return;
+  if ((store.get("cucchiaio.stats", EMPTY_STATS).games || 0) < 3 || navigator.onLine === false) return;
+  if (store.get(NEWS_KEY, "") !== NEWS_ID && isoWeekNow() <= "2026-W46") return;
+  if (store.get(UPD_KEY, "") !== UPD_ID && inPlayApp()) return;
+  if (!$("howVeil").hidden || $("startScreen").hidden || !$("rotate").hidden || !$("kbd").hidden || !$("compSheet").hidden || inMatchNow()) return;
+  $("howCard").hidden = true; $("howTip").hidden = true; $("newsCard").hidden = true; $("updCard").hidden = true; $("gPopCard").hidden = true; $("gPopCard").hidden = false; $("howVeil").hidden = false;
+  try { $("gPopGo").focus({ preventScroll: true }); } catch (e) {}
+}
+const gPopClose = () => { store.set(GPOP_KEY, true); $("gPopCard").hidden = true; $("howVeil").hidden = true; };
+$("gPopNo").onclick = gPopClose;
+$("gPopGo").onclick = () => { gPopClose(); googleSave(); };
+setInterval(maybeGPop, 1300);
 
 renderTeams();
 startOnline();
