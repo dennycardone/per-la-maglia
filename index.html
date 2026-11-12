@@ -1274,25 +1274,69 @@ function bestWindowCharge(st, ct){
 // Weather comes and goes during a match; every situation is calibrated with the weather it is played in,
 // so the good release window stays 170–210 ms in rain and wind too.
 const WX = { rain: false, wind: 0 };
+// one candidate situation, and the check that its best window is in range
+function setupCand(rain, wind){
+  const furbo = Math.random() < 0.45;
+  return { type: furbo ? "furbo" : "classico", d: 10 + Math.random() * 10, k0: 0.3 + Math.random() * 3.2,
+           vk: furbo ? 4.5 + Math.random() * 3 : 4 + Math.random() * 2.5, stop: 4 + Math.random() * 3, pause: 0.4 + Math.random() * 0.5,
+           rain, wind, target: C.windowMin + Math.random() * (C.windowMax - C.windowMin) };
+}
+const SETUP_FALLBACK = { type: "classico", d: 13, k0: 1.4, vk: 5.8, stop: 5, pause: 0.6, chargeTime: 0.6, rain: false, wind: 0 };
+// the whole search in one go: this is what the background worker runs, away from the game's frames
+function setupSolve(rain, wind){
+  for (let i = 0; i < 200; i++) {
+    const st = setupCand(rain, wind), target = st.target; delete st.target;
+    const wc1 = bestWindowCharge(st, 0.3);
+    if (wc1 <= 0) continue;
+    st.chargeTime = clamp(target / wc1, 0.35, 0.95);
+    const ms = bestWindowCharge(st, st.chargeTime) * st.chargeTime;
+    if (ms >= C.windowMin && ms <= C.windowMax) return st;
+  }
+  return SETUP_FALLBACK;
+}
+// the same search in small steps (one release moment and arc at a time), for phones where the worker is not available
+function* bestWindowChargeG(st, ct){
+  let bw = 0;
+  for (let T = 0.3; T < 3; T += 0.15) {
+    const s0 = preKick(st, T); if (s0.result) break;
+    for (const e of ELS) { const w = chargeWindow(s0, st, e, Math.min(1, T / ct)); if (w) bw = Math.max(bw, w.b - w.a); yield null; }
+  }
+  return bw;
+}
 function* setupGen(){
   const rainNow = WX.rain, windNow = WX.wind;
   for (let i = 0; i < 200; i++) {
-    const furbo = Math.random() < 0.45;
-    const st = { type: furbo ? "furbo" : "classico", d: 10 + Math.random() * 10, k0: 0.3 + Math.random() * 3.2,
-                 vk: furbo ? 4.5 + Math.random() * 3 : 4 + Math.random() * 2.5, stop: 4 + Math.random() * 3, pause: 0.4 + Math.random() * 0.5 };
-    st.rain = rainNow; st.wind = windNow;
-    const target = C.windowMin + Math.random() * (C.windowMax - C.windowMin);
-    const wc1 = bestWindowCharge(st, 0.3); yield null;
+    const st = setupCand(rainNow, windNow), target = st.target; delete st.target;
+    const wc1 = yield* bestWindowChargeG(st, 0.3);
     if (wc1 <= 0) continue;
     st.chargeTime = clamp(target / wc1, 0.35, 0.95);
-    const ms = bestWindowCharge(st, st.chargeTime) * st.chargeTime; yield null;
+    const ms = (yield* bestWindowChargeG(st, st.chargeTime)) * st.chargeTime;
     if (ms >= C.windowMin && ms <= C.windowMax) { yield st; return; }
   }
-  yield { type: "classico", d: 13, k0: 1.4, vk: 5.8, stop: 5, pause: 0.6, chargeTime: 0.6, rain: false, wind: 0 };
+  yield Object.assign({}, SETUP_FALLBACK);
 }
 let gen = null, ready = null;
+// Background worker: the next situation is worked out on another core while the current shot is played,
+// so the game never stops to think. It is built from the very same functions used to play.
+let genW = null, genBusy = 0, genSeq = 0;
+try {
+  const src = "const C=" + JSON.stringify(C) + ",ELS=" + JSON.stringify(ELS) + ",SETUP_FALLBACK=" + JSON.stringify(SETUP_FALLBACK) + ";const clamp=" + clamp.toString() + ";\n" +
+    [makeState, kickState, kSpeed, stepState, copyState, preKick, scores, chargeWindow, bestWindowCharge, setupCand, setupSolve].map(f => f.toString()).join("\n") +
+    "\nonmessage=e=>{let st;try{st=setupSolve(e.data.rain,e.data.wind)}catch(x){st=null}postMessage({id:e.data.id,st})};";
+  genW = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
+  genW.onmessage = e => { if (e.data.id !== genSeq) return; genBusy = 0; if (e.data.st) { if (!ready) ready = e.data.st; } else genOff(); };
+  genW.onerror = () => genOff();
+} catch (e) { genW = null; }
+function genOff(){ try { if (genW) genW.terminate(); } catch (e) {} genW = null; genBusy = 0; }
 function pump(budget){
   if (ready) return;
+  if (genW) {
+    // asked once; if the worker stays silent for too long the phone goes back to working it out here
+    if (!genBusy) { genBusy = performance.now(); try { genW.postMessage({ id: ++genSeq, rain: WX.rain, wind: WX.wind }); } catch (e) { genOff(); } }
+    else if (performance.now() - genBusy > 12000) genOff();
+    return;
+  }
+  if (!budget) return;
   if (!gen) gen = setupGen();
   const t0 = performance.now();
   while (performance.now() - t0 < budget) {
@@ -1301,7 +1345,12 @@ function pump(budget){
     if (r.value) { ready = r.value; gen = null; return; }
   }
 }
-function takeSetup(){ while (!ready) pump(50); const st = ready; ready = null; return st; }
+// last resort only (first shot of a match): normally the situation is already waiting
+function takeSetup(){
+  if (!ready && genW) { genSeq++; genBusy = 0; }   // an answer still on its way is dropped: this shot is worked out here
+  if (!ready) { const w = genW; genW = null; if (!gen) gen = setupGen(); while (!ready) pump(50); genW = w; }
+  const st = ready; ready = null; return st;
+}
 
 // ---------- Game state ----------
 let setup = null, sim = null, G = null, phase = "menu", pending = false, acc = 0;
@@ -2267,7 +2316,11 @@ function resolve(res){
   // continuous flow: no fade, the next situation arrives on its own after a short beat (or at the next tap)
   clearTimeout(nextTimer);
   if (G.practice && G.shots >= 3) { later(endPractice, 1100); return; }
-  later(() => { if (G.lives <= 0) gameOver(); else nextShot(); }, G.lives <= 0 ? 1300 : 650);
+  if (G.lives <= 0) { later(gameOver, 1300); return; }
+  // the next situation appears when it is ready: on a slow phone the beat gets a little longer instead of the game freezing
+  const t0 = performance.now();
+  const go = () => { if (!ready && performance.now() - t0 < 9000) { later(go, 40); return; } nextShot(); };
+  later(go, 650);
 }
 let nextTimer = null;
 // ---------- First launch: three practice shots with hints, then the real match ----------
@@ -4040,7 +4093,9 @@ function frame(now){
     if (sim.kicked) { trail.push([sim.ball.x, sim.ball.y]); if (trail.length > 30) trail.shift(); }
   } else acc = 0;
   // prepare the next situation in the background, never during a shot
-  if (phase !== "hold" && phase !== "flight") pump(12);
+  // with the worker it is only a message, at any time; without it, small slices and never during a shot
+  // (once the goal celebration has had its moment, the slices grow: nobody is aiming while the next shot is awaited)
+  pump(phase === "hold" || phase === "flight" ? 0 : phase === "after" && sim && sim.afterT > 0.65 ? 24 : 3);
   flashT = Math.max(0, flashT - dt * 1.1); shakeT = Math.max(0, shakeT - dt * 3);
   if (!paused) {
     updParts(dt);
