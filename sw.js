@@ -23,6 +23,8 @@ self.addEventListener("fetch", e => {
       .catch(() => isGame ? caches.match("./index.html") : caches.match(req)));
     return;
   }
+  // the tutorial video is streamed in pieces by the browser itself: never through this cache
+  if (url.origin === location.origin && url.pathname.indexOf("/video/") >= 0) return;
   // own files: cache first, refresh in the background
   if (url.origin === location.origin) {
     e.respondWith(caches.match(req).then(hit => {
