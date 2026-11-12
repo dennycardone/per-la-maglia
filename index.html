@@ -740,7 +740,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
       <li><span aria-hidden="true">🏆</span><span>I tuoi punti si sommano a quelli dei tifosi della tua squadra: ogni settimana vince la tifoseria migliore</span></li>
       <li><span aria-hidden="true">↕️</span><span>Ogni lunedì salgono di serie le prime 3 che hanno fatto punti e ne scendono altrettante: la tua squadra la segui ovunque</span></li>
     </ul>
-    <div class="howBtns"><button class="btn ghost" id="howVid" type="button"><span aria-hidden="true">▶</span> <span>Guarda il video</span></button><button class="btn" id="howOk" type="button">In campo!</button></div>
+    <div class="howBtns"><button class="btn ghost" id="howVid" type="button"><span aria-hidden="true">▶</span> <span>Video tutorial</span></button><button class="btn" id="howOk" type="button">In campo!</button></div>
   </div>
   <div class="howCard howTip" id="howTip" role="dialog" aria-modal="true" aria-labelledby="howTipTitle" hidden>
     <h2 id="howTipTitle">Vuoi rileggerlo?</h2>
@@ -1110,7 +1110,7 @@ I18N.en = {
   "Play Store · versione 1.1": "Play Store · version 1.1", "Aggiorna l'app": "Update the app", "Sul Play Store c'è la nuova versione di Per la Maglia: se non l'hai già fatto, aggiornala": "A new version of Per la Maglia is on the Play Store: update it if you haven't yet", "Apri il Play Store": "Open the Play Store",
   "Il tuo profilo": "Your profile", "Non perdere i progressi": "Don't lose your progress", "Salva i dati con Google per evitare di perdere i tuoi progressi": "Save your data with Google so you never lose your progress", "Non ora": "Not now",
   "Ogni lunedì salgono di serie le prime 3 che hanno fatto punti e ne scendono altrettante: la tua squadra la segui ovunque": "Every Monday the top 3 that scored go up a division and as many go down: you follow your team wherever it goes",
-  "In campo!": "Let's play!", "Guarda il video": "Watch the video", "Carico il video…": "Loading the video…", "Video non disponibile: riprova quando sei connesso": "Video not available: try again when you are online", "Chiudi il video": "Close the video", "Vuoi rileggerlo?": "Want to read it again?", "Tocca": "Tap", "nella home quando vuoi": "on the home screen whenever you like", "Ho capito": "Got it",
+  "In campo!": "Let's play!", "Carico il video…": "Loading the video…", "Video non disponibile: riprova quando sei connesso": "Video not available: try again when you are online", "Chiudi il video": "Close the video", "Vuoi rileggerlo?": "Want to read it again?", "Tocca": "Tap", "nella home quando vuoi": "on the home screen whenever you like", "Ho capito": "Got it",
   "Tutorial": "Tutorial", "Rifai i tre tiri di prova alla prossima partita.": "Replay the three practice shots in your next game.", "Rivedi": "Replay", "Alla prossima partita": "Next game",
   // install
   "Installa dal menu": "Install from the menu", "Apri il menu del browser e scegli <b>Installa app</b>.": "Open the browser menu and choose <b>Install app</b>.",
@@ -2701,13 +2701,13 @@ function badText(t){
 // ---------- The game's own keyboard: nickname (12 characters) or a banter line (80) ----------
 const KB = { up: true, val: "", armAt: 0, down: null, mode: "nick", max: 12 };
 function kbdRender(){
-  const last = KB.mode === "taunt" ? ["è", "!", "?", "space", ",", "send"] : ["_", "-", ".", "space", "ok"];
+  const last = KB.mode === "taunt" ? ["è", "'", "!", "?", "space", ",", ".", "send"] : ["_", "-", ".", "space", "ok"];
   const rows = [["1","2","3","4","5","6","7","8","9","0"], ["q","w","e","r","t","y","u","i","o","p"], ["a","s","d","f","g","h","j","k","l"], ["shift","z","x","c","v","b","n","m","del"], last];
   const box = $("kbdKeys"); box.innerHTML = "";
   rows.forEach(row => {
     const r = document.createElement("div"); r.className = "kbd-row";
     row.forEach(k => {
-      const b = document.createElement("button"); b.type = "button"; b.className = "key k-" + ({ "!": "excl", "?": "q2", ",": "comma", "è": "egrave" }[k] || k);
+      const b = document.createElement("button"); b.type = "button"; b.className = "key k-" + ({ "!": "excl", "?": "q2", ",": "comma", "è": "egrave", "'": "apos", ".": "dot" }[k] || k);
       b.textContent = k === "shift" ? (KB.up ? "▲ ABC" : "△ abc") : k === "del" ? "⌫" : k === "space" ? tr("spazio") : k === "ok" ? tr("Fatto") : k === "send" ? tr("INVIA") : (/[a-z]/.test(k) && KB.up ? k.toUpperCase() : k);
       b.addEventListener("pointerdown", e => { e.preventDefault(); if (performance.now() < KB.armAt) return; KB.down = k; b.classList.add("on"); });
       b.addEventListener("pointerup", e => { e.preventDefault(); b.classList.remove("on"); if (KB.down === k && performance.now() >= KB.armAt) kbdPress(k); KB.down = null; });
