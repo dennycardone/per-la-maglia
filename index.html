@@ -1141,8 +1141,11 @@ window.tr = tr;
 // performance, without changing the look: at most ~60 drawings a second, and automatic lightening on slow phones
 // level 0 = normal · 1 = lower pixel density · 2 = also fewer effects (as "Grafica leggera"); remembered on the phone
 // the automatic lightening is measured again from scratch with the sharper base (density 2)
-if (store.get("pm.perfv", 0) !== 2) { store.set("pm.perf", 0); store.set("pm.perfv", 2); }
-const PERF = { iv: [], prev: 0, skip: 1, n: 0, last: 0, slow: [], level: Math.min(2, +store.get("pm.perf", 0) || 0), want: 0 };
+// (v3: the stops after a goal that made phones look slow are gone, so everyone starts again from full quality)
+if (store.get("pm.perfv", 0) !== 3) { store.set("pm.perf", 0); store.set("pm.perfv", 3); }
+// a lighter level found on this phone is not for ever: after three days full quality is tried again
+if (+store.get("pm.perf", 0) && Date.now() - (+store.get("pm.perfAt", 0) || 0) > 3 * 864e5) store.set("pm.perf", 0);
+const PERF = { iv: [], prev: 0, skip: 1, n: 0, last: 0, slow: [], strikes: 0, level: Math.min(2, +store.get("pm.perf", 0) || 0), want: 0 };
 const LIGHT = () => SET.quality === "leggera" || PERF.level >= 2;
 function perfFrame(now, inMatch){
   // refresh rate, measured on the first frames: on 120 Hz screens one frame out of two is skipped (it looks the same at 60)
@@ -1153,11 +1156,12 @@ function perfFrame(now, inMatch){
     PERF.slow.push(now - PERF.last);
     if (PERF.slow.length >= 90) {
       const med = PERF.slow.sort((a, b) => a - b)[45]; PERF.slow = [];
-      if (med > 26 && PERF.level < 2) PERF.want = PERF.level + 1;
+      // two slow stretches in a row, so one bad moment (another app waking up) does not cost the sharpness
+      if (med > 26 && PERF.level < 2) { if (++PERF.strikes >= 2) { PERF.want = PERF.level + 1; PERF.strikes = 0; } } else PERF.strikes = 0;
     }
   } else if (!inMatch) PERF.slow = [];
   PERF.last = now;
-  if (PERF.want > PERF.level && (phase === "after" || phase === "ready")) { PERF.level = PERF.want; store.set("pm.perf", PERF.level); resize(); }
+  if (PERF.want > PERF.level && (phase === "after" || phase === "ready")) { PERF.level = PERF.want; store.set("pm.perf", PERF.level); store.set("pm.perfAt", Date.now()); resize(); }
   return true;
 }
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
