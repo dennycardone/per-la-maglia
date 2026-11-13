@@ -758,7 +758,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
     <button class="btn" id="newsOk" type="button">Forza ragazzi!</button>
   </div>
   <div class="howCard" id="updCard" role="dialog" aria-modal="true" aria-labelledby="updTitle" hidden>
-    <h2 id="updTitle"><span class="nkick">Play Store · versione 1.1</span>Aggiorna l'app</h2>
+    <h2 id="updTitle"><span class="nkick" id="updKick"></span>Aggiorna l'app</h2>
     <ul class="howList">
       <li><span aria-hidden="true">📲</span><span>Sul Play Store c'è la nuova versione di Per la Maglia: se non l'hai già fatto, aggiornala</span></li>
     </ul>
@@ -1107,7 +1107,7 @@ I18N.en = {
   "Altrettante scendono: chi resta a zero rischia la retrocessione": "As many go down: teams stuck at zero risk relegation",
   "La tua squadra la segui ovunque: se scende, giochi per riportarla su": "You follow your team everywhere: if it goes down, play to bring it back up",
   "Primi verdetti venerdì 13 alle 20, primi cambi lunedì 16": "First verdicts Friday 13 at 8 pm, first moves Monday 16", "Forza ragazzi!": "Come on lads!",
-  "Play Store · versione 1.1": "Play Store · version 1.1", "Aggiorna l'app": "Update the app", "Sul Play Store c'è la nuova versione di Per la Maglia: se non l'hai già fatto, aggiornala": "A new version of Per la Maglia is on the Play Store: update it if you haven't yet", "Apri il Play Store": "Open the Play Store",
+  "Play Store · versione {v}": "Play Store · version {v}", "Aggiorna l'app": "Update the app", "Sul Play Store c'è la nuova versione di Per la Maglia: se non l'hai già fatto, aggiornala": "A new version of Per la Maglia is on the Play Store: update it if you haven't yet", "Apri il Play Store": "Open the Play Store",
   "Il tuo profilo": "Your profile", "Non perdere i progressi": "Don't lose your progress", "Salva i dati con Google per evitare di perdere i tuoi progressi": "Save your data with Google so you never lose your progress", "Non ora": "Not now",
   "Ogni lunedì salgono di serie le prime 3 che hanno fatto punti e ne scendono altrettante: la tua squadra la segui ovunque": "Every Monday the top 3 that scored go up a division and as many go down: you follow your team wherever it goes",
   "In campo!": "Let's play!", "Carico il video…": "Loading the video…", "Video non disponibile: riprova quando sei connesso": "Video not available: try again when you are online", "Chiudi il video": "Close the video", "Vuoi rileggerlo?": "Want to read it again?", "Tocca": "Tap", "nella home quando vuoi": "on the home screen whenever you like", "Ho capito": "Got it",
@@ -4238,13 +4238,14 @@ function maybeNews(){
 $("newsOk").onclick = () => { store.set(NEWS_KEY, NEWS_ID); $("newsCard").hidden = true; $("howVeil").hidden = true; };
 { const newsT = setInterval(() => { if (maybeNews()) clearInterval(newsT); }, 900); }
 // Play Store update notice: once per version, only while playing inside the Play Store app (players already here before this version)
-const UPD_KEY = "pm.upd", UPD_ID = "1.1";
+const UPD_KEY = "pm.upd", UPD_ID = "1.2";   // the Play Store release being announced: change only this number
 if (!store.get(HOW_KEY, false)) store.set(UPD_KEY, UPD_ID);
 const inPlayApp = () => { try { return sessionStorage.getItem("pm.twaNow") === "1"; } catch (e) { return false; } };
 function maybeUpd(){
   if (store.get(UPD_KEY, "") === UPD_ID || !inPlayApp()) return true;
   if (store.get(NEWS_KEY, "") !== NEWS_ID && isoWeekNow() <= "2026-W46") return false;
   if (!$("howVeil").hidden || $("startScreen").hidden || !$("rotate").hidden || !$("kbd").hidden || !$("compSheet").hidden || inMatchNow()) return false;
+  $("updKick").textContent = tr("Play Store · versione {v}", { v: UPD_ID });
   $("howCard").hidden = true; $("howTip").hidden = true; $("newsCard").hidden = true; $("gPopCard").hidden = true; $("updCard").hidden = false; $("howVeil").hidden = false;
   try { $("updGo").focus({ preventScroll: true }); } catch (e) {}
   return true;
