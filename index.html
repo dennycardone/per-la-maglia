@@ -166,6 +166,14 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--chalk);overfl
 .howList li{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:8px;font-family:var(--label);font-weight:600;font-size:18px;line-height:1.2;color:var(--chalk)}
 .howList li span:first-child{font-size:22px;text-align:center}
 .howCard .btn{width:100%;padding:11px 14px;font-size:24px}
+.howBtns{display:flex;gap:10px}
+.howBtns .btn{flex:1 1 0;min-width:0}
+.howBtns .btn.ghost{font-size:20px;border-color:rgba(255,194,75,.65);color:var(--amber);white-space:nowrap}
+/* tutorial video: full screen over the game, loaded only when asked, always silent */
+.vidVeil{position:fixed;inset:0;z-index:160;background:#000;display:grid;place-items:center}
+.vidVeil video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.vidMsg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:80%;padding:10px 16px;border-radius:10px;background:rgba(5,8,14,.82);color:#fff;font-family:var(--cond);font-weight:700;font-size:20px;letter-spacing:.04em;text-align:center;pointer-events:none}
+.vidX{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);right:max(12px,env(safe-area-inset-right,0px));width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);background:rgba(5,8,14,.72);color:#fff;font-size:22px;line-height:1;cursor:pointer}
 #gPopCard .gpop{display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#1f1f1f;border:0}
 #gPopCard .gpop .gl{width:26px;height:26px;flex:none}
 #gPopNo{margin-top:8px;font-size:18px;padding:8px 14px}
@@ -717,6 +725,11 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 
 <div id="rotate" hidden><div><div class="phone"></div><p>Gira il telefono</p><small>Per la Maglia si gioca in orizzontale</small></div></div>
 
+<div class="vidVeil" id="vidVeil" hidden>
+  <video id="vidEl" playsinline muted preload="none" controls controlslist="nodownload noplaybackrate noremoteplayback" disablepictureinpicture></video>
+  <div class="vidMsg" id="vidMsg" hidden></div>
+  <button class="vidX" id="vidX" type="button" aria-label="Chiudi il video">✕</button>
+</div>
 <div class="howVeil" id="howVeil" hidden>
   <div class="howCard" id="howCard" role="dialog" aria-modal="true" aria-labelledby="howTitle">
     <h2 id="howTitle">Come si gioca</h2>
@@ -727,7 +740,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
       <li><span aria-hidden="true">🏆</span><span>I tuoi punti si sommano a quelli dei tifosi della tua squadra: ogni settimana vince la tifoseria migliore</span></li>
       <li><span aria-hidden="true">↕️</span><span>Ogni lunedì salgono di serie le prime 3 che hanno fatto punti e ne scendono altrettante: la tua squadra la segui ovunque</span></li>
     </ul>
-    <button class="btn" id="howOk" type="button">In campo!</button>
+    <div class="howBtns"><button class="btn ghost" id="howVid" type="button"><span aria-hidden="true">▶</span> <span>Video tutorial</span></button><button class="btn" id="howOk" type="button">In campo!</button></div>
   </div>
   <div class="howCard howTip" id="howTip" role="dialog" aria-modal="true" aria-labelledby="howTipTitle" hidden>
     <h2 id="howTipTitle">Vuoi rileggerlo?</h2>
@@ -1097,7 +1110,7 @@ I18N.en = {
   "Play Store · versione 1.1": "Play Store · version 1.1", "Aggiorna l'app": "Update the app", "Sul Play Store c'è la nuova versione di Per la Maglia: se non l'hai già fatto, aggiornala": "A new version of Per la Maglia is on the Play Store: update it if you haven't yet", "Apri il Play Store": "Open the Play Store",
   "Il tuo profilo": "Your profile", "Non perdere i progressi": "Don't lose your progress", "Salva i dati con Google per evitare di perdere i tuoi progressi": "Save your data with Google so you never lose your progress", "Non ora": "Not now",
   "Ogni lunedì salgono di serie le prime 3 che hanno fatto punti e ne scendono altrettante: la tua squadra la segui ovunque": "Every Monday the top 3 that scored go up a division and as many go down: you follow your team wherever it goes",
-  "In campo!": "Let's play!", "Vuoi rileggerlo?": "Want to read it again?", "Tocca": "Tap", "nella home quando vuoi": "on the home screen whenever you like", "Ho capito": "Got it",
+  "In campo!": "Let's play!", "Carico il video…": "Loading the video…", "Video non disponibile: riprova quando sei connesso": "Video not available: try again when you are online", "Chiudi il video": "Close the video", "Vuoi rileggerlo?": "Want to read it again?", "Tocca": "Tap", "nella home quando vuoi": "on the home screen whenever you like", "Ho capito": "Got it",
   "Tutorial": "Tutorial", "Rifai i tre tiri di prova alla prossima partita.": "Replay the three practice shots in your next game.", "Rivedi": "Replay", "Alla prossima partita": "Next game",
   // install
   "Installa dal menu": "Install from the menu", "Apri il menu del browser e scegli <b>Installa app</b>.": "Open the browser menu and choose <b>Install app</b>.",
@@ -1128,8 +1141,11 @@ window.tr = tr;
 // performance, without changing the look: at most ~60 drawings a second, and automatic lightening on slow phones
 // level 0 = normal · 1 = lower pixel density · 2 = also fewer effects (as "Grafica leggera"); remembered on the phone
 // the automatic lightening is measured again from scratch with the sharper base (density 2)
-if (store.get("pm.perfv", 0) !== 2) { store.set("pm.perf", 0); store.set("pm.perfv", 2); }
-const PERF = { iv: [], prev: 0, skip: 1, n: 0, last: 0, slow: [], level: Math.min(2, +store.get("pm.perf", 0) || 0), want: 0 };
+// (v3: the stops after a goal that made phones look slow are gone, so everyone starts again from full quality)
+if (store.get("pm.perfv", 0) !== 3) { store.set("pm.perf", 0); store.set("pm.perfv", 3); }
+// a lighter level found on this phone is not for ever: after three days full quality is tried again
+if (+store.get("pm.perf", 0) && Date.now() - (+store.get("pm.perfAt", 0) || 0) > 3 * 864e5) store.set("pm.perf", 0);
+const PERF = { iv: [], prev: 0, skip: 1, n: 0, last: 0, slow: [], strikes: 0, level: Math.min(2, +store.get("pm.perf", 0) || 0), want: 0 };
 const LIGHT = () => SET.quality === "leggera" || PERF.level >= 2;
 function perfFrame(now, inMatch){
   // refresh rate, measured on the first frames: on 120 Hz screens one frame out of two is skipped (it looks the same at 60)
@@ -1140,11 +1156,12 @@ function perfFrame(now, inMatch){
     PERF.slow.push(now - PERF.last);
     if (PERF.slow.length >= 90) {
       const med = PERF.slow.sort((a, b) => a - b)[45]; PERF.slow = [];
-      if (med > 26 && PERF.level < 2) PERF.want = PERF.level + 1;
+      // two slow stretches in a row, so one bad moment (another app waking up) does not cost the sharpness
+      if (med > 26 && PERF.level < 2) { if (++PERF.strikes >= 2) { PERF.want = PERF.level + 1; PERF.strikes = 0; } } else PERF.strikes = 0;
     }
   } else if (!inMatch) PERF.slow = [];
   PERF.last = now;
-  if (PERF.want > PERF.level && (phase === "after" || phase === "ready")) { PERF.level = PERF.want; store.set("pm.perf", PERF.level); resize(); }
+  if (PERF.want > PERF.level && (phase === "after" || phase === "ready")) { PERF.level = PERF.want; store.set("pm.perf", PERF.level); store.set("pm.perfAt", Date.now()); resize(); }
   return true;
 }
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
@@ -2688,13 +2705,13 @@ function badText(t){
 // ---------- The game's own keyboard: nickname (12 characters) or a banter line (80) ----------
 const KB = { up: true, val: "", armAt: 0, down: null, mode: "nick", max: 12 };
 function kbdRender(){
-  const last = KB.mode === "taunt" ? ["è", "!", "?", "space", ",", "send"] : ["_", "-", ".", "space", "ok"];
+  const last = KB.mode === "taunt" ? ["è", "'", "!", "?", "space", ",", ".", "send"] : ["_", "-", ".", "space", "ok"];
   const rows = [["1","2","3","4","5","6","7","8","9","0"], ["q","w","e","r","t","y","u","i","o","p"], ["a","s","d","f","g","h","j","k","l"], ["shift","z","x","c","v","b","n","m","del"], last];
   const box = $("kbdKeys"); box.innerHTML = "";
   rows.forEach(row => {
     const r = document.createElement("div"); r.className = "kbd-row";
     row.forEach(k => {
-      const b = document.createElement("button"); b.type = "button"; b.className = "key k-" + ({ "!": "excl", "?": "q2", ",": "comma", "è": "egrave" }[k] || k);
+      const b = document.createElement("button"); b.type = "button"; b.className = "key k-" + ({ "!": "excl", "?": "q2", ",": "comma", "è": "egrave", "'": "apos", ".": "dot" }[k] || k);
       b.textContent = k === "shift" ? (KB.up ? "▲ ABC" : "△ abc") : k === "del" ? "⌫" : k === "space" ? tr("spazio") : k === "ok" ? tr("Fatto") : k === "send" ? tr("INVIA") : (/[a-z]/.test(k) && KB.up ? k.toUpperCase() : k);
       b.addEventListener("pointerdown", e => { e.preventDefault(); if (performance.now() < KB.armAt) return; KB.down = k; b.classList.add("on"); });
       b.addEventListener("pointerup", e => { e.preventDefault(); b.classList.remove("on"); if (KB.down === k && performance.now() >= KB.armAt) kbdPress(k); KB.down = null; });
@@ -4185,7 +4202,27 @@ $("howOk").onclick = () => {
   store.set(HOW_KEY, true); $("howCard").hidden = true; $("howTip").hidden = false;
   try { $("howTipOk").focus({ preventScroll: true }); } catch (e) {}
 };
+// tutorial video: opened from "Come si gioca", downloaded only then; it has no sound (sounds belong to the match)
+function openVid(){
+  const v = $("vidEl"), f = "video/tutorial-" + (LANG === "it" ? "it" : "en");
+  $("vidMsg").textContent = tr("Carico il video…"); $("vidMsg").hidden = false; $("vidVeil").hidden = false;
+  $("vidX").setAttribute("aria-label", tr("Chiudi il video"));
+  v.muted = true; v.poster = f + ".jpg"; v.src = f + ".mp4";
+  try { const p = v.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+  try { $("vidX").focus({ preventScroll: true }); } catch (e) {}
+}
+function closeVid(){
+  const v = $("vidEl"); try { v.pause(); } catch (e) {}
+  v.removeAttribute("src"); v.removeAttribute("poster"); try { v.load(); } catch (e) {}
+  $("vidVeil").hidden = true;
+  try { $("howVid").focus({ preventScroll: true }); } catch (e) {}
+}
+$("howVid").onclick = openVid; $("vidX").onclick = closeVid;
+$("vidEl").addEventListener("playing", () => { $("vidMsg").hidden = true; });
+$("vidEl").addEventListener("ended", closeVid);
+$("vidEl").addEventListener("error", () => { if ($("vidVeil").hidden || !$("vidEl").getAttribute("src")) return; $("vidMsg").textContent = tr("Video non disponibile: riprova quando sei connesso"); $("vidMsg").hidden = false; });
 $("howTipOk").onclick = () => { closeHow(); const b = $("helpBtn"); b.classList.remove("ping"); void b.offsetWidth; b.classList.add("ping"); };
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("vidVeil").hidden) { e.stopImmediatePropagation(); closeVid(); } }, true);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("howVeil").hidden) !$("updCard").hidden ? null : (!$("gPopCard").hidden ? $("gPopNo") : !$("newsCard").hidden ? $("newsOk") : $("howTip").hidden ? $("howOk") : $("howTipOk")).click(); });
 if (!store.get(HOW_KEY, false)) { const howT = setInterval(() => { if (store.get(HOW_KEY, false)) return clearInterval(howT); maybeHow(); }, 700); }
 // news: promotions and relegations, once for the players who were already here (new players read it in "Come si gioca"); off from week 47
