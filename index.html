@@ -1298,10 +1298,11 @@ function setupCand(rain, wind){
            vk: furbo ? 4.5 + Math.random() * 3 : 4 + Math.random() * 2.5, stop: 4 + Math.random() * 3, pause: 0.4 + Math.random() * 0.5,
            rain, wind, target: C.windowMin + Math.random() * (C.windowMax - C.windowMin) };
 }
-// Time to react: a situation is kept only if the player can still BEGIN pressing 0.7 s after it appears and score
+// Time to react: a situation is kept only if the player can still BEGIN pressing 0.4 s after it appears and score
 // with the plain arc (no dragging), aiming at the middle of a scoring band at least 60 ms wide.
 // Without this, a near goal could ask for a press within 0.3 s: on paper possible, in the hand not.
-const REACT_MIN = 0.7;
+// 0.4 s removes only what reflexes cannot do; the hard-but-fair near-goal shots stay (0.7 s halved them: too soft).
+const REACT_MIN = 0.4;
 function* reactOKG(st){
   const el = C.elevDef * Math.PI / 180;
   for (let T = REACT_MIN; T < 3; T += 0.06) {
