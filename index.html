@@ -1298,6 +1298,20 @@ function setupCand(rain, wind){
            vk: furbo ? 4.5 + Math.random() * 3 : 4 + Math.random() * 2.5, stop: 4 + Math.random() * 3, pause: 0.4 + Math.random() * 0.5,
            rain, wind, target: C.windowMin + Math.random() * (C.windowMax - C.windowMin) };
 }
+// Time to react: a situation is kept only if the player can still BEGIN pressing 0.7 s after it appears and score
+// with the plain arc (no dragging), aiming at the middle of a scoring band at least 60 ms wide.
+// Without this, a near goal could ask for a press within 0.3 s: on paper possible, in the hand not.
+const REACT_MIN = 0.7;
+function* reactOKG(st){
+  const el = C.elevDef * Math.PI / 180;
+  for (let T = REACT_MIN; T < 3; T += 0.06) {
+    const s0 = preKick(st, T); if (s0.result) return false;
+    const w = chargeWindow(s0, st, el, Math.min(1, T / st.chargeTime)); yield null;
+    if (w && (w.b - w.a) * st.chargeTime >= 0.06 && T - (w.a + w.b) / 2 * st.chargeTime >= REACT_MIN) return true;
+  }
+  return false;
+}
+function reactOK(st){ const g = reactOKG(st); let r; while (!(r = g.next()).done); return r.value; }
 const SETUP_FALLBACK = { type: "classico", d: 13, k0: 1.4, vk: 5.8, stop: 5, pause: 0.6, chargeTime: 0.6, rain: false, wind: 0 };
 // the whole search in one go: this is what the background worker runs, away from the game's frames
 function setupSolve(rain, wind){
@@ -1307,7 +1321,7 @@ function setupSolve(rain, wind){
     if (wc1 <= 0) continue;
     st.chargeTime = clamp(target / wc1, 0.35, 0.95);
     const ms = bestWindowCharge(st, st.chargeTime) * st.chargeTime;
-    if (ms >= C.windowMin && ms <= C.windowMax) return st;
+    if (ms >= C.windowMin && ms <= C.windowMax && reactOK(st)) return st;
   }
   return SETUP_FALLBACK;
 }
@@ -1328,7 +1342,7 @@ function* setupGen(){
     if (wc1 <= 0) continue;
     st.chargeTime = clamp(target / wc1, 0.35, 0.95);
     const ms = (yield* bestWindowChargeG(st, st.chargeTime)) * st.chargeTime;
-    if (ms >= C.windowMin && ms <= C.windowMax) { yield st; return; }
+    if (ms >= C.windowMin && ms <= C.windowMax && (yield* reactOKG(st))) { yield st; return; }
   }
   yield Object.assign({}, SETUP_FALLBACK);
 }
@@ -1337,8 +1351,8 @@ let gen = null, ready = null;
 // so the game never stops to think. It is built from the very same functions used to play.
 let genW = null, genBusy = 0, genSeq = 0;
 try {
-  const src = "const C=" + JSON.stringify(C) + ",ELS=" + JSON.stringify(ELS) + ",SETUP_FALLBACK=" + JSON.stringify(SETUP_FALLBACK) + ";const clamp=" + clamp.toString() + ";\n" +
-    [makeState, kickState, kSpeed, stepState, copyState, preKick, scores, chargeWindow, bestWindowCharge, setupCand, setupSolve].map(f => f.toString()).join("\n") +
+  const src = "const C=" + JSON.stringify(C) + ",ELS=" + JSON.stringify(ELS) + ",SETUP_FALLBACK=" + JSON.stringify(SETUP_FALLBACK) + ",REACT_MIN=" + REACT_MIN + ";const clamp=" + clamp.toString() + ";\n" +
+    [makeState, kickState, kSpeed, stepState, copyState, preKick, scores, chargeWindow, bestWindowCharge, reactOKG, reactOK, setupCand, setupSolve].map(f => f.toString()).join("\n") +
     "\nonmessage=e=>{let st;try{st=setupSolve(e.data.rain,e.data.wind)}catch(x){st=null}postMessage({id:e.data.id,st})};";
   genW = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
   genW.onmessage = e => { if (e.data.id !== genSeq) return; genBusy = 0; if (e.data.st) { if (!ready) ready = e.data.st; } else genOff(); };
