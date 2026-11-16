@@ -422,12 +422,16 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 /* the home fits any landscape screen: sizes follow the screen height, nothing gets squeezed or overlaps */
 .hcenter{gap:clamp(3px,1.3vh,8px)}
 .hcenter>*{flex:none}
-.htitle{font-size:clamp(34px,min(10vw,16.5vh),78px)}
+.htitle{font-size:calc(clamp(34px,min(10vw,16.5vh),78px) * var(--hk,1))}
 .hwho{font-size:clamp(11px,3.5vh,14px)}
-#playBtn.hplay{height:clamp(40px,13vh,60px);font-size:clamp(24px,8.6vh,34px);display:flex;align-items:center;justify-content:center;padding:.06em 0 0;line-height:1}
+#playBtn.hplay{height:calc(clamp(40px,13vh,60px) * var(--hk,1));font-size:calc(clamp(24px,8.6vh,34px) * var(--hk,1));display:flex;align-items:center;justify-content:center;padding:.06em 0 0;line-height:1}
 #startScreen .homeTeam{margin-top:clamp(6px,2.4vh,12px)}
 #playBtn.hplay.off{font-size:clamp(17px,5.6vh,22px)}
-.hhelp{width:clamp(34px,11vh,44px);height:clamp(34px,11vh,44px);font-size:clamp(19px,6vh,24px)}
+.hhelp{width:calc(clamp(34px,11vh,44px) * var(--hk,1));height:calc(clamp(34px,11vh,44px) * var(--hk,1));font-size:calc(clamp(19px,6vh,24px) * var(--hk,1))}
+/* fitHome(): on a short screen first the spacing tightens, then title and button shrink, last the champion line steps aside */
+.hcenter.tight{gap:3px}
+.hcenter.tight #homeTeam{margin-top:2px}
+.hcenter.slim #champLine{display:none}
 .hask{left:96px;right:96px}
 @media (orientation:landscape) and (max-height:380px){
   .bench{padding-top:9px}
@@ -2633,6 +2637,32 @@ function renderHome(){
   else txt = tr(" è al {n}° posto in classifica questa settimana", { n: i + 1 });
   el.appendChild(document.createTextNode(txt));
 }
+// The home column always fits between the chips at the top and the team bench (or the "choose your team" hint) at the bottom,
+// whatever the screen and however many lines are showing: nothing may overlap the jerseys.
+function fitHome(){
+  const sc = $("startScreen"), hc = sc && sc.querySelector(".hcenter");
+  if (!hc || sc.hidden || !sc.offsetHeight) return;
+  const R = sc.getBoundingClientRect(), y = el => el.getBoundingClientRect();
+  let top = y($("compBtn")).bottom; const oc = $("onlineChip"); if (oc && !oc.hidden) top = Math.max(top, y(oc).bottom);
+  const hk = $("hask"), floor = hk && !hk.hidden ? y(hk).top : y($("teams")).top - 8;   // the chosen jersey rises 6 px
+  hc.style.top = Math.round(top - R.top + 4) + "px"; hc.style.bottom = Math.max(0, Math.round(R.bottom - floor + 4)) + "px";
+  const need = () => { const kids = [...hc.children].filter(c => c.offsetParent !== null && getComputedStyle(c).position !== "absolute");
+    const gap = parseFloat(getComputedStyle(hc).rowGap) || 0;
+    return kids.reduce((n, c) => n + c.offsetHeight + (parseFloat(getComputedStyle(c).marginTop) || 0), 0) + gap * Math.max(0, kids.length - 1); };
+  hc.classList.remove("tight", "slim"); let k = 1; hc.style.setProperty("--hk", "1");
+  if (need() <= hc.clientHeight) return;
+  hc.classList.add("tight");
+  while (need() > hc.clientHeight && k > 0.62) { k -= 0.04; hc.style.setProperty("--hk", k.toFixed(2)); }
+  if (need() > hc.clientHeight) hc.classList.add("slim");
+}
+{ let fitQ = 0; const fitSoon = () => { if (!fitQ) fitQ = requestAnimationFrame(() => { fitQ = 0; fitHome(); }); };
+  addEventListener("resize", fitSoon); addEventListener("orientationchange", fitSoon);
+  try { document.fonts.ready.then(fitSoon); } catch (e) {}
+  try { const sc = $("startScreen"), mo = new MutationObserver(fitSoon);
+    mo.observe(sc.querySelector(".hcenter"), { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ["hidden"] });
+    for (const id of ["startScreen", "onlineChip", "hask"]) mo.observe($(id), { attributes: true, attributeFilter: ["hidden"] });
+    new ResizeObserver(fitSoon).observe($("teams")); } catch (e) {}
+  setTimeout(fitSoon, 0); }
 // competitions by nation, each with its divisions (a new one only needs "open": true and its teams)
 const NATIONS = [
   { nat: "Italia", flag: "f-it", divs: [["serie-a", "Serie A", true], ["serie-b", "Serie B", true], ["serie-c", "Serie C", true]] },
