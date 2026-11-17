@@ -242,7 +242,7 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .rhd.fhd.withdl{grid-template-columns:28px minmax(0,1fr) auto}.rhd.fhd.withdl span:nth-child(3){padding-right:62px}
 .rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:22px 18px minmax(80px,1fr) 118px 58px minmax(56px,.9fr)}
 .rlist.full.fans.withdl .rrow{grid-template-columns:28px minmax(0,1fr) auto}
-@media (max-width:720px){.rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:18px 16px minmax(50px,1fr) 92px 44px}.rlist.full.withdl .rname,.rhd.withdl span:nth-child(6){display:none}.rlist.withdl .pts .dl{width:46px;font-size:.72em}.rhd.withdl span:nth-child(4){padding-right:50px}.rhd.fhd.withdl{grid-template-columns:26px minmax(0,1fr) auto}.rhd.fhd.withdl span:nth-child(3){padding-right:50px}.rlist.full.fans.withdl .rrow{grid-template-columns:26px minmax(0,1fr) auto}}
+@media (max-width:720px){.rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:16px 14px minmax(40px,1fr) 82px 40px minmax(34px,.7fr);gap:4px}.rlist.full.withdl .rrow{font-size:13px;padding:4px 5px}.rlist.full.withdl .rname{font-size:12px}.rlist.withdl .pts .dl{width:38px;font-size:.66em}.rhd.withdl span:nth-child(4){padding-right:42px}.rhd.fhd.withdl{grid-template-columns:26px minmax(0,1fr) auto}.rhd.fhd.withdl span:nth-child(3){padding-right:50px}.rlist.full.fans.withdl .rrow{grid-template-columns:26px minmax(0,1fr) auto}}
 @keyframes rflash{0%,20%{background-color:rgba(255,194,75,.3)}}
 .rrow.flash{animation:rflash 1.6s ease-out}
 .rrow .who .mv{margin-left:6px;font-size:.78em;font-weight:700;white-space:nowrap}
@@ -411,10 +411,15 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 #startScreen .moveLine.down{border-color:rgba(255,90,90,.8)}
 #startScreen .moveLine b{color:#7fe0a0}
 #startScreen .moveLine.down b{color:#ff8f8f}
-/* mid-size screens with the "(+…)" slot: the record holder's name steps aside so team names stay readable */
+/* the smallest phones: with the "(+…)" slot there is no room for the record holder's name */
+@media (max-width:600px){.rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:16px 14px minmax(46px,1fr) 86px 42px}.rlist.full.withdl .rname,.rhd.withdl span:nth-child(6){display:none}}
+/* mid-size screens with the "(+…)" slot: every column stays, a little more compact (the record holder's name included) */
 @media (min-width:721px) and (max-width:1000px){
-  .rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:22px 18px minmax(80px,1fr) 118px 58px}
-  .rlist.full.withdl .rname,.rhd.withdl span:nth-child(6){display:none}
+  .rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:18px 16px minmax(56px,1fr) 100px 50px minmax(52px,.8fr)}
+  .rlist.full.withdl .rrow{font-size:14px;padding:4px 6px}
+  .rlist.full.withdl .pts .dl{width:46px;font-size:.72em}
+  .rhd.withdl span:nth-child(4){padding-right:50px}
+  .rlist.full.withdl .rname{font-size:13px}
 }
 /* left edge: promotion / relegation (bar, and at the weekend the new division as a badge) — right of the name: places gained or lost */
 .rrow.zup{box-shadow:inset 4px 0 0 #3ecf74}.rrow.zdown{box-shadow:inset 4px 0 0 #ff5a5a}
@@ -1872,7 +1877,9 @@ async function srvLoad(){
   renderRanks(); if (!$("profileScreen").hidden) renderProfile(); if (!$("startScreen").hidden) renderHome();
 }
 // who played for each team this week: all teams of the division in one go, so opening a team is instant
-const fanRow = x => ({ me: x.player_id === srv.uid && x.nick === cleanNick(store.get("cucchiaio.nick", "")), name: x.nick, pts: +x.pts, lv: 0, refs: +x.refs || 0 });
+const fanRow = x => ({ id: x.player_id, me: x.player_id === srv.uid && x.nick === cleanNick(store.get("cucchiaio.nick", "")), name: x.nick, pts: +x.pts, lv: 0, refs: +x.refs || 0 });
+// a fan is one player under one name: two players both called "Bonsai" must never share their "(+…)" or their arrow
+const fanKey = x => (x.id ? x.id + "|" : "") + x.name;
 async function fansQuery(q){
   if (!srv.noRefs) { try { return await sb(q + ",refs"); } catch (e) { srv.noRefs = true; } }
   return sb(q);
@@ -2163,10 +2170,12 @@ let rankBase = null, rankFlashAt = 0;
 function rankSnapshot(){
   const sid = seasonId(), teams = {}, fans = {}, pos = {}, fpos = {};
   teamRows().forEach((r, k) => { teams[r.name] = r.pts; pos[r.name] = k + 1; });
-  if (srv.ok && srv.fansSid === sid) for (const [t, list] of Object.entries(srv.fans)) { fans[t] = Object.fromEntries(list.map(x => [x.name, x.pts])); fpos[t] = Object.fromEntries(list.map((x, k) => [x.name, k + 1])); }
-  return { sid, league: LEAGUE, teams, fans, pos, fpos };
+  if (srv.ok && srv.fansSid === sid) for (const [t, list] of Object.entries(srv.fans)) { fans[t] = Object.fromEntries(list.map(x => [fanKey(x), x.pts])); fpos[t] = Object.fromEntries(list.map((x, k) => [fanKey(x), k + 1])); }
+  return { v: 2, sid, league: LEAGUE, teams, fans, pos, fpos };
 }
-function rankOpen(){ const b = store.get("pm.rankSeen", null); rankBase = b && b.sid === seasonId() && b.league === LEAGUE ? b : null; rankFlashAt = Date.now(); }
+function rankOpen(){ const b = store.get("pm.rankSeen", null); rankBase = b && b.sid === seasonId() && b.league === LEAGUE ? b : null;
+  if (rankBase && rankBase.v !== 2) rankBase = Object.assign({}, rankBase, { fans: {}, fpos: {} });   // fans saved by name (before): not comparable, skip once
+  rankFlashAt = Date.now(); }
 function rankClose(){ const s = rankSnapshot(); if (Object.keys(s.teams).length) store.set("pm.rankSeen", s); rankBase = null; }
 const rankDelta = (now, before) => before === undefined ? (rankBase ? now : 0) : now - before;
 function renderRanks(){
@@ -2242,8 +2251,9 @@ function renderRanks(){
         list.appendChild(hd); if (rows.length > 10) list.appendChild(hd2);
       }
       const fb = full && rankBase && sid === rankBase.sid && rankBase.fans[team] ? rankBase.fans[team] : null, fp = fb && rankBase.fpos ? rankBase.fpos[team] || {} : {};
-      if (fb && rows.some(r => (fb[r.name] === undefined ? r.pts : r.pts - fb[r.name]) > 0)) { list.classList.add("withdl"); list.querySelectorAll(".rhd").forEach(h => h.classList.add("withdl")); }
-      if (rows.length) rows.slice(0, 100).forEach((r, k) => { row(k + 1, { team }, (k === 0 ? "👑 " : "") + r.name, "", r.pts, r.me, r.lv, null, null, fb ? (fb[r.name] === undefined ? r.pts : r.pts - fb[r.name]) : 0, fp[r.name] || 0);
+      const fd = r => fb[fanKey(r)] === undefined ? r.pts : r.pts - fb[fanKey(r)];
+      if (fb && rows.some(r => fd(r) > 0)) { list.classList.add("withdl"); list.querySelectorAll(".rhd").forEach(h => h.classList.add("withdl")); }
+      if (rows.length) rows.slice(0, 100).forEach((r, k) => { row(k + 1, { team }, (k === 0 ? "👑 " : "") + r.name, "", r.pts, r.me, r.lv, null, null, fb ? fd(r) : 0, fp[fanKey(r)] || 0);
         if (full) { const blk = Math.floor(k / 20), w = k % 20; list.lastChild.style.gridArea = `${2 + blk * 10 + (w % 10)} / ${w < 10 ? 1 : 2}`; }
         const bd = badgeOf(r.refs || 0); if (bd) { const s = document.createElement("span"); s.className = "badgeTag"; s.textContent = bd[2]; s.title = tr(bd[1]); list.lastChild.querySelector(".who").appendChild(s); }
         if (k === 0) { const b = document.createElement("span"); b.className = "mvpTag"; b.textContent = "MVP"; list.lastChild.querySelector(".who").appendChild(b); } });
