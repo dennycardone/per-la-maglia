@@ -242,7 +242,7 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .rhd.fhd.withdl{grid-template-columns:28px minmax(0,1fr) auto}.rhd.fhd.withdl span:nth-child(3){padding-right:62px}
 .rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:22px 18px minmax(80px,1fr) 118px 58px minmax(56px,.9fr)}
 .rlist.full.fans.withdl .rrow{grid-template-columns:28px minmax(0,1fr) auto}
-@media (max-width:720px){.rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:18px 16px minmax(50px,1fr) 92px 44px}.rlist.full.withdl .rname,.rhd.withdl span:nth-child(6){display:none}.rlist.withdl .pts .dl{width:46px;font-size:.72em}.rhd.withdl span:nth-child(4){padding-right:50px}.rhd.fhd.withdl{grid-template-columns:26px minmax(0,1fr) auto}.rhd.fhd.withdl span:nth-child(3){padding-right:50px}.rlist.full.fans.withdl .rrow{grid-template-columns:26px minmax(0,1fr) auto}}
+@media (max-width:720px){.rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:16px 14px minmax(40px,1fr) 82px 40px minmax(34px,.7fr);gap:4px}.rlist.full.withdl .rrow{font-size:13px;padding:4px 5px}.rlist.full.withdl .rname{font-size:12px}.rlist.withdl .pts .dl{width:38px;font-size:.66em}.rhd.withdl span:nth-child(4){padding-right:42px}.rhd.fhd.withdl{grid-template-columns:26px minmax(0,1fr) auto}.rhd.fhd.withdl span:nth-child(3){padding-right:50px}.rlist.full.fans.withdl .rrow{grid-template-columns:26px minmax(0,1fr) auto}}
 @keyframes rflash{0%,20%{background-color:rgba(255,194,75,.3)}}
 .rrow.flash{animation:rflash 1.6s ease-out}
 .rrow .who .mv{margin-left:6px;font-size:.78em;font-weight:700;white-space:nowrap}
@@ -411,10 +411,15 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 #startScreen .moveLine.down{border-color:rgba(255,90,90,.8)}
 #startScreen .moveLine b{color:#7fe0a0}
 #startScreen .moveLine.down b{color:#ff8f8f}
-/* mid-size screens with the "(+…)" slot: the record holder's name steps aside so team names stay readable */
+/* the smallest phones: with the "(+…)" slot there is no room for the record holder's name */
+@media (max-width:600px){.rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:16px 14px minmax(46px,1fr) 86px 42px}.rlist.full.withdl .rname,.rhd.withdl span:nth-child(6){display:none}}
+/* mid-size screens with the "(+…)" slot: every column stays, a little more compact (the record holder's name included) */
 @media (min-width:721px) and (max-width:1000px){
-  .rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:22px 18px minmax(80px,1fr) 118px 58px}
-  .rlist.full.withdl .rname,.rhd.withdl span:nth-child(6){display:none}
+  .rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:18px 16px minmax(56px,1fr) 100px 50px minmax(52px,.8fr)}
+  .rlist.full.withdl .rrow{font-size:14px;padding:4px 6px}
+  .rlist.full.withdl .pts .dl{width:46px;font-size:.72em}
+  .rhd.withdl span:nth-child(4){padding-right:50px}
+  .rlist.full.withdl .rname{font-size:13px}
 }
 /* left edge: promotion / relegation (bar, and at the weekend the new division as a badge) — right of the name: places gained or lost */
 .rrow.zup{box-shadow:inset 4px 0 0 #3ecf74}.rrow.zdown{box-shadow:inset 4px 0 0 #ff5a5a}
