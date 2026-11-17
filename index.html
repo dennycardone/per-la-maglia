@@ -536,6 +536,20 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .switch.danger{border-color:rgba(255,95,95,.6);color:#ff8f8f}
 #askVeil{position:fixed;inset:0;z-index:80;background:rgba(3,5,9,.72);display:flex;align-items:center;justify-content:center;padding:16px}
 #askVeil[hidden]{display:none}
+#rulesVeil{position:fixed;inset:0;z-index:80;background:rgba(3,5,9,.72);display:flex;align-items:center;justify-content:center;padding:16px}
+#rulesVeil[hidden]{display:none}
+.rulesbox{width:min(520px,100%);max-height:calc(100vh - 32px);overflow-y:auto}
+#rulesBody p{margin:0 0 9px;font-size:14px;line-height:1.38;color:#e7eef2}
+#rulesBody b{color:var(--amber)}
+.zq{appearance:none;margin-left:10px;width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,194,75,.75);background:rgba(5,8,14,.6);color:var(--amber);font-family:var(--label);font-weight:800;font-size:13px;line-height:1;cursor:pointer;vertical-align:middle}
+/* live sfottò during a match: bottom left on the grass, where the ball never goes, never over the power bar */
+.liveT{position:fixed;z-index:30;box-sizing:border-box;left:max(10px,env(safe-area-inset-left,0px));bottom:max(8px,env(safe-area-inset-bottom,0px));width:max-content;max-width:min(260px,calc((100vw - min(46vw,440px)) / 2 - 22px));padding:6px 12px 7px 10px;border-radius:12px;background:rgba(5,8,14,.86);border:1.5px solid rgba(255,194,75,.7);box-shadow:0 6px 18px rgba(0,0,0,.45);color:#eef2ea;font-family:var(--label);pointer-events:none;opacity:0;transform:translateY(8px);transition:opacity .35s,transform .35s;will-change:opacity,transform}
+.liveT[hidden]{display:none}
+.liveT.on{opacity:1;transform:none}
+.liveT .lh{font-size:11.5px;font-weight:700;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.liveT .lh b{color:var(--amber)}
+.liveT .lh .lt{color:#cfd8d1;font-weight:600}
+.liveT .lx{font-size:13px;font-weight:600;line-height:1.2;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .askbox{width:min(420px,100%);background:#0d1320;border:1.5px solid rgba(255,194,75,.55);border-radius:16px;padding:16px 16px 12px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .askbox p{margin:0 0 12px;font-size:14px;line-height:1.4;color:#e7eef2}
 .askbox .askt{font-family:var(--label);font-weight:700;font-size:17px;color:var(--chalk);margin-bottom:6px}
@@ -875,6 +889,8 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 
 <div id="inviteVeil" hidden><div class="invbox"><div class="invt">Chiama la curva</div><div class="invs" id="invSub"></div><div class="invmsg" id="invMsg"></div><div class="invgrid" id="invGrid"></div><div class="invfoot"><span id="invCount"></span><button type="button" id="invClose">Chiudi</button></div></div></div>
 <div class="toast" id="toast" hidden></div>
+<div id="rulesVeil" hidden><div class="askbox rulesbox" role="dialog" aria-modal="true" aria-labelledby="rulesTitle"><div class="askt" id="rulesTitle">Promozioni e retrocessioni</div><div id="rulesBody"></div><div class="askb"><button class="main" id="rulesOk" type="button">Ho capito</button></div></div></div>
+<div class="liveT" id="liveT" aria-live="polite" hidden><div class="lh"><span class="mega" aria-hidden="true">📣</span> <b></b> <span class="lt"></span></div><div class="lx"></div></div>
 <div id="askVeil" hidden><div class="askbox"><div class="askt" id="askTitle"></div><p id="askText"></p><div class="askb" id="askBtns"></div></div></div>
 <section class="screen page" id="settingsScreen" hidden>
   <div class="panel wide setpanel">
@@ -1115,7 +1131,13 @@ I18N.en = {
   "Play Store · versione {v}": "Play Store · version {v}", "Aggiorna l'app": "Update the app", "Sul Play Store c'è la nuova versione di Per la Maglia: se non l'hai già fatto, aggiornala": "A new version of Per la Maglia is on the Play Store: update it if you haven't yet", "Apri il Play Store": "Open the Play Store",
   "Il tuo profilo": "Your profile", "Non perdere i progressi": "Don't lose your progress", "Salva i dati con Google per evitare di perdere i tuoi progressi": "Save your data with Google so you never lose your progress", "Non ora": "Not now",
   "Ogni lunedì salgono di serie le prime 3 che hanno fatto punti e ne scendono altrettante: la tua squadra la segui ovunque": "Every Monday the top 3 that scored go up a division and as many go down: you follow your team wherever it goes",
-  "In campo!": "Let's play!", "Carico il video…": "Loading the video…", "Video non disponibile: riprova quando sei connesso": "Video not available: try again when you are online", "Chiudi il video": "Close the video", "Vuoi rileggerlo?": "Want to read it again?", "Tocca": "Tap", "nella home quando vuoi": "on the home screen whenever you like", "Ho capito": "Got it",
+  "In campo!": "Let's play!", "Promozioni e retrocessioni": "Promotion and relegation", "Ho capito": "Got it",
+  "Quando:": "When:", "la settimana si chiude il venerdì alle 20. Il sabato mattina escono i verdetti e il lunedì le squadre iniziano nella nuova serie.": "the week closes on Friday at 8 pm. The verdicts come out on Saturday morning and on Monday the teams start in their new division.",
+  "Chi sale:": "Who goes up:", "le prime 3 della serie inferiore. Sale solo chi ha fatto punti: se in Serie C solo una squadra ha punti, sale solo quella.": "the top 3 of the lower division. Only teams with points go up: if in Serie C only one team has points, only that one goes up.",
+  "Chi scende:": "Who goes down:", "tante squadre quante ne salgono, partendo dall'ultima della serie superiore.": "as many teams as go up, starting from the bottom of the higher division.",
+  "A parità di punti": "On equal points", "contano i punti storici della squadra.": "the team's all-time points decide.",
+  "Le frecce ↑ e ↓ in classifica indicano chi, in questo momento, salirebbe o scenderebbe.": "The ↑ and ↓ arrows in the table show who would go up or down right now.",
+  "Sfottò in partita": "Banter during the match", "Mostra gli sfottò degli altri tifosi mentre giochi.": "Shows the other fans' banter while you play.", "Carico il video…": "Loading the video…", "Video non disponibile: riprova quando sei connesso": "Video not available: try again when you are online", "Chiudi il video": "Close the video", "Vuoi rileggerlo?": "Want to read it again?", "Tocca": "Tap", "nella home quando vuoi": "on the home screen whenever you like", "Ho capito": "Got it",
   "Tutorial": "Tutorial", "Rifai i tre tiri di prova alla prossima partita.": "Replay the three practice shots in your next game.", "Rivedi": "Replay", "Alla prossima partita": "Next game",
   // install
   "Installa dal menu": "Install from the menu", "Apri il menu del browser e scegli <b>Installa app</b>.": "Open the browser menu and choose <b>Install app</b>.",
@@ -2213,6 +2235,7 @@ function renderRanks(){
         if (k === 0) { const b = document.createElement("span"); b.className = "mvpTag"; b.textContent = "MVP"; list.lastChild.querySelector(".who").appendChild(b); } });
     }
     const st = box.querySelector(".rstatus"); st.textContent = seasonLabel(sid) + " · "; const cd = document.createElement("span"); cd.className = "cd"; cd.textContent = seasonLeft(); st.appendChild(cd);
+    if (tab === "teams") { const q = document.createElement("button"); q.type = "button"; q.className = "zq"; q.textContent = "?"; q.setAttribute("aria-label", tr("Promozioni e retrocessioni")); q.onclick = openRules; st.appendChild(q); }
     if (tab === "teams" && sid === seasonId() && MEMBERS && MEMBERS.swaps && MEMBERS.season === isoWeekNow()) { const zl = document.createElement("span"); zl.className = "zleg";
       const dn = swapsDown();
       zl.innerHTML = (LEAGUE !== "serie-a" ? `<i class="zu"></i>${tr("salgono le prime 3 che fanno punti")} ` : "")
@@ -2242,6 +2265,7 @@ function startGame(){
   stopDemo(); wparts = []; sparts = []; pickTheme();
   if (WX.rain || WX.wind || (ready && (ready.rain || ready.wind))) { ready = null; gen = null; }
   WX.rain = false; WX.wind = 0; prevWx = { rain: false, wind: 0 };
+  liveReset(); setTimeout(livePoll, 4000);
   G = { localId: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), score: 0, lives: C.lives, streak: 0, bestStreak: 0, shots: 0, goals: 0, top: 0, perfect: 0, start: performance.now(), miss: {} };
   $("startScreen").hidden = true; $("overScreen").hidden = true; $("hud").hidden = false; $("info").hidden = false;
   $("coach").hidden = true;
@@ -2916,6 +2940,55 @@ function fillTaunts(box){
   });
 }
 
+// how promotions and relegations work (the "?" next to the ranking footer)
+const RULES = [
+  ["Quando:", "la settimana si chiude il venerdì alle 20. Il sabato mattina escono i verdetti e il lunedì le squadre iniziano nella nuova serie."],
+  ["Chi sale:", "le prime 3 della serie inferiore. Sale solo chi ha fatto punti: se in Serie C solo una squadra ha punti, sale solo quella."],
+  ["Chi scende:", "tante squadre quante ne salgono, partendo dall'ultima della serie superiore."],
+  ["A parità di punti", "contano i punti storici della squadra."],
+  ["", "Le frecce ↑ e ↓ in classifica indicano chi, in questo momento, salirebbe o scenderebbe."]
+];
+function openRules(){
+  $("rulesTitle").textContent = tr("Promozioni e retrocessioni"); $("rulesOk").textContent = tr("Ho capito");
+  const box = $("rulesBody"); box.textContent = "";
+  RULES.forEach(([k, t]) => { const p = document.createElement("p"); if (k) { const b = document.createElement("b"); b.textContent = tr(k); p.append(b, " "); } p.append(tr(t)); box.appendChild(p); });
+  $("rulesVeil").hidden = false; try { $("rulesOk").focus({ preventScroll: true }); } catch (e) {}
+}
+$("rulesOk").onclick = () => { $("rulesVeil").hidden = true; };
+$("rulesVeil").addEventListener("click", e => { if (e.target.id === "rulesVeil") $("rulesVeil").hidden = true; });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("rulesVeil").hidden) { e.stopImmediatePropagation(); $("rulesVeil").hidden = true; } }, true);
+
+// ---------- Live sfottò during a match ----------
+// Every 20 s while playing, the new lines of the other fans of this division are fetched; each one shows for 10 s, one after the other.
+const LIVE = { since: "", seen: new Set(), q: [], showing: false };
+function liveReset(){ LIVE.since = new Date(Date.now() - 5000).toISOString(); LIVE.q = []; liveHide(); }
+function liveHide(){ const el = $("liveT"); el.classList.remove("on"); clearTimeout(LIVE.t1); clearTimeout(LIVE.t2); LIVE.showing = false; LIVE.t2 = setTimeout(() => { if (!LIVE.showing) el.hidden = true; }, 400); }
+const liveOn = () => SET.live !== false && inMatchNow() && !$("hud").hidden;
+async function livePoll(){
+  if (!liveOn() || !srv.ok || srv.legacy || !LIVE.since) return;
+  try {
+    const rows = await sb(`taunts?league=eq.${LEAGUE}&season=eq.${encodeURIComponent(seasonId())}&created_at=gt.${encodeURIComponent(LIVE.since)}&order=created_at.asc&limit=5&select=id,nick,team,body,created_at,player_id`);
+    const blocked = store.get("pm.blocked", []), reported = store.get("pm.reported", []);
+    for (const x of rows || []) {
+      if (x.created_at > LIVE.since) LIVE.since = x.created_at;
+      if (LIVE.seen.has(x.id) || x.player_id === srv.uid || blocked.includes(x.player_id) || reported.includes(x.id)) continue;
+      LIVE.seen.add(x.id); LIVE.q.push(x);
+    }
+    liveNext();
+  } catch (e) {}
+}
+function liveNext(){
+  if (LIVE.showing) return;
+  if (!liveOn()) { LIVE.q = []; return; }
+  const x = LIVE.q.shift(); if (!x) return;
+  const el = $("liveT"); el.querySelector("b").textContent = x.nick; el.querySelector(".lt").textContent = "· " + x.team; el.querySelector(".lx").textContent = x.body;
+  clearTimeout(LIVE.t2); el.hidden = false; LIVE.showing = true;
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("on")));
+  LIVE.t1 = setTimeout(() => { el.classList.remove("on"); LIVE.t2 = setTimeout(() => { el.hidden = true; LIVE.showing = false; liveNext(); }, 450); }, 10000);
+}
+setInterval(livePoll, 20000);
+setInterval(() => { if (LIVE.showing && !liveOn()) liveHide(); }, 1000);
+
 // a small in-game dialog (no browser pop-ups): title, text and a list of buttons
 function ask(title, text, buttons){
   $("askTitle").textContent = title; $("askText").textContent = text; const box = $("askBtns"); box.textContent = "";
@@ -3216,6 +3289,7 @@ function renderSettings(){
     ["audio", "Audio", "Calcio, rete, pubblico e cori.", sfx.on, null],
     ["vibra", "Vibrazione", canVibrate ? "Piccoli colpi al tiro e al gol." : "Non disponibile su questo telefono.", SET.vibra && canVibrate, !canVibrate],
     ["quality", "Grafica leggera", "Meno effetti, per telefoni meno potenti.", LIGHT(), null],
+    ["live", "Sfottò in partita", "Mostra gli sfottò degli altri tifosi mentre giochi.", SET.live !== false, null],
     ["cb", "Colori per daltonici", "Errori in blu invece che in rosso, contorni più marcati.", SET.cb, null]
   ];
   for (const [key, title, desc, on, disabled] of items) {
@@ -3227,6 +3301,7 @@ function renderSettings(){
       if (key === "audio") { sfx.toggle(); syncSound(); }
       else if (key === "vibra") SET.vibra = !SET.vibra;
       else if (key === "quality") { SET.quality = LIGHT() ? "alta" : "leggera"; PERF.level = PERF.want = 0; store.set("pm.perf", 0); resize(); homeTheme(); }
+      else if (key === "live") { SET.live = SET.live === false; if (!SET.live) { LIVE.q = []; liveHide(); } }
       else if (key === "cb") { SET.cb = !SET.cb; document.body.classList.toggle("cb", SET.cb); }
       saveSet(); renderSettings();
     };
