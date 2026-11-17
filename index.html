@@ -4379,7 +4379,7 @@ function maybeNews(){
 $("newsOk").onclick = () => { store.set(NEWS_KEY, NEWS_ID); $("newsCard").hidden = true; $("howVeil").hidden = true; };
 { const newsT = setInterval(() => { if (maybeNews()) clearInterval(newsT); }, 900); }
 // Play Store update notice: once per version, only while playing inside the Play Store app (players already here before this version)
-const UPD_KEY = "pm.upd", UPD_ID = "1.2";   // the Play Store release being announced: change only this number
+const UPD_KEY = "pm.upd", UPD_ID = "1.3";   // the Play Store release being announced: change only this number
 if (!store.get(HOW_KEY, false)) store.set(UPD_KEY, UPD_ID);
 const inPlayApp = () => { try { return sessionStorage.getItem("pm.twaNow") === "1"; } catch (e) { return false; } };
 function maybeUpd(){
