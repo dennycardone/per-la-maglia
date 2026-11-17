@@ -3,7 +3,7 @@
   "short_name": "Per la Maglia",
   "description": "Ogni tuo gol vale per la tua squadra: scavalca il portiere col cucchiaio e porta punti alla tua tifoseria.",
   "lang": "it",
-  "start_url": "./?app=1",
+  "start_url": "./?app=1&apk=5",
   "scope": "./",
   "display": "fullscreen",
   "orientation": "landscape",
