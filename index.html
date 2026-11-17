@@ -353,6 +353,7 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .tmsg .tx{margin-top:1px;font-size:13px;line-height:1.3;color:#e7eef2;word-break:break-word}
 .tmsg .th{font-size:12px!important}
 .tlist .rempty{grid-column:1 / -1}
+#tauntList .thd{position:sticky;top:0;z-index:1;background:#0a1018;box-shadow:0 -6px 0 #0a1018}
 @media (orientation:portrait){.tlist{grid-template-columns:1fr}}
 .mj,.mjw{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))}
 .mj svg{display:block}
@@ -2868,12 +2869,14 @@ async function loadTaunts(){
   }
   renderTaunts();
 }
-function openTaunts(from){ tauntFrom = from; $(from).hidden = true; $("tauntScreen").hidden = false; renderTaunts(); loadTaunts(); }
+function openTaunts(from){ tauntFrom = from; $(from).hidden = true; $("tauntScreen").hidden = false; $("tauntList").textContent = ""; renderTaunts(); loadTaunts(); }
 function renderTaunts(){
   if (!$("tauntScreen").hidden) { $("tauntTitle").textContent = tr("Sfottò") + " · " + leagueName() + " · " + seasonLabel(seasonId()).split(" · ")[0]; fillTaunts($("tauntList")); }
   if (!$("overFeed").hidden) fillTaunts($("overFeed"));
 }
 function fillTaunts(box){
+  // where the reader is, measured before the list is rebuilt (the wall keeps them there unless they were at the bottom)
+  const atEnd = !box.childElementCount || box.scrollHeight - box.scrollTop - box.clientHeight < 40, keep = box.scrollTop;
   const local = store.get("cucchiaio.taunts", []).filter(x => x.league === LEAGUE && x.season === seasonId()).map(x => ({ nick: x.nick, team: x.team, body: x.body, at: x.at, me: true, score: x.score == null ? null : x.score }));
   const blocked = store.get("pm.blocked", []), reported = store.get("pm.reported", []);
   const list = srv.ok && srv.taunts ? srv.taunts.filter(x => !blocked.includes(x.player_id) && !reported.includes(x.id))
@@ -2883,6 +2886,9 @@ function fillTaunts(box){
   const ago = at => { const m = Math.max(1, Math.round((Date.now() - at) / 60000)); return m < 60 ? tr("{n} min fa", { n: m }) : m < 1440 ? tr("{n} h fa", { n: Math.round(m / 60) }) : tr("{n} g fa", { n: Math.round(m / 1440) }); };
   // the banter wall is a table: one line per message (shirt, name, banter, team, points, when)
   if (box.id === "tauntList") {
+    // like a chat: oldest at the top, the most recent at the bottom, and the wall opens on the newest.
+    // A refresh keeps the reader where they are, unless they were already at the bottom.
+    list.reverse();
     const hd = document.createElement("div"); hd.className = "trow thd";
     hd.innerHTML = `<span></span><span>${tr("Nome")}</span><span>${tr("Sfottò")}</span><span>${tr("Squadra")}</span><span>${tr("Punti")}</span><span>${tr("Quando")}</span><span></span>`;
     box.appendChild(hd);
@@ -2895,6 +2901,7 @@ function fillTaunts(box){
       if (!x.me && x.id) { const m = document.createElement("button"); m.type = "button"; m.className = "tmore"; m.textContent = "⋯"; m.setAttribute("aria-label", tr("Segnala o nascondi")); m.onclick = () => tauntMenu(x); r.querySelector(".tm").appendChild(m); }
       box.appendChild(r);
     });
+    box.scrollTop = atEnd ? box.scrollHeight : keep;
     return;
   }
   list.forEach(x => {
