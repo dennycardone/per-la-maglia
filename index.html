@@ -408,9 +408,25 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 #startScreen .moveLine.down{border-color:rgba(255,90,90,.8)}
 #startScreen .moveLine b{color:#7fe0a0}
 #startScreen .moveLine.down b{color:#ff8f8f}
-.rrow.zup{box-shadow:inset 3px 0 0 #3ecf74}.rrow.zdown{box-shadow:inset 3px 0 0 #ff5a5a}
-.rrow .zt{margin-left:6px;font-size:.78em;font-weight:700;letter-spacing:.04em}
-.rrow.zup .zt{color:#3ecf74}.rrow.zdown .zt{color:#ff6b6b}
+/* left: promotion / relegation (bar, and at the weekend the new division as a badge) — right: places gained or lost */
+.rrow.zup{box-shadow:inset 4px 0 0 #3ecf74}.rrow.zdown{box-shadow:inset 4px 0 0 #ff5a5a}
+.rrow .zt{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 3px;margin-right:6px;border-radius:5px;font-size:.72em;font-weight:800;line-height:1;vertical-align:1px;background:#3ecf74;color:#06120a}
+.rrow.zdown .zt{background:#ff5a5a;color:#fff}
+.rrow .mvr{font-size:.78em;font-weight:700;white-space:nowrap;text-align:left;font-variant-numeric:tabular-nums}
+.rrow .mvr.up{color:#7fe0a0}.rrow .mvr.down{color:#ff8f8f}
+.rlist.full.withmv .rrow,.rhd.withmv{grid-template-columns:22px 18px minmax(80px,1fr) 58px 30px 58px minmax(56px,.9fr)}
+.rlist.full.withmv.withdl .rrow,.rhd.withmv.withdl{grid-template-columns:22px 18px minmax(70px,1fr) 118px 30px 58px minmax(50px,.8fr)}
+.rhd.withmv span:nth-child(6){text-align:right}.rhd.withmv span:nth-child(5){text-align:left}
+@media (min-width:721px) and (max-width:1000px){
+  .rlist.full.withmv .rrow,.rhd.withmv{grid-template-columns:22px 18px minmax(70px,1fr) 58px 30px 58px}
+  .rlist.full.withmv.withdl .rrow,.rhd.withmv.withdl{grid-template-columns:22px 18px minmax(70px,1fr) 118px 30px 58px}
+  .rlist.full.withmv .rname,.rhd.withmv span:nth-child(7){display:none}
+}
+@media (max-width:720px){
+  .rlist.full.withmv .rrow,.rhd.withmv{grid-template-columns:18px 16px minmax(50px,1fr) 50px 26px 44px minmax(36px,.7fr)}
+  .rlist.full.withmv.withdl .rrow,.rhd.withmv.withdl{grid-template-columns:18px 16px minmax(46px,1fr) 92px 26px 44px}
+  .rhd.withmv.withdl span:nth-child(7){display:none}.rhd.withmv.withdl span:nth-child(6){display:revert}
+}
 .zleg{margin-left:10px;white-space:nowrap}.zleg i{display:inline-block;width:3px;height:11px;margin:0 4px -1px 8px;border-radius:1px}.zleg .zu{background:#3ecf74}.zleg .zd{background:#ff5a5a}
 .hask{position:absolute;left:0;right:0;bottom:96px;text-align:center;font-family:var(--label);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);text-shadow:0 2px 8px #000;z-index:1;animation:pulse2 1.4s ease-in-out infinite}
 @keyframes pulse2{50%{opacity:.5}}
@@ -1136,7 +1152,7 @@ I18N.en = {
   "Chi sale:": "Who goes up:", "le prime 3 della serie inferiore. Sale solo chi ha fatto punti: se in Serie C solo una squadra ha punti, sale solo quella.": "the top 3 of the lower division. Only teams with points go up: if in Serie C only one team has points, only that one goes up.",
   "Chi scende:": "Who goes down:", "tante squadre quante ne salgono, partendo dall'ultima della serie superiore.": "as many teams as go up, starting from the bottom of the higher division.",
   "A parità di punti": "On equal points", "contano i punti storici della squadra.": "the team's all-time points decide.",
-  "Le frecce ↑ e ↓ in classifica indicano chi, in questo momento, salirebbe o scenderebbe.": "The ↑ and ↓ arrows in the table show who would go up or down right now.",
+  "Le barre verdi e rosse a sinistra indicano chi, in questo momento, salirebbe o scenderebbe. Le frecce a destra indicano le posizioni guadagnate o perse dall'ultima volta che hai aperto la classifica.": "The green and red bars on the left show who would go up or down right now. The arrows on the right show the places gained or lost since you last opened the table.",
   "Sfottò in partita": "Banter during the match", "Mostra gli sfottò degli altri tifosi mentre giochi.": "Shows the other fans' banter while you play.", "Carico il video…": "Loading the video…", "Video non disponibile: riprova quando sei connesso": "Video not available: try again when you are online", "Chiudi il video": "Close the video", "Vuoi rileggerlo?": "Want to read it again?", "Tocca": "Tap", "nella home quando vuoi": "on the home screen whenever you like", "Ho capito": "Got it",
   "Tutorial": "Tutorial", "Rifai i tre tiri di prova alla prossima partita.": "Replay the three practice shots in your next game.", "Rivedi": "Replay", "Alla prossima partita": "Next game",
   // install
@@ -2175,13 +2191,14 @@ function renderRanks(){
       const i = document.createElement("span"); i.className = "mjw"; i.innerHTML = teamIcon(color.team || "", 18, isChamp);
       const w = document.createElement("span"); w.className = "who"; w.textContent = who;
       if (isChamp) w.insertAdjacentHTML("beforeend", scudoBadge());
-      if (was && was !== pos) { const m = document.createElement("span"); m.className = "mv " + (was > pos ? "up" : "down"); m.textContent = (was > pos ? "↑" : "↓") + Math.abs(was - pos); m.title = tr("posizioni dall'ultima volta"); w.appendChild(m); }
       if (lv) { const b = document.createElement("span"); b.className = "lv"; b.textContent = "Liv. " + lv; w.appendChild(b); }
       if (sub) { const sm = document.createElement("small"); sm.textContent = sub; w.appendChild(sm); }
       const p = document.createElement("span"); p.className = "pts"; p.textContent = pts.toLocaleString(LOC());
       if (list.classList.contains("withdl")) { p.textContent = ""; const n = document.createElement("span"); n.textContent = pts.toLocaleString(LOC()); const d = document.createElement("span"); d.className = "dl"; if (dl > 0) d.textContent = "(+" + dl.toLocaleString(LOC()) + ")"; p.append(n, d); }
       if ((dl > 0 || (was && was !== pos)) && Date.now() - rankFlashAt < 1600) { r.classList.add("flash"); r.style.animationDelay = -(Date.now() - rankFlashAt) + "ms"; }
       r.append(a, i, w, p);
+      // on the right of the points: places gained or lost since the ranking was last opened (promotion and relegation stay on the left)
+      if (list.classList.contains("withmv")) { const m = document.createElement("span"); m.className = "mvr"; if (was && was !== pos) { m.classList.add(was > pos ? "up" : "down"); m.textContent = (was > pos ? "▲" : "▼") + Math.abs(was - pos); m.title = tr("posizioni dall'ultima volta"); } r.appendChild(m); }
       if (full && tab === "teams") {
         const rc = document.createElement("span"); rc.className = "rec"; rc.textContent = rec ? rec.pts.toLocaleString(LOC()) : "–"; r.appendChild(rc);
         const rn = document.createElement("span"); rn.className = "rname"; rn.textContent = rec ? rec.name : ""; r.appendChild(rn);
@@ -2195,8 +2212,10 @@ function renderRanks(){
       const rows = teamRows();
       const hasDl = full && rankBase && sid === rankBase.sid && rows.some(r => rankDelta(r.pts, rankBase.teams[r.name]) > 0);
       if (hasDl) list.classList.add("withdl");
+      const hasMv = full && rankBase && sid === rankBase.sid && rankBase.pos && rows.some((r, k) => rankBase.pos[r.name] && rankBase.pos[r.name] !== k + 1);
+      if (hasMv) list.classList.add("withmv");
       if (full) {
-        const hd = document.createElement("div"); hd.className = "rhd" + (hasDl ? " withdl" : ""); hd.innerHTML = `<span></span><span></span><span>${tr("Squadra")}</span><span>${tr("Punti")}</span><span>${tr("Record")}</span><span>${tr("Giocatore")}</span>`;
+        const hd = document.createElement("div"); hd.className = "rhd" + (hasDl ? " withdl" : "") + (hasMv ? " withmv" : ""); hd.innerHTML = `<span></span><span></span><span>${tr("Squadra")}</span><span>${tr("Punti")}</span>${hasMv ? "<span></span>" : ""}<span>${tr("Record")}</span><span>${tr("Giocatore")}</span>`;
         const hd2 = hd.cloneNode(true); hd.style.gridArea = "1 / 1"; hd2.style.gridArea = "1 / 2";
         list.appendChild(hd); list.appendChild(hd2);
       }
@@ -2212,7 +2231,7 @@ function renderRanks(){
       rows.forEach((r, k) => { row(k + 1, { team: r.name }, r.name, !full && bests[r.name] ? `${tr("record")} ${bests[r.name].pts.toLocaleString(LOC())} · ${bests[r.name].name}` : "", r.pts, r.name === mine, 0, bests[r.name],
         () => { rankTeam = r.name; box.dataset.tab = "fans"; rankFlashAt = Date.now(); renderRanks(); }, full && rankBase && sid === rankBase.sid ? rankDelta(r.pts, rankBase.teams[r.name]) : 0, full && rankBase && sid === rankBase.sid && rankBase.pos ? rankBase.pos[r.name] : 0);
         const z = zone(k, r.name); if (z) { list.lastChild.classList.add(z);
-          if (nxt) { const zt = document.createElement("span"); zt.className = "zt"; zt.textContent = (z === "zup" ? "↑ " : "↓ ") + leagueName(nxt[r.name]).replace("Serie ", ""); zt.title = tr(z === "zup" ? "promozione" : "retrocessione"); list.lastChild.querySelector(".who").appendChild(zt); } }
+          if (nxt) { const zt = document.createElement("span"); zt.className = "zt"; zt.textContent = leagueName(nxt[r.name]).replace("Serie ", ""); zt.title = tr(z === "zup" ? "promozione" : "retrocessione"); list.lastChild.querySelector(".who").prepend(zt); } }
         if (full) { const half = Math.ceil(rows.length / 2); list.lastChild.style.gridArea = `${(k % half) + 2} / ${k < half ? 1 : 2}`; } });
     } else {
       const team = rankTeam || mine, color = (TEAMS.find(t => t[0] === team) || ["", "#888"])[1];
@@ -2949,7 +2968,7 @@ const RULES = [
   ["Chi sale:", "le prime 3 della serie inferiore. Sale solo chi ha fatto punti: se in Serie C solo una squadra ha punti, sale solo quella."],
   ["Chi scende:", "tante squadre quante ne salgono, partendo dall'ultima della serie superiore."],
   ["A parità di punti", "contano i punti storici della squadra."],
-  ["", "Le frecce ↑ e ↓ in classifica indicano chi, in questo momento, salirebbe o scenderebbe."]
+  ["", "Le barre verdi e rosse a sinistra indicano chi, in questo momento, salirebbe o scenderebbe. Le frecce a destra indicano le posizioni guadagnate o perse dall'ultima volta che hai aperto la classifica."]
 ];
 function openRules(){
   $("rulesTitle").textContent = tr("Promozioni e retrocessioni"); $("rulesOk").textContent = tr("Ho capito");
