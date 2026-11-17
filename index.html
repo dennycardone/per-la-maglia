@@ -1804,7 +1804,7 @@ async function srvMembers(){
   try {
     const d = await sb("rpc/leagues_now", { body: {} });
     if (!d || !Array.isArray(d.teams) || d.teams.length < 50) return;
-    const M = { season: d.season, map: Object.fromEntries(d.teams.map(([l, t]) => [t, l])), moved: d.moved || [], next: d.next || null, swaps: d.swaps || null };
+    const M = { season: d.season, map: Object.fromEntries(d.teams.map(([l, t]) => [t, l])), moved: d.moved || [], next: d.next || null, swaps: d.swaps || null, hist: d.hist || null };
     if (MEMBERS && JSON.stringify(MEMBERS) === JSON.stringify(M)) return;
     if (inMatchNow()) { srv.pendingMembers = M; return; }
     applyMembers(M);
@@ -2055,11 +2055,14 @@ function seasonTotals(sid){
   } else Object.assign(totals, (store.get("cucchiaio.seasons", {})[sid]) || {});
   return { totals, fans };
 }
+// the same order the server uses for promotions: points, then the team's all-time points, then the name
+const histOf = name => (MEMBERS && MEMBERS.hist && +MEMBERS.hist[name]) || 0;
+const rankOrder = (a, b) => b.pts - a.pts || histOf(b.name) - histOf(a.name) || a.name.localeCompare(b.name);
 function teamRows(extra){
   const { totals, fans } = seasonTotals(seasonId());
   if (extra) totals[extra.team] = (totals[extra.team] || 0) + extra.pts;
   return TEAMS.map(t => ({ name: t[0], color: t[1], pts: totals[t[0]] || 0, fans: fans[t[0]] || 0 }))
-    .sort((a, b) => b.pts - a.pts || b.fans - a.fans || a.name.localeCompare(b.name));
+    .sort(rankOrder);
 }
 function teamMvps(sid){
   const d = svData();
