@@ -228,7 +228,10 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .rrow:nth-child(odd){background:rgba(238,242,234,.035)}
 .rrow .pos{color:var(--mute);text-align:right}
 .rrow i{width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
-.rrow .who{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow .who{display:flex;align-items:center;min-width:0;overflow:hidden;white-space:nowrap}
+.rrow .who .nm{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.rrow .who>:not(.nm){flex:none}
+.rrow .who>small{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .rrow .who small{margin-left:6px;color:var(--mute);font-size:13px;font-weight:500}
 .rrow .pts{color:var(--chalk)}
 .rrow .pts .dl{margin-left:5px;font-size:.78em;font-weight:700;color:#7fe0a0;white-space:nowrap}
@@ -353,6 +356,7 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .tmsg .tx{margin-top:1px;font-size:13px;line-height:1.3;color:#e7eef2;word-break:break-word}
 .tmsg .th{font-size:12px!important}
 .tlist .rempty{grid-column:1 / -1}
+#tauntList .thd{position:sticky;top:0;z-index:1;background:#0a1018;box-shadow:0 -6px 0 #0a1018}
 @media (orientation:portrait){.tlist{grid-template-columns:1fr}}
 .mj,.mjw{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))}
 .mj svg{display:block}
@@ -407,9 +411,15 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 #startScreen .moveLine.down{border-color:rgba(255,90,90,.8)}
 #startScreen .moveLine b{color:#7fe0a0}
 #startScreen .moveLine.down b{color:#ff8f8f}
-.rrow.zup{box-shadow:inset 3px 0 0 #3ecf74}.rrow.zdown{box-shadow:inset 3px 0 0 #ff5a5a}
-.rrow .zt{margin-left:6px;font-size:.78em;font-weight:700;letter-spacing:.04em}
-.rrow.zup .zt{color:#3ecf74}.rrow.zdown .zt{color:#ff6b6b}
+/* mid-size screens with the "(+…)" slot: the record holder's name steps aside so team names stay readable */
+@media (min-width:721px) and (max-width:1000px){
+  .rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:22px 18px minmax(80px,1fr) 118px 58px}
+  .rlist.full.withdl .rname,.rhd.withdl span:nth-child(6){display:none}
+}
+/* left edge: promotion / relegation (bar, and at the weekend the new division as a badge) — right of the name: places gained or lost */
+.rrow.zup{box-shadow:inset 4px 0 0 #3ecf74}.rrow.zdown{box-shadow:inset 4px 0 0 #ff5a5a}
+.rrow .zt{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 3px;margin-right:6px;border-radius:5px;font-size:.72em;font-weight:800;line-height:1;vertical-align:1px;background:#3ecf74;color:#06120a}
+.rrow.zdown .zt{background:#ff5a5a;color:#fff}
 .zleg{margin-left:10px;white-space:nowrap}.zleg i{display:inline-block;width:3px;height:11px;margin:0 4px -1px 8px;border-radius:1px}.zleg .zu{background:#3ecf74}.zleg .zd{background:#ff5a5a}
 .hask{position:absolute;left:0;right:0;bottom:96px;text-align:center;font-family:var(--label);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);text-shadow:0 2px 8px #000;z-index:1;animation:pulse2 1.4s ease-in-out infinite}
 @keyframes pulse2{50%{opacity:.5}}
@@ -422,12 +432,16 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 /* the home fits any landscape screen: sizes follow the screen height, nothing gets squeezed or overlaps */
 .hcenter{gap:clamp(3px,1.3vh,8px)}
 .hcenter>*{flex:none}
-.htitle{font-size:clamp(34px,min(10vw,16.5vh),78px)}
+.htitle{font-size:calc(clamp(34px,min(10vw,16.5vh),78px) * var(--hk,1))}
 .hwho{font-size:clamp(11px,3.5vh,14px)}
-#playBtn.hplay{height:clamp(40px,13vh,60px);font-size:clamp(24px,8.6vh,34px);display:flex;align-items:center;justify-content:center;padding:.06em 0 0;line-height:1}
+#playBtn.hplay{height:calc(clamp(40px,13vh,60px) * var(--hk,1));font-size:calc(clamp(24px,8.6vh,34px) * var(--hk,1));display:flex;align-items:center;justify-content:center;padding:.06em 0 0;line-height:1}
 #startScreen .homeTeam{margin-top:clamp(6px,2.4vh,12px)}
 #playBtn.hplay.off{font-size:clamp(17px,5.6vh,22px)}
-.hhelp{width:clamp(34px,11vh,44px);height:clamp(34px,11vh,44px);font-size:clamp(19px,6vh,24px)}
+.hhelp{width:calc(clamp(34px,11vh,44px) * var(--hk,1));height:calc(clamp(34px,11vh,44px) * var(--hk,1));font-size:calc(clamp(19px,6vh,24px) * var(--hk,1))}
+/* fitHome(): on a short screen first the spacing tightens, then title and button shrink, last the champion line steps aside */
+.hcenter.tight{gap:3px}
+.hcenter.tight #homeTeam{margin-top:2px}
+.hcenter.slim #champLine{display:none}
 .hask{left:96px;right:96px}
 @media (orientation:landscape) and (max-height:380px){
   .bench{padding-top:9px}
@@ -531,6 +545,20 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .switch.danger{border-color:rgba(255,95,95,.6);color:#ff8f8f}
 #askVeil{position:fixed;inset:0;z-index:80;background:rgba(3,5,9,.72);display:flex;align-items:center;justify-content:center;padding:16px}
 #askVeil[hidden]{display:none}
+#rulesVeil{position:fixed;inset:0;z-index:80;background:rgba(3,5,9,.72);display:flex;align-items:center;justify-content:center;padding:16px}
+#rulesVeil[hidden]{display:none}
+.rulesbox{width:min(520px,100%);max-height:calc(100vh - 32px);overflow-y:auto}
+#rulesBody p{margin:0 0 9px;font-size:14px;line-height:1.38;color:#e7eef2}
+#rulesBody b{color:var(--amber)}
+.zq{appearance:none;margin-left:10px;width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,194,75,.75);background:rgba(5,8,14,.6);color:var(--amber);font-family:var(--label);font-weight:800;font-size:13px;line-height:1;cursor:pointer;vertical-align:middle}
+/* live sfottò during a match: bottom left on the grass, where the ball never goes, never over the power bar */
+.liveT{position:fixed;z-index:30;box-sizing:border-box;left:max(10px,env(safe-area-inset-left,0px));bottom:max(8px,env(safe-area-inset-bottom,0px));width:max-content;max-width:min(260px,calc((100vw - min(46vw,440px)) / 2 - 22px));padding:6px 12px 7px 10px;border-radius:12px;background:rgba(5,8,14,.86);border:1.5px solid rgba(255,194,75,.7);box-shadow:0 6px 18px rgba(0,0,0,.45);color:#eef2ea;font-family:var(--label);pointer-events:none;opacity:0;transform:translateY(8px);transition:opacity .35s,transform .35s;will-change:opacity,transform}
+.liveT[hidden]{display:none}
+.liveT.on{opacity:1;transform:none}
+.liveT .lh{font-size:11.5px;font-weight:700;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.liveT .lh b{color:var(--amber)}
+.liveT .lh .lt{color:#cfd8d1;font-weight:600}
+.liveT .lx{font-size:13px;font-weight:600;line-height:1.2;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .askbox{width:min(420px,100%);background:#0d1320;border:1.5px solid rgba(255,194,75,.55);border-radius:16px;padding:16px 16px 12px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .askbox p{margin:0 0 12px;font-size:14px;line-height:1.4;color:#e7eef2}
 .askbox .askt{font-family:var(--label);font-weight:700;font-size:17px;color:var(--chalk);margin-bottom:6px}
@@ -870,6 +898,8 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 
 <div id="inviteVeil" hidden><div class="invbox"><div class="invt">Chiama la curva</div><div class="invs" id="invSub"></div><div class="invmsg" id="invMsg"></div><div class="invgrid" id="invGrid"></div><div class="invfoot"><span id="invCount"></span><button type="button" id="invClose">Chiudi</button></div></div></div>
 <div class="toast" id="toast" hidden></div>
+<div id="rulesVeil" hidden><div class="askbox rulesbox" role="dialog" aria-modal="true" aria-labelledby="rulesTitle"><div class="askt" id="rulesTitle">Promozioni e retrocessioni</div><div id="rulesBody"></div><div class="askb"><button class="main" id="rulesOk" type="button">Ho capito</button></div></div></div>
+<div class="liveT" id="liveT" aria-live="polite" hidden><div class="lh"><span class="mega" aria-hidden="true">📣</span> <b></b> <span class="lt"></span></div><div class="lx"></div></div>
 <div id="askVeil" hidden><div class="askbox"><div class="askt" id="askTitle"></div><p id="askText"></p><div class="askb" id="askBtns"></div></div></div>
 <section class="screen page" id="settingsScreen" hidden>
   <div class="panel wide setpanel">
@@ -1110,7 +1140,13 @@ I18N.en = {
   "Play Store · versione {v}": "Play Store · version {v}", "Aggiorna l'app": "Update the app", "Sul Play Store c'è la nuova versione di Per la Maglia: se non l'hai già fatto, aggiornala": "A new version of Per la Maglia is on the Play Store: update it if you haven't yet", "Apri il Play Store": "Open the Play Store",
   "Il tuo profilo": "Your profile", "Non perdere i progressi": "Don't lose your progress", "Salva i dati con Google per evitare di perdere i tuoi progressi": "Save your data with Google so you never lose your progress", "Non ora": "Not now",
   "Ogni lunedì salgono di serie le prime 3 che hanno fatto punti e ne scendono altrettante: la tua squadra la segui ovunque": "Every Monday the top 3 that scored go up a division and as many go down: you follow your team wherever it goes",
-  "In campo!": "Let's play!", "Carico il video…": "Loading the video…", "Video non disponibile: riprova quando sei connesso": "Video not available: try again when you are online", "Chiudi il video": "Close the video", "Vuoi rileggerlo?": "Want to read it again?", "Tocca": "Tap", "nella home quando vuoi": "on the home screen whenever you like", "Ho capito": "Got it",
+  "In campo!": "Let's play!", "Promozioni e retrocessioni": "Promotion and relegation", "Ho capito": "Got it",
+  "Quando:": "When:", "la settimana si chiude il venerdì alle 20. Il sabato mattina escono i verdetti e il lunedì le squadre iniziano nella nuova serie.": "the week closes on Friday at 8 pm. The verdicts come out on Saturday morning and on Monday the teams start in their new division.",
+  "Chi sale:": "Who goes up:", "le prime 3 della serie inferiore. Sale solo chi ha fatto punti: se in Serie C solo una squadra ha punti, sale solo quella.": "the top 3 of the lower division. Only teams with points go up: if in Serie C only one team has points, only that one goes up.",
+  "Chi scende:": "Who goes down:", "tante squadre quante ne salgono, partendo dall'ultima della serie superiore.": "as many teams as go up, starting from the bottom of the higher division.",
+  "A parità di punti": "On equal points", "contano i punti storici della squadra.": "the team's all-time points decide.",
+  "Le barre verdi e rosse a sinistra indicano chi, in questo momento, salirebbe o scenderebbe. Le frecce accanto al nome della squadra indicano le posizioni guadagnate o perse dall'ultima volta che hai aperto la classifica.": "The green and red bars on the left show who would go up or down right now. The arrows next to the team name show the places gained or lost since you last opened the table.",
+  "Sfottò in partita": "Banter during the match", "Mostra gli sfottò degli altri tifosi mentre giochi.": "Shows the other fans' banter while you play.", "Carico il video…": "Loading the video…", "Video non disponibile: riprova quando sei connesso": "Video not available: try again when you are online", "Chiudi il video": "Close the video", "Vuoi rileggerlo?": "Want to read it again?", "Tocca": "Tap", "nella home quando vuoi": "on the home screen whenever you like", "Ho capito": "Got it",
   "Tutorial": "Tutorial", "Rifai i tre tiri di prova alla prossima partita.": "Replay the three practice shots in your next game.", "Rivedi": "Replay", "Alla prossima partita": "Next game",
   // install
   "Installa dal menu": "Install from the menu", "Apri il menu del browser e scegli <b>Installa app</b>.": "Open the browser menu and choose <b>Install app</b>.",
@@ -1298,6 +1334,21 @@ function setupCand(rain, wind){
            vk: furbo ? 4.5 + Math.random() * 3 : 4 + Math.random() * 2.5, stop: 4 + Math.random() * 3, pause: 0.4 + Math.random() * 0.5,
            rain, wind, target: C.windowMin + Math.random() * (C.windowMax - C.windowMin) };
 }
+// Time to react: a situation is kept only if the player can still BEGIN pressing 0.4 s after it appears and score
+// with the plain arc (no dragging), aiming at the middle of a scoring band at least 60 ms wide.
+// Without this, a near goal could ask for a press within 0.3 s: on paper possible, in the hand not.
+// 0.4 s removes only what reflexes cannot do; the hard-but-fair near-goal shots stay (0.7 s halved them: too soft).
+const REACT_MIN = 0.4;
+function* reactOKG(st){
+  const el = C.elevDef * Math.PI / 180;
+  for (let T = REACT_MIN; T < 3; T += 0.06) {
+    const s0 = preKick(st, T); if (s0.result) return false;
+    const w = chargeWindow(s0, st, el, Math.min(1, T / st.chargeTime)); yield null;
+    if (w && (w.b - w.a) * st.chargeTime >= 0.06 && T - (w.a + w.b) / 2 * st.chargeTime >= REACT_MIN) return true;
+  }
+  return false;
+}
+function reactOK(st){ const g = reactOKG(st); let r; while (!(r = g.next()).done); return r.value; }
 const SETUP_FALLBACK = { type: "classico", d: 13, k0: 1.4, vk: 5.8, stop: 5, pause: 0.6, chargeTime: 0.6, rain: false, wind: 0 };
 // the whole search in one go: this is what the background worker runs, away from the game's frames
 function setupSolve(rain, wind){
@@ -1307,7 +1358,7 @@ function setupSolve(rain, wind){
     if (wc1 <= 0) continue;
     st.chargeTime = clamp(target / wc1, 0.35, 0.95);
     const ms = bestWindowCharge(st, st.chargeTime) * st.chargeTime;
-    if (ms >= C.windowMin && ms <= C.windowMax) return st;
+    if (ms >= C.windowMin && ms <= C.windowMax && reactOK(st)) return st;
   }
   return SETUP_FALLBACK;
 }
@@ -1328,7 +1379,7 @@ function* setupGen(){
     if (wc1 <= 0) continue;
     st.chargeTime = clamp(target / wc1, 0.35, 0.95);
     const ms = (yield* bestWindowChargeG(st, st.chargeTime)) * st.chargeTime;
-    if (ms >= C.windowMin && ms <= C.windowMax) { yield st; return; }
+    if (ms >= C.windowMin && ms <= C.windowMax && (yield* reactOKG(st))) { yield st; return; }
   }
   yield Object.assign({}, SETUP_FALLBACK);
 }
@@ -1337,8 +1388,8 @@ let gen = null, ready = null;
 // so the game never stops to think. It is built from the very same functions used to play.
 let genW = null, genBusy = 0, genSeq = 0;
 try {
-  const src = "const C=" + JSON.stringify(C) + ",ELS=" + JSON.stringify(ELS) + ",SETUP_FALLBACK=" + JSON.stringify(SETUP_FALLBACK) + ";const clamp=" + clamp.toString() + ";\n" +
-    [makeState, kickState, kSpeed, stepState, copyState, preKick, scores, chargeWindow, bestWindowCharge, setupCand, setupSolve].map(f => f.toString()).join("\n") +
+  const src = "const C=" + JSON.stringify(C) + ",ELS=" + JSON.stringify(ELS) + ",SETUP_FALLBACK=" + JSON.stringify(SETUP_FALLBACK) + ",REACT_MIN=" + REACT_MIN + ";const clamp=" + clamp.toString() + ";\n" +
+    [makeState, kickState, kSpeed, stepState, copyState, preKick, scores, chargeWindow, bestWindowCharge, reactOKG, reactOK, setupCand, setupSolve].map(f => f.toString()).join("\n") +
     "\nonmessage=e=>{let st;try{st=setupSolve(e.data.rain,e.data.wind)}catch(x){st=null}postMessage({id:e.data.id,st})};";
   genW = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
   genW.onmessage = e => { if (e.data.id !== genSeq) return; genBusy = 0; if (e.data.st) { if (!ready) ready = e.data.st; } else genOff(); };
@@ -1762,7 +1813,7 @@ async function srvMembers(){
   try {
     const d = await sb("rpc/leagues_now", { body: {} });
     if (!d || !Array.isArray(d.teams) || d.teams.length < 50) return;
-    const M = { season: d.season, map: Object.fromEntries(d.teams.map(([l, t]) => [t, l])), moved: d.moved || [], next: d.next || null, swaps: d.swaps || null };
+    const M = { season: d.season, map: Object.fromEntries(d.teams.map(([l, t]) => [t, l])), moved: d.moved || [], next: d.next || null, swaps: d.swaps || null, hist: d.hist || null };
     if (MEMBERS && JSON.stringify(MEMBERS) === JSON.stringify(M)) return;
     if (inMatchNow()) { srv.pendingMembers = M; return; }
     applyMembers(M);
@@ -2013,11 +2064,14 @@ function seasonTotals(sid){
   } else Object.assign(totals, (store.get("cucchiaio.seasons", {})[sid]) || {});
   return { totals, fans };
 }
+// the same order the server uses for promotions: points, then the team's all-time points, then the name
+const histOf = name => (MEMBERS && MEMBERS.hist && +MEMBERS.hist[name]) || 0;
+const rankOrder = (a, b) => b.pts - a.pts || histOf(b.name) - histOf(a.name) || a.name.localeCompare(b.name);
 function teamRows(extra){
   const { totals, fans } = seasonTotals(seasonId());
   if (extra) totals[extra.team] = (totals[extra.team] || 0) + extra.pts;
   return TEAMS.map(t => ({ name: t[0], color: t[1], pts: totals[t[0]] || 0, fans: fans[t[0]] || 0 }))
-    .sort((a, b) => b.pts - a.pts || b.fans - a.fans || a.name.localeCompare(b.name));
+    .sort(rankOrder);
 }
 function teamMvps(sid){
   const d = svData();
@@ -2128,9 +2182,11 @@ function renderRanks(){
       const a = document.createElement("span"); a.className = "pos"; a.textContent = pos;
       const isChamp = !!champ && color.team === champ && who === champ;
       const i = document.createElement("span"); i.className = "mjw"; i.innerHTML = teamIcon(color.team || "", 18, isChamp);
-      const w = document.createElement("span"); w.className = "who"; w.textContent = who;
+      // the name shrinks with "…" when space is short; badges, arrows and tags next to it always stay visible
+      const w = document.createElement("span"); w.className = "who"; const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = who; w.appendChild(nm);
       if (isChamp) w.insertAdjacentHTML("beforeend", scudoBadge());
-      if (was && was !== pos) { const m = document.createElement("span"); m.className = "mv " + (was > pos ? "up" : "down"); m.textContent = (was > pos ? "↑" : "↓") + Math.abs(was - pos); m.title = tr("posizioni dall'ultima volta"); w.appendChild(m); }
+      // right of the team name: places gained or lost since the ranking was last opened (promotion and relegation stay on the left edge)
+      if (was && was !== pos) { const m = document.createElement("span"); m.className = "mv " + (was > pos ? "up" : "down"); m.textContent = (was > pos ? "▲" : "▼") + Math.abs(was - pos); m.title = tr("posizioni dall'ultima volta"); w.appendChild(m); }
       if (lv) { const b = document.createElement("span"); b.className = "lv"; b.textContent = "Liv. " + lv; w.appendChild(b); }
       if (sub) { const sm = document.createElement("small"); sm.textContent = sub; w.appendChild(sm); }
       const p = document.createElement("span"); p.className = "pts"; p.textContent = pts.toLocaleString(LOC());
@@ -2167,7 +2223,7 @@ function renderRanks(){
       rows.forEach((r, k) => { row(k + 1, { team: r.name }, r.name, !full && bests[r.name] ? `${tr("record")} ${bests[r.name].pts.toLocaleString(LOC())} · ${bests[r.name].name}` : "", r.pts, r.name === mine, 0, bests[r.name],
         () => { rankTeam = r.name; box.dataset.tab = "fans"; rankFlashAt = Date.now(); renderRanks(); }, full && rankBase && sid === rankBase.sid ? rankDelta(r.pts, rankBase.teams[r.name]) : 0, full && rankBase && sid === rankBase.sid && rankBase.pos ? rankBase.pos[r.name] : 0);
         const z = zone(k, r.name); if (z) { list.lastChild.classList.add(z);
-          if (nxt) { const zt = document.createElement("span"); zt.className = "zt"; zt.textContent = (z === "zup" ? "↑ " : "↓ ") + leagueName(nxt[r.name]).replace("Serie ", ""); zt.title = tr(z === "zup" ? "promozione" : "retrocessione"); list.lastChild.querySelector(".who").appendChild(zt); } }
+          if (nxt) { const zt = document.createElement("span"); zt.className = "zt"; zt.textContent = leagueName(nxt[r.name]).replace("Serie ", ""); zt.title = tr(z === "zup" ? "promozione" : "retrocessione"); list.lastChild.querySelector(".who").prepend(zt); } }
         if (full) { const half = Math.ceil(rows.length / 2); list.lastChild.style.gridArea = `${(k % half) + 2} / ${k < half ? 1 : 2}`; } });
     } else {
       const team = rankTeam || mine, color = (TEAMS.find(t => t[0] === team) || ["", "#888"])[1];
@@ -2193,6 +2249,7 @@ function renderRanks(){
         if (k === 0) { const b = document.createElement("span"); b.className = "mvpTag"; b.textContent = "MVP"; list.lastChild.querySelector(".who").appendChild(b); } });
     }
     const st = box.querySelector(".rstatus"); st.textContent = seasonLabel(sid) + " · "; const cd = document.createElement("span"); cd.className = "cd"; cd.textContent = seasonLeft(); st.appendChild(cd);
+    if (tab === "teams") { const q = document.createElement("button"); q.type = "button"; q.className = "zq"; q.textContent = "?"; q.setAttribute("aria-label", tr("Promozioni e retrocessioni")); q.onclick = openRules; st.appendChild(q); }
     if (tab === "teams" && sid === seasonId() && MEMBERS && MEMBERS.swaps && MEMBERS.season === isoWeekNow()) { const zl = document.createElement("span"); zl.className = "zleg";
       const dn = swapsDown();
       zl.innerHTML = (LEAGUE !== "serie-a" ? `<i class="zu"></i>${tr("salgono le prime 3 che fanno punti")} ` : "")
@@ -2222,6 +2279,7 @@ function startGame(){
   stopDemo(); wparts = []; sparts = []; pickTheme();
   if (WX.rain || WX.wind || (ready && (ready.rain || ready.wind))) { ready = null; gen = null; }
   WX.rain = false; WX.wind = 0; prevWx = { rain: false, wind: 0 };
+  liveReset(); setTimeout(livePoll, 4000);
   G = { localId: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), score: 0, lives: C.lives, streak: 0, bestStreak: 0, shots: 0, goals: 0, top: 0, perfect: 0, start: performance.now(), miss: {} };
   $("startScreen").hidden = true; $("overScreen").hidden = true; $("hud").hidden = false; $("info").hidden = false;
   $("coach").hidden = true;
@@ -2618,6 +2676,32 @@ function renderHome(){
   else txt = tr(" è al {n}° posto in classifica questa settimana", { n: i + 1 });
   el.appendChild(document.createTextNode(txt));
 }
+// The home column always fits between the chips at the top and the team bench (or the "choose your team" hint) at the bottom,
+// whatever the screen and however many lines are showing: nothing may overlap the jerseys.
+function fitHome(){
+  const sc = $("startScreen"), hc = sc && sc.querySelector(".hcenter");
+  if (!hc || sc.hidden || !sc.offsetHeight) return;
+  const R = sc.getBoundingClientRect(), y = el => el.getBoundingClientRect();
+  let top = y($("compBtn")).bottom; const oc = $("onlineChip"); if (oc && !oc.hidden) top = Math.max(top, y(oc).bottom);
+  const hk = $("hask"), floor = hk && !hk.hidden ? y(hk).top : y($("teams")).top - 8;   // the chosen jersey rises 6 px
+  hc.style.top = Math.round(top - R.top + 4) + "px"; hc.style.bottom = Math.max(0, Math.round(R.bottom - floor + 4)) + "px";
+  const need = () => { const kids = [...hc.children].filter(c => c.offsetParent !== null && getComputedStyle(c).position !== "absolute");
+    const gap = parseFloat(getComputedStyle(hc).rowGap) || 0;
+    return kids.reduce((n, c) => n + c.offsetHeight + (parseFloat(getComputedStyle(c).marginTop) || 0), 0) + gap * Math.max(0, kids.length - 1); };
+  hc.classList.remove("tight", "slim"); let k = 1; hc.style.setProperty("--hk", "1");
+  if (need() <= hc.clientHeight) return;
+  hc.classList.add("tight");
+  while (need() > hc.clientHeight && k > 0.62) { k -= 0.04; hc.style.setProperty("--hk", k.toFixed(2)); }
+  if (need() > hc.clientHeight) hc.classList.add("slim");
+}
+{ let fitQ = 0; const fitSoon = () => { if (!fitQ) fitQ = requestAnimationFrame(() => { fitQ = 0; fitHome(); }); };
+  addEventListener("resize", fitSoon); addEventListener("orientationchange", fitSoon);
+  try { document.fonts.ready.then(fitSoon); } catch (e) {}
+  try { const sc = $("startScreen"), mo = new MutationObserver(fitSoon);
+    mo.observe(sc.querySelector(".hcenter"), { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ["hidden"] });
+    for (const id of ["startScreen", "onlineChip", "hask"]) mo.observe($(id), { attributes: true, attributeFilter: ["hidden"] });
+    new ResizeObserver(fitSoon).observe($("teams")); } catch (e) {}
+  setTimeout(fitSoon, 0); }
 // competitions by nation, each with its divisions (a new one only needs "open": true and its teams)
 const NATIONS = [
   { nat: "Italia", flag: "f-it", divs: [["serie-a", "Serie A", true], ["serie-b", "Serie B", true], ["serie-c", "Serie C", true]] },
@@ -2823,12 +2907,14 @@ async function loadTaunts(){
   }
   renderTaunts();
 }
-function openTaunts(from){ tauntFrom = from; $(from).hidden = true; $("tauntScreen").hidden = false; renderTaunts(); loadTaunts(); }
+function openTaunts(from){ tauntFrom = from; $(from).hidden = true; $("tauntScreen").hidden = false; $("tauntList").textContent = ""; renderTaunts(); loadTaunts(); }
 function renderTaunts(){
   if (!$("tauntScreen").hidden) { $("tauntTitle").textContent = tr("Sfottò") + " · " + leagueName() + " · " + seasonLabel(seasonId()).split(" · ")[0]; fillTaunts($("tauntList")); }
   if (!$("overFeed").hidden) fillTaunts($("overFeed"));
 }
 function fillTaunts(box){
+  // where the reader is, measured before the list is rebuilt (the wall keeps them there unless they were at the bottom)
+  const atEnd = !box.childElementCount || box.scrollHeight - box.scrollTop - box.clientHeight < 40, keep = box.scrollTop;
   const local = store.get("cucchiaio.taunts", []).filter(x => x.league === LEAGUE && x.season === seasonId()).map(x => ({ nick: x.nick, team: x.team, body: x.body, at: x.at, me: true, score: x.score == null ? null : x.score }));
   const blocked = store.get("pm.blocked", []), reported = store.get("pm.reported", []);
   const list = srv.ok && srv.taunts ? srv.taunts.filter(x => !blocked.includes(x.player_id) && !reported.includes(x.id))
@@ -2838,6 +2924,9 @@ function fillTaunts(box){
   const ago = at => { const m = Math.max(1, Math.round((Date.now() - at) / 60000)); return m < 60 ? tr("{n} min fa", { n: m }) : m < 1440 ? tr("{n} h fa", { n: Math.round(m / 60) }) : tr("{n} g fa", { n: Math.round(m / 1440) }); };
   // the banter wall is a table: one line per message (shirt, name, banter, team, points, when)
   if (box.id === "tauntList") {
+    // like a chat: oldest at the top, the most recent at the bottom, and the wall opens on the newest.
+    // A refresh keeps the reader where they are, unless they were already at the bottom.
+    list.reverse();
     const hd = document.createElement("div"); hd.className = "trow thd";
     hd.innerHTML = `<span></span><span>${tr("Nome")}</span><span>${tr("Sfottò")}</span><span>${tr("Squadra")}</span><span>${tr("Punti")}</span><span>${tr("Quando")}</span><span></span>`;
     box.appendChild(hd);
@@ -2850,6 +2939,7 @@ function fillTaunts(box){
       if (!x.me && x.id) { const m = document.createElement("button"); m.type = "button"; m.className = "tmore"; m.textContent = "⋯"; m.setAttribute("aria-label", tr("Segnala o nascondi")); m.onclick = () => tauntMenu(x); r.querySelector(".tm").appendChild(m); }
       box.appendChild(r);
     });
+    box.scrollTop = atEnd ? box.scrollHeight : keep;
     return;
   }
   list.forEach(x => {
@@ -2863,6 +2953,55 @@ function fillTaunts(box){
     box.appendChild(r);
   });
 }
+
+// how promotions and relegations work (the "?" next to the ranking footer)
+const RULES = [
+  ["Quando:", "la settimana si chiude il venerdì alle 20. Il sabato mattina escono i verdetti e il lunedì le squadre iniziano nella nuova serie."],
+  ["Chi sale:", "le prime 3 della serie inferiore. Sale solo chi ha fatto punti: se in Serie C solo una squadra ha punti, sale solo quella."],
+  ["Chi scende:", "tante squadre quante ne salgono, partendo dall'ultima della serie superiore."],
+  ["A parità di punti", "contano i punti storici della squadra."],
+  ["", "Le barre verdi e rosse a sinistra indicano chi, in questo momento, salirebbe o scenderebbe. Le frecce accanto al nome della squadra indicano le posizioni guadagnate o perse dall'ultima volta che hai aperto la classifica."]
+];
+function openRules(){
+  $("rulesTitle").textContent = tr("Promozioni e retrocessioni"); $("rulesOk").textContent = tr("Ho capito");
+  const box = $("rulesBody"); box.textContent = "";
+  RULES.forEach(([k, t]) => { const p = document.createElement("p"); if (k) { const b = document.createElement("b"); b.textContent = tr(k); p.append(b, " "); } p.append(tr(t)); box.appendChild(p); });
+  $("rulesVeil").hidden = false; try { $("rulesOk").focus({ preventScroll: true }); } catch (e) {}
+}
+$("rulesOk").onclick = () => { $("rulesVeil").hidden = true; };
+$("rulesVeil").addEventListener("click", e => { if (e.target.id === "rulesVeil") $("rulesVeil").hidden = true; });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("rulesVeil").hidden) { e.stopImmediatePropagation(); $("rulesVeil").hidden = true; } }, true);
+
+// ---------- Live sfottò during a match ----------
+// Every 20 s while playing, the new lines of the other fans of this division are fetched; each one shows for 10 s, one after the other.
+const LIVE = { since: "", seen: new Set(), q: [], showing: false };
+function liveReset(){ LIVE.since = new Date(Date.now() - 5000).toISOString(); LIVE.q = []; liveHide(); }
+function liveHide(){ const el = $("liveT"); el.classList.remove("on"); clearTimeout(LIVE.t1); clearTimeout(LIVE.t2); LIVE.showing = false; LIVE.t2 = setTimeout(() => { if (!LIVE.showing) el.hidden = true; }, 400); }
+const liveOn = () => SET.live !== false && inMatchNow() && !$("hud").hidden;
+async function livePoll(){
+  if (!liveOn() || !srv.ok || srv.legacy || !LIVE.since) return;
+  try {
+    const rows = await sb(`taunts?league=eq.${LEAGUE}&season=eq.${encodeURIComponent(seasonId())}&created_at=gt.${encodeURIComponent(LIVE.since)}&order=created_at.asc&limit=5&select=id,nick,team,body,created_at,player_id`);
+    const blocked = store.get("pm.blocked", []), reported = store.get("pm.reported", []);
+    for (const x of rows || []) {
+      if (x.created_at > LIVE.since) LIVE.since = x.created_at;
+      if (LIVE.seen.has(x.id) || x.player_id === srv.uid || blocked.includes(x.player_id) || reported.includes(x.id)) continue;
+      LIVE.seen.add(x.id); LIVE.q.push(x);
+    }
+    liveNext();
+  } catch (e) {}
+}
+function liveNext(){
+  if (LIVE.showing) return;
+  if (!liveOn()) { LIVE.q = []; return; }
+  const x = LIVE.q.shift(); if (!x) return;
+  const el = $("liveT"); el.querySelector("b").textContent = x.nick; el.querySelector(".lt").textContent = "· " + x.team; el.querySelector(".lx").textContent = x.body;
+  clearTimeout(LIVE.t2); el.hidden = false; LIVE.showing = true;
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("on")));
+  LIVE.t1 = setTimeout(() => { el.classList.remove("on"); LIVE.t2 = setTimeout(() => { el.hidden = true; LIVE.showing = false; liveNext(); }, 450); }, 10000);
+}
+setInterval(livePoll, 20000);
+setInterval(() => { if (LIVE.showing && !liveOn()) liveHide(); }, 1000);
 
 // a small in-game dialog (no browser pop-ups): title, text and a list of buttons
 function ask(title, text, buttons){
@@ -3164,6 +3303,7 @@ function renderSettings(){
     ["audio", "Audio", "Calcio, rete, pubblico e cori.", sfx.on, null],
     ["vibra", "Vibrazione", canVibrate ? "Piccoli colpi al tiro e al gol." : "Non disponibile su questo telefono.", SET.vibra && canVibrate, !canVibrate],
     ["quality", "Grafica leggera", "Meno effetti, per telefoni meno potenti.", LIGHT(), null],
+    ["live", "Sfottò in partita", "Mostra gli sfottò degli altri tifosi mentre giochi.", SET.live !== false, null],
     ["cb", "Colori per daltonici", "Errori in blu invece che in rosso, contorni più marcati.", SET.cb, null]
   ];
   for (const [key, title, desc, on, disabled] of items) {
@@ -3175,6 +3315,7 @@ function renderSettings(){
       if (key === "audio") { sfx.toggle(); syncSound(); }
       else if (key === "vibra") SET.vibra = !SET.vibra;
       else if (key === "quality") { SET.quality = LIGHT() ? "alta" : "leggera"; PERF.level = PERF.want = 0; store.set("pm.perf", 0); resize(); homeTheme(); }
+      else if (key === "live") { SET.live = SET.live === false; if (!SET.live) { LIVE.q = []; liveHide(); } }
       else if (key === "cb") { SET.cb = !SET.cb; document.body.classList.toggle("cb", SET.cb); }
       saveSet(); renderSettings();
     };
