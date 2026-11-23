@@ -4466,7 +4466,7 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
 (() => {
   // Play Store: when PLAY_ON is true, "Installa" on Android phones opens the game's page in the Play Store app.
   // Switch it on the day the app is public (until then the page only exists for testers).
-  const PLAY_ON = false;
+  const PLAY_ON = true;
   const PLAY_ID = "com.perlamaglia.app";
   const PLAY_URL = "https://play.google.com/store/apps/details?id=" + PLAY_ID;
   const btn = document.getElementById("installBtn");
