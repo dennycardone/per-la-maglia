@@ -1199,23 +1199,28 @@ window.tr = tr;
 if (store.get("pm.perfv", 0) !== 3) { store.set("pm.perf", 0); store.set("pm.perfv", 3); }
 // a lighter level found on this phone is not for ever: after three days full quality is tried again
 if (+store.get("pm.perf", 0) && Date.now() - (+store.get("pm.perfAt", 0) || 0) > 3 * 864e5) store.set("pm.perf", 0);
-const PERF = { iv: [], prev: 0, skip: 1, n: 0, last: 0, slow: [], strikes: 0, level: Math.min(2, +store.get("pm.perf", 0) || 0), want: 0 };
+const PERF = { iv: [], prev: 0, skip: 1, ref: 16.7, n: 0, last: 0, slow: [], strikes: 0, level: Math.min(3, +store.get("pm.perf", 0) || 0), want: 0 };
 const LIGHT = () => SET.quality === "leggera" || PERF.level >= 2;
+// drawings per second: 120 Hz screens draw one frame out of two (it looks the same at 60);
+// at the last lightening step a 90 Hz screen that still cannot keep up draws a steady 45 instead of an uneven 45-90
+function paceSet(){ PERF.skip = PERF.ref < 10 || (PERF.level >= 3 && PERF.ref < 13) ? 2 : 1; PERF.n = 0; }
 function perfFrame(now, inMatch){
   // refresh rate, measured on the first frames: on 120 Hz screens one frame out of two is skipped (it looks the same at 60)
-  if (PERF.iv.length < 40) { if (PERF.prev) PERF.iv.push(now - PERF.prev); PERF.prev = now; if (PERF.iv.length === 40) PERF.skip = PERF.iv.slice().sort((a, b) => a - b)[20] < 10 ? 2 : 1; }
+  if (PERF.iv.length < 40) { if (PERF.prev) PERF.iv.push(now - PERF.prev); PERF.prev = now; if (PERF.iv.length === 40) { PERF.ref = PERF.iv.slice().sort((a, b) => a - b)[20]; paceSet(); } }
   if (PERF.skip > 1 && (++PERF.n % PERF.skip)) return false;
   // during the match: if the drawings come too slowly (under ~38 a second), lighten one step, between two shots
   if (inMatch && PERF.last && now - PERF.last < 250) {
     PERF.slow.push(now - PERF.last);
     if (PERF.slow.length >= 90) {
+      // slow = drawings too slow on average, or too many drawings that miss the screen's beat (that is what looks jerky)
+      const beat = PERF.ref * PERF.skip, late = PERF.slow.filter(x => x > beat * 1.7).length / PERF.slow.length;
       const med = PERF.slow.sort((a, b) => a - b)[45]; PERF.slow = [];
       // two slow stretches in a row, so one bad moment (another app waking up) does not cost the sharpness
-      if (med > 26 && PERF.level < 2) { if (++PERF.strikes >= 2) { PERF.want = PERF.level + 1; PERF.strikes = 0; } } else PERF.strikes = 0;
+      if ((med > 26 || late > 0.2) && PERF.level < 3) { if (++PERF.strikes >= 2) { PERF.want = PERF.level + 1; PERF.strikes = 0; } } else PERF.strikes = 0;
     }
   } else if (!inMatch) PERF.slow = [];
   PERF.last = now;
-  if (PERF.want > PERF.level && (phase === "after" || phase === "ready")) { PERF.level = PERF.want; store.set("pm.perf", PERF.level); store.set("pm.perfAt", Date.now()); resize(); }
+  if (PERF.want > PERF.level && (phase === "after" || phase === "ready")) { PERF.level = PERF.want; store.set("pm.perf", PERF.level); store.set("pm.perfAt", Date.now()); paceSet(); resize(); }
   return true;
 }
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
@@ -1445,7 +1450,7 @@ let trail = [], lastCharge = null, holdStart = 0, holdY = 0, slowLeft = 0, flash
 // ---------- Layout & stadium (landscape side view) ----------
 let L = {}, bg = null;
 function resize(){
-  DPR = LIGHT() || PERF.level >= 1 ? 1 : Math.min(2, window.devicePixelRatio || 1);
+  DPR = LIGHT() ? 1 : Math.min(PERF.level >= 1 ? 1.5 : 2, window.devicePixelRatio || 1);
   W = window.innerWidth; H = window.innerHeight;
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -1487,11 +1492,10 @@ function teamKit(){ const n = TEAMS[teamIdx][0]; return KIT[n] || ["plain", TEAM
 // Atmospheres: purely visual, never change difficulty
 const THEMES = {
   notte:    { sky: ["#02050a", "#0b1424"], roof: "#080c13", tier: ["#0c1422", "#111c2e"], beam: 0.16, near: ["#1b5634", "#0d2b1a"], far: ["#0d2c1b", "#174d2e"], tint: null },
-  tramonto: { sky: ["#2b1838", "#8a4a4a"], roof: "#1a1222", tier: ["#1c1524", "#2a1f2e"], beam: 0.07, near: ["#2b5e31", "#14301c"], far: ["#1d3a22", "#2b5a33"], tint: "rgba(255,140,70,.10)" },
   pioggia:  { sky: ["#03060a", "#0a1018"], roof: "#070a10", tier: ["#0a1019", "#0e1724"], beam: 0.12, near: ["#16462b", "#0a2214"], far: ["#0b2617", "#123d25"], tint: "rgba(120,150,190,.06)" }
 };
-let THEME = "notte", crowdL = null, rain = [], gusts = [], bgCanvas = null, crowdCanvas = null;
-function pickTheme(){ const k = ["notte", "tramonto"]; THEME = k[Math.floor(Math.random() * k.length)]; buildCrowd(); }
+let bgVer = 0, THEME = "notte", crowdL = null, rain = [], gusts = [], bgCanvas = null, crowdCanvas = null;
+function pickTheme(){ THEME = "notte"; buildCrowd(); }
 // the team colour that stands out on a dark stadium: white or black kits use their second colour
 function lum(c){ const n = parseInt(c.slice(1), 16), f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(n >> 16 & 255) + 0.7152 * f(n >> 8 & 255) + 0.0722 * f(n & 255); }
 function contrast(a, b){ const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
@@ -1620,7 +1624,7 @@ function buildCrowd(){
     const wet = g.createLinearGradient(0, gy, 0, H); wet.addColorStop(0, "rgba(170,200,230,.10)"); wet.addColorStop(1, "rgba(170,200,230,0)");
     g.fillStyle = wet; g.fillRect(0, gy, W, H - gy);
   }
-  bg = c; crowdL = cl;
+  bg = c; crowdL = cl; bgVer++;
   rain = [];
   for (let i = 0; i < (LIGHT() ? 50 : 140); i++) rain.push({ x: Math.random() * W, y: Math.random() * H, l: 8 + Math.random() * 12, v: 520 + Math.random() * 280 });
   gusts = [];
@@ -3337,7 +3341,7 @@ function renderSettings(){
     sw.onclick = () => {
       if (key === "audio") { sfx.toggle(); syncSound(); }
       else if (key === "vibra") SET.vibra = !SET.vibra;
-      else if (key === "quality") { SET.quality = LIGHT() ? "alta" : "leggera"; PERF.level = PERF.want = 0; store.set("pm.perf", 0); resize(); homeTheme(); }
+      else if (key === "quality") { SET.quality = LIGHT() ? "alta" : "leggera"; PERF.level = PERF.want = 0; store.set("pm.perf", 0); paceSet(); resize(); homeTheme(); }
       else if (key === "live") { SET.live = SET.live === false; if (!SET.live) { LIVE.q = []; liveHide(); } }
       else if (key === "cb") { SET.cb = !SET.cb; document.body.classList.toggle("cb", SET.cb); }
       saveSet(); renderSettings();
@@ -3799,28 +3803,15 @@ function drawWParts(v){
 function hexA(hex, a){ const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; }
 
 // ---------- Drawing ----------
-function drawScene(){
-  ctx.clearRect(0, 0, W, H);
-  const v = view();
-  ctx.save();
-  if (shakeT > 0) ctx.translate((Math.random() - .5) * 12 * shakeT, (Math.random() - .5) * 8 * shakeT);
-  if (bg) ctx.drawImage(bg, 0, 0, W, H);
-  if (crowdL) {
-    const now = performance.now(), tt = now / 1000;
-    const cheer = now < crowdCheer, sad = now < crowdSad;
-    const amp = cheer ? 5 : sad ? 0 : 0.9, w = cheer ? 15 : 2.2;
-    if (LIGHT() || amp === 0) ctx.drawImage(crowdL, 0, 0, W, L.boardY);
-    else {
-      const sw = 24;
-      for (let x = 0; x < W; x += sw) {
-        const off = cheer ? -Math.abs(Math.sin(tt * w + x * 0.05)) * amp : Math.sin(tt * w + x * 0.045) * amp;
-        ctx.drawImage(crowdL, x * DPR, 0, sw * DPR, L.boardY * DPR, x, off, sw, L.boardY);
-      }
-    }
-  }
-  if (flashT > 0) { ctx.globalAlpha = 0.3 * flashT; ctx.fillStyle = TEAMS[teamIdx][1]; ctx.fillRect(0, L.roofH, W, L.boardY - L.roofH); ctx.globalAlpha = 1; }
-  drawStandFlags();
-  drawSParts();
+// the stadium background with the pitch of this shot (mowing stripes, lines, penalty spot): drawn once per shot, not every frame
+let pitchC = null, pitchKey = "";
+function pitchLayer(v){
+  const key = [setup.d, W, H, DPR, bgVer].join("|");
+  if (pitchC && pitchKey === key) return pitchC;
+  const c = pitchC || (pitchC = document.createElement("canvas"));
+  c.width = Math.round(W * DPR); c.height = Math.round(H * DPR);
+  const ctx = c.getContext("2d"); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.drawImage(bg, 0, 0, W, H);
   // mowing stripes on both halves of the pitch, aligned to the world
   for (let x = -10, i = 0; x < setup.d + 8; x += 2, i++) {
     if (i % 2) continue;
@@ -3838,6 +3829,31 @@ function drawScene(){
   const ps = S_(v, setup.d - 11, 0);
   ctx.fillStyle = "rgba(238,242,234,.6)"; ctx.beginPath(); ctx.ellipse(ps.x + (ps.x - W / 2) * 0.06, v.gy - L.farH * 0.5, 3, 1.6, 0, 0, 7); ctx.fill();
   ctx.fillStyle = "rgba(238,242,234,.55)"; ctx.fillRect(0, v.gy, W, 1.5);
+  pitchKey = key;
+  return c;
+}
+function drawScene(){
+  ctx.clearRect(0, 0, W, H);
+  const v = view();
+  ctx.save();
+  if (shakeT > 0) ctx.translate((Math.random() - .5) * 12 * shakeT, (Math.random() - .5) * 8 * shakeT);
+  if (bg) ctx.drawImage(pitchLayer(v), 0, 0, W, H);
+  if (crowdL) {
+    const now = performance.now(), tt = now / 1000;
+    const cheer = now < crowdCheer, sad = now < crowdSad;
+    const amp = cheer ? 5 : sad ? 0 : 0.9, w = cheer ? 15 : 2.2;
+    if (LIGHT() || amp === 0) ctx.drawImage(crowdL, 0, 0, W, L.boardY);
+    else {
+      const sw = 24;
+      for (let x = 0; x < W; x += sw) {
+        const off = cheer ? -Math.abs(Math.sin(tt * w + x * 0.05)) * amp : Math.sin(tt * w + x * 0.045) * amp;
+        ctx.drawImage(crowdL, x * DPR, 0, sw * DPR, L.boardY * DPR, x, off, sw, L.boardY);
+      }
+    }
+  }
+  if (flashT > 0) { ctx.globalAlpha = 0.3 * flashT; ctx.fillStyle = TEAMS[teamIdx][1]; ctx.fillRect(0, L.roofH, W, L.boardY - L.roofH); ctx.globalAlpha = 1; }
+  drawStandFlags();
+  drawSParts();
   drawGoalBack(v);
   drawKeeper(v);
   drawAttacker(v);
@@ -4239,13 +4255,14 @@ function afterStep(h){
 
 // ---------- Loop ----------
 let last = performance.now();
+let clockTxt = "";
 function frame(now){
   if (!perfFrame(now, !!G && !demo && (phase === "ready" || phase === "hold" || phase === "flight" || phase === "after"))) { requestAnimationFrame(frame); return; }
   const dt = Math.min(1/20, (now - last) / 1000); last = now;
   // the match is played in landscape: in portrait it waits behind the "turn your phone" card
   const inMatch = G && (phase === "ready" || phase === "hold" || phase === "flight" || phase === "after");
   const paused = inMatch && (H > W || userPaused);
-  $("rotate").hidden = !(H > W);   // the whole game is played in landscape, home included
+  if ($("rotate").hidden !== !(H > W)) $("rotate").hidden = !(H > W);   // the whole game is played in landscape, home included
   // between matches nothing is simulated or drawn: only the next situation is prepared
   if (demo) { pump(12); crowdTick(dt); requestAnimationFrame(frame); return; }
   if (paused) { acc = 0; fingerDown = false; pending = false; }
@@ -4293,7 +4310,7 @@ function frame(now){
     if (phase === "after") sim.afterT = (sim.afterT || 0) + dt;
   }
 
-  if (G && phase !== "over" && phase !== "menu") $("clock").textContent = fmt(now - G.start);
+  if (G && phase !== "over" && phase !== "menu") { const ck = fmt(now - G.start); if (ck !== clockTxt) { clockTxt = ck; $("clock").textContent = ck; } }
   updateGuide();
   crowdTick(dt);
   if (setup && $("startScreen").hidden) {
