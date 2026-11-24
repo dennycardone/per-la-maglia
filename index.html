@@ -1799,13 +1799,16 @@ async function errFlush(){
   } catch (e) { errFails++; } finally { errBusy = false; }
 }
 setInterval(errFlush, 8000);
-// who is online right now: every open phone says hello once a minute
+// who is online right now: every open phone says hello once a minute (so everyone is counted),
+// but the counter is shown only on the phones where the owner turned it on with ?contatore=si (off again with ?contatore=no)
+try { const q = new URLSearchParams(location.search).get("contatore"); if (q === "si") store.set("pm.cnt", true); else if (q === "no") store.set("pm.cnt", false); } catch (e) {}
 async function srvPing(){
   if (document.visibilityState !== "visible" || !store.get("pm.session", null)) return;
   try {
     const team = teamChosen ? TEAMS[teamIdx][0] : null;
     const r = await sb("rpc/ping", { body: { p_league: LEAGUE, p_team: team } });
     const el = $("onlineChip"); if (!r || !el) return;
+    if (!store.get("pm.cnt", false)) { el.hidden = true; return; }
     el.innerHTML = ""; const i = document.createElement("i"); el.appendChild(i);
     el.appendChild(document.createTextNode((+r.online === 1 ? tr("1 tifoso online") : tr("{n} tifosi online", { n: (+r.online).toLocaleString(LOC()) }))));
     if (team && r.team > 0) { el.appendChild(document.createTextNode(" · ")); const b = document.createElement("b"); b.textContent = tr("{n} {t}", { n: r.team, t: sq(team, "per") }); el.appendChild(b); }
