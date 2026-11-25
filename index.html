@@ -245,9 +245,9 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 .rlist.withdl .pts .dl{margin-left:0;width:58px;text-align:left}
 .rhd.withdl span:nth-child(4){padding-right:62px}
 .rhd.fhd.withdl{grid-template-columns:28px minmax(0,1fr) auto}.rhd.fhd.withdl span:nth-child(3){padding-right:62px}
-.rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:22px 18px minmax(80px,1fr) 118px 58px minmax(56px,.9fr)}
+.rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:22px 18px minmax(80px,.8fr) 118px 58px minmax(96px,1fr)}
 .rlist.full.fans.withdl .rrow{grid-template-columns:28px minmax(0,1fr) auto}
-@media (max-width:720px){.rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:16px 14px minmax(40px,1fr) 82px 40px minmax(34px,.7fr);gap:4px}.rlist.full.withdl .rrow{font-size:13px;padding:4px 5px}.rlist.full.withdl .rname{font-size:12px}.rlist.withdl .pts .dl{width:38px;font-size:.66em}.rhd.withdl span:nth-child(4){padding-right:42px}.rhd.fhd.withdl{grid-template-columns:26px minmax(0,1fr) auto}.rhd.fhd.withdl span:nth-child(3){padding-right:50px}.rlist.full.fans.withdl .rrow{grid-template-columns:26px minmax(0,1fr) auto}}
+@media (max-width:720px){.rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:16px 14px minmax(52px,.75fr) 80px 40px minmax(72px,1fr);gap:4px}.rlist.full.withdl .rrow{font-size:13px;padding:4px 5px}.rlist.full.withdl .rname{font-size:12px}.rlist.withdl .pts .dl{width:38px;font-size:.66em}.rhd.withdl span:nth-child(4){padding-right:42px}.rhd.fhd.withdl{grid-template-columns:26px minmax(0,1fr) auto}.rhd.fhd.withdl span:nth-child(3){padding-right:50px}.rlist.full.fans.withdl .rrow{grid-template-columns:26px minmax(0,1fr) auto}}
 @keyframes rflash{0%,20%{background-color:rgba(255,194,75,.3)}}
 .rrow.flash{animation:rflash 1.6s ease-out}
 .rrow .who .mv{margin-left:6px;font-size:.78em;font-weight:700;white-space:nowrap}
@@ -420,7 +420,7 @@ h1{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw
 @media (max-width:600px){.rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:16px 14px minmax(46px,1fr) 86px 42px}.rlist.full.withdl .rname,.rhd.withdl span:nth-child(6){display:none}}
 /* mid-size screens with the "(+…)" slot: every column stays, a little more compact (the record holder's name included) */
 @media (min-width:721px) and (max-width:1000px){
-  .rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:18px 16px minmax(56px,1fr) 100px 50px minmax(52px,.8fr)}
+  .rlist.full.withdl .rrow,.rhd.withdl{grid-template-columns:18px 16px minmax(60px,.72fr) 96px 50px minmax(92px,1fr)}
   .rlist.full.withdl .rrow{font-size:14px;padding:4px 6px}
   .rlist.full.withdl .pts .dl{width:46px;font-size:.72em}
   .rhd.withdl span:nth-child(4){padding-right:50px}
@@ -655,7 +655,7 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 .rlist.full{max-height:none;overflow:visible}
 .rlist.full.teams{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:18px;row-gap:2px}
 .rlist.full.fans{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:18px;row-gap:2px;align-content:start}
-.rlist.full .rrow{min-width:0;overflow:hidden;gap:6px;grid-template-columns:22px 18px minmax(88px,1fr) 58px 58px minmax(56px,.9fr);padding:4px 8px;font-size:15px}
+.rlist.full .rrow{min-width:0;overflow:hidden;gap:6px;grid-template-columns:22px 18px minmax(88px,.8fr) 58px 58px minmax(96px,1fr);padding:4px 8px;font-size:15px}
 .rlist.full.fans .rrow{grid-template-columns:28px minmax(0,1fr) auto}
 @media (max-width:720px){.rlist.full .rrow,.rhd{grid-template-columns:18px 16px minmax(54px,1fr) 50px 44px minmax(36px,.7fr);gap:4px;font-size:13.5px;padding-inline:4px}.rlist.full.teams{column-gap:10px}.rlist.full.fans .rrow,.rhd.fhd{grid-template-columns:26px minmax(0,1fr) auto}}
 .rlist.full.fans .rrow .mjw{display:none}
@@ -2301,7 +2301,19 @@ function renderRanks(){
       r.append(a, i, b); box.appendChild(r);
     });
   });
+  fitNames();
 }
+// full rankings: a name that does not fit gets a slightly smaller font (down to 72%) before falling back to "…"
+function fitNames(){
+  document.querySelectorAll(".rlist.full .rname, .rlist.full .who .nm").forEach(e => {
+    e.style.fontSize = ""; e.style.letterSpacing = "";
+    if (!e.textContent || e.offsetParent === null || e.scrollWidth <= e.clientWidth + 1) return;
+    const base = parseFloat(getComputedStyle(e).fontSize) || 14;
+    e.style.letterSpacing = "-.01em";
+    for (let f = base - 0.5; f >= base * 0.72 && e.scrollWidth > e.clientWidth + 1; f -= 0.5) e.style.fontSize = f + "px";
+  });
+}
+addEventListener("resize", () => { if (!$("rankScreen").hidden) requestAnimationFrame(fitNames); });
 document.querySelectorAll("[data-rank] .tab").forEach(b => b.addEventListener("click", () => { if (b.dataset.tab === "fans") rankTeam = null; b.closest("[data-rank]").dataset.tab = b.dataset.tab; renderRanks(); }));
 
 // ---------- Flow ----------
