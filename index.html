@@ -3339,6 +3339,17 @@ $("pauseBtn").onclick = pauseGame;
 $("resumeBtn").onclick = resumeGame;
 $("quitBtn").onclick = quitGame;
 document.addEventListener("visibilitychange", () => { if (document.hidden) pauseGame(); });
+// Play Store app: coming back from the background, Android sometimes leaves the status bar strip black at the top.
+// If the page is no longer full height, the first tap puts it back to full screen (a web page can only do it on a tap).
+let fsFix = false;
+const fsShort = () => inPlayApp() && !document.fullscreenElement && Math.min(screen.width, screen.height) - innerHeight > 8 && innerWidth > innerHeight;
+document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => { fsFix = fsShort(); }, 400); });
+addEventListener("resize", () => { if (fsFix && !fsShort()) fsFix = false; });
+document.addEventListener("pointerdown", () => {
+  if (!fsFix || !fsShort()) return; fsFix = false;
+  const el = document.documentElement;
+  try { const p = el.requestFullscreen && el.requestFullscreen({ navigationUI: "hide" }); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+}, true);
 window.addEventListener("pagehide", pauseGame);
 cv.addEventListener("contextmenu", e => e.preventDefault());
 let settingsFrom = "startScreen";
