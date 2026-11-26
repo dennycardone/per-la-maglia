@@ -2310,7 +2310,7 @@ function renderRanks(){
       r.append(a, i, b); box.appendChild(r);
     });
   });
-  fitNames(); requestAnimationFrame(pageFans);
+  fitNames(); requestAnimationFrame(pageFans); if (document.fonts) document.fonts.ready.then(pageFans);
 }
 // height of the scrolling fans box: its header plus exactly 10 rows
 function pageFans(){
@@ -2323,6 +2323,9 @@ function pageFans(){
     // the header gets its own background only while the list is scrolled: at the top it is the plain header, aligned with row 1
     if (!list.__sc) { list.__sc = 1; list.addEventListener("scroll", () => list.classList.toggle("scrolled", list.scrollTop > 2), { passive: true }); }
     list.style.maxHeight = Math.ceil(a.top - top + pitch * 10 - (pitch - a.height)) + "px";
+    // a last page with fewer than 10 rows gets empty space below, so it can still scroll up to the top like the others
+    const left = Math.min(10, (r.length - 1) % 20 + 1);
+    list.style.paddingBottom = Math.ceil((10 - left) * pitch + 16) + "px";
   });
 }
 // full rankings: a name that does not fit gets a slightly smaller font (down to 72%) before falling back to "…"
