@@ -662,6 +662,11 @@ button.rrow{appearance:none;border:0;background:none;color:inherit;font:inherit;
 .rhd.fhd{grid-template-columns:28px minmax(0,1fr) auto}
 .rhd.fhd span:nth-child(3){text-align:right}
 .rlist.full.fans .rempty{grid-column:1 / -1}
+.rlist.full.fans.paged{overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;scroll-padding-top:var(--hd,0px);scrollbar-width:thin;
+  -webkit-mask-image:linear-gradient(#000 calc(100% - 22px),rgba(0,0,0,.35));mask-image:linear-gradient(#000 calc(100% - 22px),rgba(0,0,0,.35))}
+.rlist.full.fans.paged .rhd{position:sticky;top:0;z-index:2;background:#0a121c;box-shadow:0 -8px 0 #0a121c,0 8px 0 #0a121c}
+.rlist.full.fans.paged .rrow.pg{scroll-snap-align:start}
+.rmore{color:var(--gold,#f6c344)}
 .rhd{display:grid;gap:6px;grid-template-columns:22px 18px minmax(88px,1fr) 58px 58px minmax(56px,.9fr);padding:0 8px 2px;font-family:var(--label);font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
 .rhd span:nth-child(4),.rhd span:nth-child(5),.rlist.full .pts{text-align:right}
 .rec{display:flex;gap:6px;justify-content:flex-end;align-items:baseline;min-width:0;color:var(--amber);font-variant-numeric:tabular-nums}
@@ -1140,7 +1145,7 @@ I18N.en = {
   "⏸ Stadio chiuso": "⏸ Stadium closed", "Si chiude venerdì alle 20:00 · tra {d} g {h} h {m} min {s} s": "Closes Friday at 8pm · in {d}d {h}h {m}m {s}s",
   "Si riapre lunedì alle 8:00 · tra {d} g {h} h {m} min {s} s": "Reopens Monday at 8am · in {d}d {h}h {m}m {s}s", "Non conta per la classifica · {c}": "Doesn't count for the table · {c}",
   "Partita finita a stadio chiuso: vale come allenamento": "Game ended after closing time: it counts as training",
-  "{n} tifosi online": "{n} fans online", "Nome": "Name", "Totale": "Total", "Sfottò": "Banter", "Squadra": "Team", "Punti": "Points", "Quando": "When", "1 tifoso online": "1 fan online", "Più tifosi giocano {t}, più punti fa in classifica.": "The more fans play {t}, the more points it gets.",
+  "{n} tifosi online": "{n} fans online", "Nome": "Name", "scorri ↓ per gli altri {n}": "scroll ↓ for the other {n}", "Totale": "Total", "Sfottò": "Banter", "Squadra": "Team", "Punti": "Points", "Quando": "When", "1 tifoso online": "1 fan online", "Più tifosi giocano {t}, più punti fa in classifica.": "The more fans play {t}, the more points it gets.",
   "Più siamo, più è bello: porta i tuoi amici in curva.": "The more the merrier: bring your friends to the stand.", "Copia link": "Copy link", "▾ cambia": "▾ change", "Chiudi": "Close", "Messaggi": "Messages", "GIOCA {t}": "PLAY {t}", "Ho appena portato +{p} punti {t} ⚽ Riesci a fare meglio? 👉 {u} #PerLaMaglia": "I just brought +{p} points {t} ⚽ Can you do better? 👉 {u} #PerLaMaglia", "punti {t}": "points {t}", "{t} TI CHIAMA": "{t} NEEDS YOU", "⚽ Gioca con me a Per la Maglia: scegli la tua squadra del cuore e fai il cucchiaio al portiere 👉 {u}": "⚽ Play Per la Maglia with me: pick your team and chip the keeper 👉 {u}", "⚽ Sto giocando a Per la Maglia {t}: servono i tuoi gol! Scegli la tua squadra e fai il cucchiaio al portiere 👉 {u}": "⚽ I'm playing Per la Maglia {t}: we need your goals! Pick your team and chip the keeper 👉 {u}", "⚽ Sto giocando a Per la Maglia {t}: siamo al {n}° posto in classifica questa settimana e servono i tuoi gol! Scegli la tua squadra e fai il cucchiaio al portiere 👉 {u}": "⚽ I'm playing Per la Maglia {t}: we're #{n} in the table this week and we need your goals! Pick your team and chip the keeper 👉 {u}", "🏆 {n}° in classifica questa settimana": "🏆 #{n} in the table this week", "Altro…": "More…",
   "Messaggio copiato: incollalo dove vuoi": "Message copied: paste it anywhere", "Immagine salvata e testo copiato: incollali dove vuoi": "Image saved and text copied: paste them anywhere",
   "Hai portato": "You brought", "{n} tifosi": "{n} fans", "primo distintivo con 1 tifoso": "first badge with 1 fan", "Nessun distintivo, per ora": "No badge yet",
@@ -2274,11 +2279,14 @@ function renderRanks(){
       const fd = r => fb[fanKey(r)] === undefined ? r.pts : r.pts - fb[fanKey(r)];
       if (fb && rows.some(r => fd(r) > 0)) { list.classList.add("withdl"); list.querySelectorAll(".rhd").forEach(h => h.classList.add("withdl")); }
       if (rows.length) rows.slice(0, 100).forEach((r, k) => { row(k + 1, { team }, (k === 0 ? "👑 " : "") + r.name, "", r.pts, r.me, r.lv, null, null, fb ? fd(r) : 0, fp[fanKey(r)] || 0);
-        if (full) { const blk = Math.floor(k / 20), w = k % 20; list.lastChild.style.gridArea = `${2 + blk * 10 + (w % 10)} / ${w < 10 ? 1 : 2}`; }
+        if (full) { const blk = Math.floor(k / 20), w = k % 20; list.lastChild.style.gridArea = `${2 + blk * 10 + (w % 10)} / ${w < 10 ? 1 : 2}`; if (!w) list.lastChild.classList.add("pg"); }
         const bd = badgeOf(r.refs || 0); if (bd) { const s = document.createElement("span"); s.className = "badgeTag"; s.textContent = bd[2]; s.title = tr(bd[1]); list.lastChild.querySelector(".who").appendChild(s); }
         if (k === 0) { const b = document.createElement("span"); b.className = "mvpTag"; b.textContent = "MVP"; list.lastChild.querySelector(".who").appendChild(b); } });
+      // more than 20 fans: the box shows the first 20 (1–10 and 11–20) and scrolls, 20 at a time, to the next ones (21–30 and 31–40…)
+      if (full && rows.length > 20) list.classList.add("paged");
     }
     const st = box.querySelector(".rstatus"); st.textContent = seasonLabel(sid) + " · "; const cd = document.createElement("span"); cd.className = "cd"; cd.textContent = seasonLeft(); st.appendChild(cd);
+    if (list.classList.contains("paged")) { const m = document.createElement("span"); m.className = "rmore"; m.textContent = " · " + tr("scorri ↓ per gli altri {n}", { n: Math.min(100, list.querySelectorAll(".rrow").length) - 20 }); st.appendChild(m); }
     if (tab === "teams") { const q = document.createElement("button"); q.type = "button"; q.className = "zq"; q.textContent = "?"; q.setAttribute("aria-label", tr("Promozioni e retrocessioni")); q.onclick = openRules; st.appendChild(q); }
     if (tab === "teams" && sid === seasonId() && MEMBERS && MEMBERS.swaps && MEMBERS.season === isoWeekNow()) { const zl = document.createElement("span"); zl.className = "zleg";
       const dn = swapsDown();
@@ -2301,7 +2309,17 @@ function renderRanks(){
       r.append(a, i, b); box.appendChild(r);
     });
   });
-  fitNames();
+  fitNames(); requestAnimationFrame(pageFans);
+}
+// height of the scrolling fans box: its header plus exactly 10 rows
+function pageFans(){
+  document.querySelectorAll(".rlist.full.fans.paged").forEach(list => {
+    const r = list.querySelectorAll(".rrow"); if (r.length < 2 || list.offsetParent === null) return;
+    const top = list.getBoundingClientRect().top, a = r[0].getBoundingClientRect(), b = r[1].getBoundingClientRect();
+    const pitch = b.top - a.top; if (!(pitch > 0)) return;
+    list.style.setProperty("--hd", (a.top - top) + "px");
+    list.style.maxHeight = Math.ceil(a.top - top + pitch * 10 - (pitch - a.height)) + "px";
+  });
 }
 // full rankings: a name that does not fit gets a slightly smaller font (down to 72%) before falling back to "…"
 function fitNames(){
@@ -2313,7 +2331,7 @@ function fitNames(){
     for (let f = base - 0.5; f >= base * 0.72 && e.scrollWidth > e.clientWidth + 1; f -= 0.5) e.style.fontSize = f + "px";
   });
 }
-addEventListener("resize", () => { if (!$("rankScreen").hidden) requestAnimationFrame(fitNames); });
+addEventListener("resize", () => { if (!$("rankScreen").hidden) requestAnimationFrame(() => { fitNames(); pageFans(); }); });
 document.querySelectorAll("[data-rank] .tab").forEach(b => b.addEventListener("click", () => { if (b.dataset.tab === "fans") rankTeam = null; b.closest("[data-rank]").dataset.tab = b.dataset.tab; renderRanks(); }));
 
 // ---------- Flow ----------
