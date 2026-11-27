@@ -2211,7 +2211,11 @@ function renderRanks(){
   document.querySelectorAll("[data-rank]").forEach(box => {
     const tab = box.dataset.tab, list = box.querySelector(".rlist"), full = box.hasAttribute("data-full");
     box.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-pressed", b.dataset.tab === tab ? "true" : "false"));
+    box.__keep = 0;
+    // the same box shows teams and fans: a new view starts from the top; a refresh of the same view keeps where you were
+    const view = tab + "|" + (tab === "fans" ? (rankTeam || mine) : ""), keep = box.__view === view ? list.scrollTop : 0; box.__view = view;
     list.textContent = ""; list.className = "rlist" + (full ? " full " + tab : "");
+    list.style.maxHeight = ""; list.style.paddingBottom = ""; box.__keep = keep;
     const row = (pos, color, who, sub, pts, me, lv, rec, onTap, dl, was) => {
       const r = document.createElement(onTap ? "button" : "div"); r.className = "rrow" + (me ? " me" : ""); if (onTap) { r.type = "button"; r.onclick = onTap; }
       const a = document.createElement("span"); a.className = "pos"; a.textContent = pos;
@@ -2310,7 +2314,9 @@ function renderRanks(){
       r.append(a, i, b); box.appendChild(r);
     });
   });
-  fitNames(); requestAnimationFrame(pageFans); if (document.fonts) document.fonts.ready.then(pageFans);
+  fitNames(); pageFans();
+  document.querySelectorAll("[data-rank]").forEach(box => { const l = box.querySelector(".rlist"); if (l && box.__keep) l.scrollTop = box.__keep; if (l) l.classList.toggle("scrolled", l.scrollTop > 2); });
+  requestAnimationFrame(pageFans); if (document.fonts) document.fonts.ready.then(pageFans);
 }
 // height of the scrolling fans box: its header plus exactly 10 rows
 function pageFans(){
@@ -2318,11 +2324,12 @@ function pageFans(){
     const r = list.querySelectorAll(".rrow"); if (r.length < 2 || list.offsetParent === null) return;
     const top = list.getBoundingClientRect().top, a = r[0].getBoundingClientRect(), b = r[1].getBoundingClientRect();
     const pitch = b.top - a.top; if (!(pitch > 0)) return;
-    list.style.setProperty("--hd", (a.top - top) + "px");
-    const h = list.querySelector(".rhd"); if (h) list.style.setProperty("--hx", Math.max(0, Math.ceil(a.top - h.getBoundingClientRect().bottom)) + "px");
+    const off = a.top - top + list.scrollTop;   // where row 1 starts, whatever the scroll (the box can be refreshed while scrolled)
+    list.style.setProperty("--hd", off + "px");
+    const h = list.querySelector(".rhd"); if (h) list.style.setProperty("--hx", Math.max(0, Math.ceil(off - h.offsetHeight)) + "px");
     // the header gets its own background only while the list is scrolled: at the top it is the plain header, aligned with row 1
     if (!list.__sc) { list.__sc = 1; list.addEventListener("scroll", () => list.classList.toggle("scrolled", list.scrollTop > 2), { passive: true }); }
-    list.style.maxHeight = Math.ceil(a.top - top + pitch * 10 - (pitch - a.height)) + "px";
+    list.style.maxHeight = Math.ceil(off + pitch * 10 - (pitch - a.height)) + "px";
     // a last page with fewer than 10 rows gets empty space below, so it can still scroll up to the top like the others
     const left = Math.min(10, (r.length - 1) % 20 + 1);
     list.style.paddingBottom = Math.ceil((10 - left) * pitch + 16) + "px";
