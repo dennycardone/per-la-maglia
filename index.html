@@ -1782,10 +1782,14 @@ async function sbAuth(){
   })();
   try { return await authJob; } finally { authJob = null; }
 }
+// public reads (rankings, honours, sfottò, the week's line-up) need no profile: a visitor who has not played yet reads them as a guest,
+// and a profile is made only when it is really needed (first game sent, a name saved, a sfottò written, an invite)
 async function sb(path, opt = {}){
-  const ses = await sbAuth(); srv.uid = ses.uid;
+  const guest = (!opt.body || opt.pub) && !store.get("pm.session", null);
+  let tok = SB.key;
+  if (!guest) { const ses = await sbAuth(); srv.uid = ses.uid; tok = ses.at; }
   const r = await fetch(SB.url + "/rest/v1/" + path, { method: opt.body ? "POST" : "GET",
-    headers: { apikey: SB.key, Authorization: "Bearer " + ses.at, "Content-Type": "application/json" }, body: opt.body ? JSON.stringify(opt.body) : undefined });
+    headers: { apikey: SB.key, Authorization: "Bearer " + tok, "Content-Type": "application/json" }, body: opt.body ? JSON.stringify(opt.body) : undefined });
   if (!r.ok) { const t = await r.text().catch(() => ""); throw new Error(r.status + " " + t); }
   const tx = await r.text(); return tx ? JSON.parse(tx) : null;
 }
@@ -1828,6 +1832,7 @@ const BADGES = [[1, "Passaparola", "📣"], [3, "Capo coro", "🎵"], [10, "Capo
 const badgeOf = n => BADGES.filter(b => n >= b[0]).pop() || null;
 const nextBadge = n => BADGES.find(b => n < b[0]) || null;
 async function srvRefs(){
+  if (!store.get("pm.session", null)) return;
   try { const n = await sb("rpc/my_referrals", { body: {} }); srv.refs = +n || 0; store.set("pm.refs", srv.refs); } catch (e) {}
   const code = store.get("pm.ref", "");
   if (code && !store.get("pm.refDone", false) && ((store.get("cucchiaio.stats", {}) || {}).games > 0)) {
@@ -1842,7 +1847,7 @@ async function myRefCode(){
 }
 async function srvMembers(){
   try {
-    const d = await sb("rpc/leagues_now", { body: {} });
+    const d = await sb("rpc/leagues_now", { body: {}, pub: true });
     if (!d || !Array.isArray(d.teams) || d.teams.length < 50) return;
     const M = { season: d.season, map: Object.fromEntries(d.teams.map(([l, t]) => [t, l])), moved: d.moved || [], next: d.next || null, swaps: d.swaps || null, hist: d.hist || null };
     if (MEMBERS && JSON.stringify(MEMBERS) === JSON.stringify(M)) return;
@@ -1865,7 +1870,7 @@ function applyMembers(M){
 async function srvLoad(){
   if (srv.loading) return; srv.loading = true;
   try {
-    const ses = await sbAuth(); srv.uid = ses.uid;
+    if (store.get("pm.session", null)) { const ses = await sbAuth(); srv.uid = ses.uid; } else srv.uid = null;
     if (!srv.membersAt || Date.now() - srv.membersAt > 10 * 60000 || (MEMBERS && MEMBERS.season !== isoWeekNow())) { srv.membersAt = Date.now(); await srvMembers(); }
     const sid = seasonId(), q = encodeURIComponent(sid), lg = LEAGUE;
     let week, rec, win, mine, mvp = [];
@@ -1875,7 +1880,7 @@ async function srvLoad(){
         sb(`team_week?${L}season=eq.${q}&select=team,pts,fans`),
         sb(`team_record?${L}season=eq.${q}&select=team,pts,nick`),
         sb(`season_winners?${L}season=lt.${encodeURIComponent(honoursCut())}&select=season,team,pts,fans,mvp_nick,mvp_pts&order=season.desc&limit=200`),
-        sb(`player_team_stats?${L}player_id=eq.${srv.uid}&select=*`),
+        srv.uid ? sb(`player_team_stats?${L}player_id=eq.${srv.uid}&select=*`) : [],
         sb(`team_mvp?${L}season=eq.${q}&select=team,nick,pts`)
       ]);
       srv.legacy = false;
@@ -1886,7 +1891,7 @@ async function srvLoad(){
         sb(`team_week?season=eq.${q}&select=team,pts,fans`),
         sb(`team_record?season=eq.${q}&select=team,pts,nick`),
         sb(`season_winners?season=lt.${encodeURIComponent(honoursCut())}&select=season,team,pts&order=season.desc&limit=200`),
-        sb(`player_team_stats?player_id=eq.${srv.uid}&select=*`)
+        srv.uid ? sb(`player_team_stats?player_id=eq.${srv.uid}&select=*`) : []
       ]);
     }
     srv.sid = sid; srv.week = {}; week.forEach(w => srv.week[w.team] = { pts: +w.pts, fans: w.fans });
@@ -3348,12 +3353,11 @@ $("quitBtn").onclick = quitGame;
 document.addEventListener("visibilitychange", () => { if (document.hidden) pauseGame(); });
 // Play Store app: coming back from the background, Android sometimes leaves the status bar strip black at the top.
 // If the page is no longer full height, the first tap puts it back to full screen (a web page can only do it on a tap).
-let fsFix = false;
+// It is checked on every tap (not only after a return), at most once every 3 seconds, so a refusal by the phone does not repeat on each tap.
+let fsLast = 0;
 const fsShort = () => inPlayApp() && !document.fullscreenElement && Math.min(screen.width, screen.height) - innerHeight > 8 && innerWidth > innerHeight;
-document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => { fsFix = fsShort(); }, 400); });
-addEventListener("resize", () => { if (fsFix && !fsShort()) fsFix = false; });
 document.addEventListener("pointerdown", () => {
-  if (!fsFix || !fsShort()) return; fsFix = false;
+  if (!fsShort() || Date.now() - fsLast < 3000) return; fsLast = Date.now();
   const el = document.documentElement;
   try { const p = el.requestFullscreen && el.requestFullscreen({ navigationUI: "hide" }); if (p && p.catch) p.catch(() => {}); } catch (e) {}
 }, true);
